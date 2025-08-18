@@ -1,5 +1,3 @@
-import logo from "@/assets/logo.png";
-
 const Footer = () => {
   return (
     <footer className="bg-primary text-primary-foreground py-12 px-4">
@@ -8,7 +6,7 @@ const Footer = () => {
           <div className="md:col-span-2">
             <div className="mb-4">
               <img 
-                src={logo} 
+                src="/lovable-uploads/19e8d3e6-b5ff-48b7-bd8f-c14e12a47b0f.png" 
                 alt="Batalla de Gimnasios" 
                 className="h-8 w-auto filter brightness-0 invert"
               />
