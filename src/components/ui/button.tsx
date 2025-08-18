@@ -18,6 +18,10 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Urban variants for Batalla de Gimnasios
+        hero: "bg-gradient-to-r from-accent to-street-accent text-accent-foreground hover:shadow-accent font-semibold tracking-wide transition-all duration-300 hover:scale-105",
+        urban: "bg-urban-gray text-white hover:bg-primary border-2 border-transparent hover:border-accent transition-all duration-200",
+        vote: "bg-vote-inactive hover:bg-vote-active text-white font-medium transition-all duration-200 hover:shadow-md",
       },
       size: {
         default: "h-10 px-4 py-2",

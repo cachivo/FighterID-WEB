@@ -52,6 +52,12 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Urban-specific color tokens
+				'urban-gray': 'hsl(var(--urban-gray))',
+				'urban-light': 'hsl(var(--urban-light))',
+				'street-accent': 'hsl(var(--street-accent))',
+				'vote-active': 'hsl(var(--vote-active))',
+				'vote-inactive': 'hsl(var(--vote-inactive))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
