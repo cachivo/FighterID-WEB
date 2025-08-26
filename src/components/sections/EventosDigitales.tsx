@@ -29,10 +29,10 @@ const EventosDigitales = () => {
   return (
     <section id="eventos-digitales" className="py-20 relative overflow-hidden">
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-fixed opacity-20"
+        className="absolute inset-0 bg-cover bg-center bg-fixed opacity-35"
         style={{ backgroundImage: 'url(/lovable-uploads/17f6dde8-5a0e-4986-a833-30fc435b156c.png)' }}
       />
-      <div className="absolute inset-0 bg-black/80" />
+      <div className="absolute inset-0 bg-black/55" />
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 animate-slide-up">
