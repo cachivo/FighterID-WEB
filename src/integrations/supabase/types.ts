@@ -38,6 +38,71 @@ export type Database = {
         }
         Relationships: []
       }
+      contestants: {
+        Row: {
+          active: boolean
+          avatar_url: string | null
+          created_at: string
+          event_id: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          avatar_url?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          avatar_url?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contestants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disciplines: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       estadisticas: {
         Row: {
           activo: boolean | null
@@ -173,6 +238,59 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          active: boolean
+          allow_guest_votes: boolean
+          created_at: string
+          created_by: string
+          description: string | null
+          discipline_id: string
+          ends_at: string | null
+          id: string
+          public: boolean
+          starts_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          allow_guest_votes?: boolean
+          created_at?: string
+          created_by: string
+          description?: string | null
+          discipline_id: string
+          ends_at?: string | null
+          id?: string
+          public?: boolean
+          starts_at: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          allow_guest_votes?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          discipline_id?: string
+          ends_at?: string | null
+          id?: string
+          public?: boolean
+          starts_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partners: {
         Row: {
           activo: boolean | null
@@ -208,6 +326,147 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      round_contestants: {
+        Row: {
+          contestant_id: string
+          round_id: string
+        }
+        Insert: {
+          contestant_id: string
+          round_id: string
+        }
+        Update: {
+          contestant_id?: string
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_contestants_contestant_id_fkey"
+            columns: ["contestant_id"]
+            isOneToOne: false
+            referencedRelation: "contestants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_contestants_contestant_id_fkey"
+            columns: ["contestant_id"]
+            isOneToOne: false
+            referencedRelation: "vw_round_leaderboard"
+            referencedColumns: ["contestant_id"]
+          },
+          {
+            foreignKeyName: "round_contestants_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_contestants_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "vw_round_leaderboard"
+            referencedColumns: ["round_id"]
+          },
+        ]
+      }
+      round_totals: {
+        Row: {
+          contestant_id: string
+          round_id: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          contestant_id: string
+          round_id: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          contestant_id?: string
+          round_id?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_totals_contestant_id_fkey"
+            columns: ["contestant_id"]
+            isOneToOne: false
+            referencedRelation: "contestants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_totals_contestant_id_fkey"
+            columns: ["contestant_id"]
+            isOneToOne: false
+            referencedRelation: "vw_round_leaderboard"
+            referencedColumns: ["contestant_id"]
+          },
+          {
+            foreignKeyName: "round_totals_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_totals_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "vw_round_leaderboard"
+            referencedColumns: ["round_id"]
+          },
+        ]
+      }
+      rounds: {
+        Row: {
+          active: boolean
+          created_at: string
+          event_id: string
+          id: string
+          name: string
+          strategy: string
+          strategy_config: Json
+          updated_at: string
+          voting_closes_at: string
+          voting_opens_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          event_id: string
+          id?: string
+          name: string
+          strategy: string
+          strategy_config?: Json
+          updated_at?: string
+          voting_closes_at: string
+          voting_opens_at: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          event_id?: string
+          id?: string
+          name?: string
+          strategy?: string
+          strategy_config?: Json
+          updated_at?: string
+          voting_closes_at?: string
+          voting_opens_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rounds_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       servicios: {
         Row: {
@@ -281,9 +540,64 @@ export type Database = {
         }
         Relationships: []
       }
+      votes: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          id: number
+          ip: unknown | null
+          round_id: string
+          user_id: string | null
+          value_json: Json
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          id?: number
+          ip?: unknown | null
+          round_id: string
+          user_id?: string | null
+          value_json: Json
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          id?: number
+          ip?: unknown | null
+          round_id?: string
+          user_id?: string | null
+          value_json?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "vw_round_leaderboard"
+            referencedColumns: ["round_id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      vw_round_leaderboard: {
+        Row: {
+          contestant_id: string | null
+          contestant_name: string | null
+          position: number | null
+          round_id: string | null
+          round_name: string | null
+          total: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
