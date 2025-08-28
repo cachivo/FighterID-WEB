@@ -14,6 +14,183 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_user: {
+        Row: {
+          auth_user_id: string | null
+          beber_loyalty_id: string | null
+          birthdate: string | null
+          birthdate_verified_at: string | null
+          country: string | null
+          created_at: string | null
+          email: string | null
+          handle: string
+          id: string
+          kyc_level: number | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          auth_user_id?: string | null
+          beber_loyalty_id?: string | null
+          birthdate?: string | null
+          birthdate_verified_at?: string | null
+          country?: string | null
+          created_at?: string | null
+          email?: string | null
+          handle: string
+          id?: string
+          kyc_level?: number | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          auth_user_id?: string | null
+          beber_loyalty_id?: string | null
+          birthdate?: string | null
+          birthdate_verified_at?: string | null
+          country?: string | null
+          created_at?: string | null
+          email?: string | null
+          handle?: string
+          id?: string
+          kyc_level?: number | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      bdg_event: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          discipline: string
+          end_time: string | null
+          id: string
+          meta: Json | null
+          name: string
+          source_event_id: string | null
+          start_time: string | null
+          state: string
+          updated_at: string | null
+          venue: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          discipline: string
+          end_time?: string | null
+          id?: string
+          meta?: Json | null
+          name: string
+          source_event_id?: string | null
+          start_time?: string | null
+          state?: string
+          updated_at?: string | null
+          venue?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          discipline?: string
+          end_time?: string | null
+          id?: string
+          meta?: Json | null
+          name?: string
+          source_event_id?: string | null
+          start_time?: string | null
+          state?: string
+          updated_at?: string | null
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bdg_event_source_event_id_fkey"
+            columns: ["source_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bet_ticket: {
+        Row: {
+          created_at: string | null
+          currency: string
+          id: string
+          ip_address: unknown | null
+          kind: string
+          market_id: string
+          outcome_id: string
+          payout_amount: number | null
+          potential_payout: number | null
+          price_locked: number | null
+          settled_at: string | null
+          stake: number
+          status: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          id?: string
+          ip_address?: unknown | null
+          kind?: string
+          market_id: string
+          outcome_id: string
+          payout_amount?: number | null
+          potential_payout?: number | null
+          price_locked?: number | null
+          settled_at?: string | null
+          stake: number
+          status?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          id?: string
+          ip_address?: unknown | null
+          kind?: string
+          market_id?: string
+          outcome_id?: string
+          payout_amount?: number | null
+          potential_payout?: number | null
+          price_locked?: number | null
+          settled_at?: string | null
+          stake?: number
+          status?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_ticket_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "market"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bet_ticket_outcome_id_fkey"
+            columns: ["outcome_id"]
+            isOneToOne: false
+            referencedRelation: "outcome"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bet_ticket_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       configuracion_sitio: {
         Row: {
           clave: string
@@ -291,6 +468,147 @@ export type Database = {
           },
         ]
       }
+      market: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          event_id: string
+          id: string
+          kind: string
+          max_stake: number | null
+          meta: Json | null
+          min_stake: number | null
+          rake: number | null
+          settlement_delay_seconds: number | null
+          state: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          event_id: string
+          id?: string
+          kind?: string
+          max_stake?: number | null
+          meta?: Json | null
+          min_stake?: number | null
+          rake?: number | null
+          settlement_delay_seconds?: number | null
+          state?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          event_id?: string
+          id?: string
+          kind?: string
+          max_stake?: number | null
+          meta?: Json | null
+          min_stake?: number | null
+          rake?: number | null
+          settlement_delay_seconds?: number | null
+          state?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "bdg_event"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_state_log: {
+        Row: {
+          actor: string | null
+          created_at: string | null
+          from_state: string | null
+          id: string
+          market_id: string
+          reason: string | null
+          to_state: string
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string | null
+          from_state?: string | null
+          id?: string
+          market_id: string
+          reason?: string | null
+          to_state: string
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string | null
+          from_state?: string | null
+          id?: string
+          market_id?: string
+          reason?: string | null
+          to_state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_state_log_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "market"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outcome: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          description: string | null
+          id: string
+          label: string
+          market_id: string
+          pool: number | null
+          price: number | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label: string
+          market_id: string
+          pool?: number | null
+          price?: number | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label?: string
+          market_id?: string
+          pool?: number | null
+          price?: number | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outcome_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "market"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partners: {
         Row: {
           activo: boolean | null
@@ -504,6 +822,63 @@ export type Database = {
         }
         Relationships: []
       }
+      settlement: {
+        Row: {
+          confirmed_by: string | null
+          created_at: string | null
+          id: string
+          market_id: string
+          result_meta: Json | null
+          result_type: string | null
+          settled_by: string | null
+          total_payout: number | null
+          total_pool: number | null
+          total_rake: number | null
+          winning_outcome_id: string | null
+        }
+        Insert: {
+          confirmed_by?: string | null
+          created_at?: string | null
+          id?: string
+          market_id: string
+          result_meta?: Json | null
+          result_type?: string | null
+          settled_by?: string | null
+          total_payout?: number | null
+          total_pool?: number | null
+          total_rake?: number | null
+          winning_outcome_id?: string | null
+        }
+        Update: {
+          confirmed_by?: string | null
+          created_at?: string | null
+          id?: string
+          market_id?: string
+          result_meta?: Json | null
+          result_type?: string | null
+          settled_by?: string | null
+          total_payout?: number | null
+          total_pool?: number | null
+          total_rake?: number | null
+          winning_outcome_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "market"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_winning_outcome_id_fkey"
+            columns: ["winning_outcome_id"]
+            isOneToOne: false
+            referencedRelation: "outcome"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       testimonios: {
         Row: {
           activo: boolean | null
@@ -539,6 +914,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_limit: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          current_amount: number | null
+          id: string
+          limit_type: string
+          max_amount: number
+          period: string
+          reset_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          current_amount?: number | null
+          id?: string
+          limit_type: string
+          max_amount: number
+          period: string
+          reset_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          current_amount?: number | null
+          id?: string
+          limit_type?: string
+          max_amount?: number
+          period?: string
+          reset_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_limit_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       votes: {
         Row: {
@@ -585,6 +1004,82 @@ export type Database = {
           },
         ]
       }
+      wallet: {
+        Row: {
+          balance: number
+          created_at: string | null
+          currency: string
+          hold: number
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string | null
+          currency: string
+          hold?: number
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string | null
+          currency?: string
+          hold?: number
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallet_tx: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          kind: string
+          meta: Json | null
+          reference_id: string | null
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          kind: string
+          meta?: Json | null
+          reference_id?: string | null
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          kind?: string
+          meta?: Json | null
+          reference_id?: string | null
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_tx_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallet"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       vw_round_leaderboard: {
@@ -600,7 +1095,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      calculate_parimutuel_payout: {
+        Args: { p_market_id: string; p_outcome_id: string; p_stake: number }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
