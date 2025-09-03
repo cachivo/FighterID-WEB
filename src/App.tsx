@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LicenseAuthProvider } from "@/hooks/useLicenseAuth";
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -65,11 +65,14 @@ const App = () => (
                   <LicensePending />
                 </LicenseProtectedRoute>
               } />
-              <Route path="/license/*" element={
+              
+              {/* Protected License Routes with Layout */}
+              <Route path="/license" element={
                 <LicenseProtectedRoute requireActiveLicense>
                   <LicenseLayout />
                 </LicenseProtectedRoute>
               }>
+                <Route index element={<Navigate to="/license/dashboard" replace />} />
                 <Route path="dashboard" element={<LicenseDashboard />} />
               </Route>
 
