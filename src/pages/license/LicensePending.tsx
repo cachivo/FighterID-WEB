@@ -1,4 +1,4 @@
-import { Clock, Shield, CheckCircle, FileText, AlertTriangle } from 'lucide-react';
+import { Clock, Shield, CheckCircle, FileText, AlertTriangle, Home } from 'lucide-react';
 import { useLicenseAuth } from '@/hooks/useLicenseAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -58,7 +58,15 @@ export default function LicensePending() {
           <p className="text-muted-foreground">
             Tu solicitud de licencia está siendo procesada
           </p>
-          <div className="mt-4 flex justify-center">
+          <div className="mt-4 flex justify-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => window.location.href = '/'}
+              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <Home className="h-4 w-4" />
+              Pantalla Principal
+            </Button>
             <Button
               variant="outline"
               onClick={signOut}
