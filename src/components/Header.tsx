@@ -11,13 +11,14 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { Menu, Trophy, Monitor, Settings, BarChart3, Users, Phone, DollarSign, ChevronDown } from "lucide-react";
+import { Menu, Trophy, Monitor, Settings, BarChart3, Users, Phone, DollarSign, ChevronDown, Shield } from "lucide-react";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
 
   const navigationItems = [
+    { name: "Mi Fighter ID", href: "/fighters/me", icon: Shield },
     { name: "Eventos", href: "/eventos", icon: Trophy },
     { name: "Fighters", href: "/fighters", icon: Users },
     { name: "Predicciones", href: "/predicciones", icon: DollarSign },
@@ -52,6 +53,19 @@ const Header = () => {
         {/* Desktop Navigation */}
         <NavigationMenu className="hidden lg:flex">
           <NavigationMenuList className="space-x-2">
+            {/* Mi Fighter ID - Always visible and prominent */}
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Link 
+                  to={user ? "/fighters/me" : "/auth"}
+                  className="group inline-flex h-10 w-max items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium transition-colors hover:bg-primary/90 focus:bg-primary/90 focus:outline-none"
+                >
+                  <Shield className="h-4 w-4" />
+                  Mi Fighter ID
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link 
@@ -73,19 +87,6 @@ const Header = () => {
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
-
-            {user && (
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link 
-                    to="/fighters/me" 
-                    className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none"
-                  >
-                    Mi Fighter ID
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            )}
 
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
@@ -141,6 +142,13 @@ const Header = () => {
 
         {/* Simplified Navigation for Medium Screens */}
         <nav className="hidden md:flex lg:hidden items-center space-x-4">
+          <Link 
+            to={user ? "/fighters/me" : "/auth"}
+            className="flex items-center gap-1 text-sm bg-primary text-primary-foreground px-3 py-1.5 rounded-md font-medium hover:bg-primary/90 transition-colors"
+          >
+            <Shield className="h-3 w-3" />
+            Mi Fighter ID
+          </Link>
           <Link to="/eventos" className="text-sm text-foreground hover:text-primary transition-colors">
             Eventos
           </Link>
@@ -177,9 +185,26 @@ const Header = () => {
                 </div>
                 
                 {/* Navigation Items */}
-                <div className="flex-1 py-6">
-                  <nav className="space-y-2 px-4">
-                     {navigationItems.map((item) => {
+                <div className="flex-1 py-2">
+                  {/* Featured Mi Fighter ID */}
+                  <div className="px-4 pb-4">
+                    <Link
+                      to={user ? "/fighters/me" : "/auth"}
+                      className="flex items-center gap-3 rounded-lg px-4 py-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors border-2 border-primary/20"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Shield className="h-6 w-6" />
+                      <div>
+                        <span className="font-semibold text-base">Mi Fighter ID</span>
+                        <p className="text-xs opacity-90 mt-0.5">
+                          {user ? "Gestiona tu perfil" : "Crea tu perfil"}
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                  
+                  <nav className="space-y-1 px-4">
+                     {navigationItems.slice(1).map((item) => {
                        const IconComponent = item.icon;
                        const isExternalLink = item.href.startsWith('#');
                        
@@ -213,7 +238,7 @@ const Header = () => {
                 </div>
                 
                 {/* Call to Actions */}
-                <div className="border-t border-border p-6 space-y-3">
+                <div className="border-t border-border p-6">
                   <Button 
                     variant="outline" 
                     className="w-full"
@@ -221,20 +246,6 @@ const Header = () => {
                     asChild
                   >
                     <Link to="/auth">Admin Panel</Link>
-                  </Button>
-                  <Button 
-                    variant="default" 
-                    className="w-full"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Solicitar Cotización
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    className="w-full"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Únete como Partner
                   </Button>
                 </div>
               </div>
@@ -244,9 +255,6 @@ const Header = () => {
           {/* Desktop Actions */}
           <Button variant="outline" size="sm" className="hidden sm:flex" asChild>
             <Link to="/auth">Admin Panel</Link>
-          </Button>
-          <Button variant="default" size="sm" className="hidden md:flex">
-            Solicitar Cotización
           </Button>
         </div>
       </div>
