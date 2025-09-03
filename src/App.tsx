@@ -17,6 +17,7 @@ import ValidacionLicencias from './pages/admin/ValidacionLicencias';
 import LicenseAuth from './pages/license/LicenseAuth';
 import LicenseDashboard from './pages/license/LicenseDashboard';
 import LicensePending from './pages/license/LicensePending';
+import LicenseOnboarding from './pages/license/LicenseOnboarding';
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Predicciones from "./pages/Predicciones";
@@ -60,6 +61,11 @@ const App = () => (
 
               {/* Fighter License Portal Routes */}
               <Route path="/license/auth" element={<LicenseAuth />} />
+              <Route path="/license/onboarding" element={
+                <LicenseProtectedRoute>
+                  <LicenseOnboarding />
+                </LicenseProtectedRoute>
+              } />
               <Route path="/license/pending" element={
                 <LicenseProtectedRoute>
                   <LicensePending />
