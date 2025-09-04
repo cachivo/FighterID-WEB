@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import StrategicAllies from "@/components/StrategicAllies";
 import Ranking from "@/components/sections/Ranking";
 import Footer from "@/components/Footer";
 import UrbanDecorations from "@/components/UrbanDecorations";
@@ -10,6 +11,7 @@ const Index = () => {
       <UrbanDecorations />
       <Header />
       <Hero />
+      <StrategicAllies />
       <Ranking />
       <Footer />
     </div>
