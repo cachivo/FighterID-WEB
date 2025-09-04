@@ -1981,6 +1981,10 @@ export type Database = {
         Args: { p_ticket_id: string }
         Returns: undefined
       }
+      delete_fighter_license: {
+        Args: { p_license_id: string }
+        Returns: undefined
+      }
       expire_old_licenses: {
         Args: Record<PropertyKey, never>
         Returns: undefined
