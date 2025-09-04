@@ -34,7 +34,7 @@ export default function AdminCertLayout() {
         <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-card/95 backdrop-blur-sm border-b border-border flex items-center px-4">
           <SidebarTrigger className="text-primary" />
           <div className="ml-4 flex items-center gap-3">
-            <Shield className="h-6 w-6 text-purple-neon-primary" />
+            <Shield className="h-6 w-6 text-professional-primary" />
             <span className="font-bold text-lg">Panel de Certificación</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
@@ -67,7 +67,7 @@ export default function AdminCertLayout() {
                           className={({ isActive }) =>
                             `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                               isActive 
-                                ? 'bg-purple-neon-primary/10 text-purple-neon-primary' 
+                                ? 'bg-professional-primary/10 text-professional-primary border-l-2 border-professional-accent' 
                                 : 'hover:bg-muted/50'
                             }`
                           }
