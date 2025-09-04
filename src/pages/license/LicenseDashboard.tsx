@@ -145,9 +145,11 @@ export default function LicenseDashboard() {
           <Separator className="bg-gradient-to-r from-transparent via-professional-accent/40 to-transparent" />
           
           <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {[
                 { label: 'País', value: fighterProfile?.country || 'N/A' },
+                { label: 'Disciplina', value: fighterProfile?.discipline || 'N/A' },
+                { label: 'Nivel', value: fighterProfile?.level || 'N/A' },
                 { label: 'División', value: fighterProfile?.weight_class || 'N/A' },
                 { 
                   label: 'Record', 

@@ -32,6 +32,27 @@ const FIGHTING_STYLES = [
   'Defensivo',
 ];
 
+const DISCIPLINES = [
+  'MMA',
+  'Boxeo', 
+  'Judo',
+  'JiuJitsu',
+  'Kickboxing',
+  'MuayThai',
+  'Grappling',
+  'Otro'
+] as const;
+
+const LEVELS = [
+  'Amateur',
+  'Semi-Profesional', 
+  'Profesional',
+  'Elite',
+  'Principiante',
+  'Intermedio',
+  'Avanzado'
+];
+
 interface FighterProfileFormProps {
   existingProfile?: FighterProfile | null;
   onSuccess?: () => void;
@@ -52,6 +73,8 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
     gym_name: '',
     bio: '',
     avatar_url: '',
+    discipline: undefined,
+    level: '',
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,6 +96,8 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
         gym_name: existingProfile.gym_name || '',
         bio: existingProfile.bio || '',
         avatar_url: existingProfile.avatar_url || '',
+        discipline: existingProfile.discipline,
+        level: existingProfile.level || '',
       });
     }
   }, [existingProfile]);
@@ -89,10 +114,10 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
       return;
     }
     
-    if (!formData.first_name || !formData.last_name || !formData.weight_class) {
+    if (!formData.first_name || !formData.last_name || !formData.weight_class || !formData.discipline) {
       toast({
         title: "Error",
-        description: "Por favor completa todos los campos requeridos",
+        description: "Por favor completa todos los campos requeridos (nombre, apellido, disciplina y división)",
         variant: "destructive",
       });
       return;
@@ -186,6 +211,46 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
               onChange={(e) => handleChange('gym_name', e.target.value)}
               placeholder="Ej: Gracie Barra"
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="discipline" className="text-foreground">Disciplina *</Label>
+              <Select
+                value={formData.discipline}
+                onValueChange={(value) => handleChange('discipline', value as typeof formData.discipline)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona una disciplina" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DISCIPLINES.map(discipline => (
+                    <SelectItem key={discipline} value={discipline}>
+                      {discipline}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="level" className="text-foreground">Nivel</Label>
+              <Select
+                value={formData.level}
+                onValueChange={(value) => handleChange('level', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona tu nivel" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEVELS.map(level => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
