@@ -26,6 +26,10 @@ const FIGHTING_STYLES = [
   'Defensivo',
 ];
 
+const DISCIPLINES = [
+  'MMA', 'Boxeo', 'Judo', 'JiuJitsu', 'Kickboxing', 'MuayThai', 'Grappling', 'Otro'
+];
+
 interface FighterEditModalProps {
   fighter: FighterProfile;
   open: boolean;
@@ -48,6 +52,7 @@ export function FighterEditModal({ fighter, open, onClose }: FighterEditModalPro
     gym_name: '',
     bio: '',
     avatar_url: '',
+    discipline: undefined,
     record_wins: 0,
     record_losses: 0,
     record_draws: 0,
@@ -69,6 +74,7 @@ export function FighterEditModal({ fighter, open, onClose }: FighterEditModalPro
         gym_name: fighter.gym_name || '',
         bio: fighter.bio || '',
         avatar_url: fighter.avatar_url || '',
+        discipline: fighter.discipline || undefined,
         record_wins: fighter.record_wins,
         record_losses: fighter.record_losses,
         record_draws: fighter.record_draws,
@@ -188,6 +194,25 @@ export function FighterEditModal({ fighter, open, onClose }: FighterEditModalPro
                     value={formData.country}
                     onChange={(e) => handleChange('country', e.target.value)}
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="discipline">Disciplina</Label>
+                  <Select 
+                    value={formData.discipline || ''} 
+                    onValueChange={(value) => handleChange('discipline', value as any)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una disciplina" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DISCIPLINES.map(discipline => (
+                        <SelectItem key={discipline} value={discipline}>
+                          {discipline}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
