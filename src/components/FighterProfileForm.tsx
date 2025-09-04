@@ -55,7 +55,7 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { createFighterProfile, updateFighterProfile } = useFighterProfiles();
+  const { createFighterProfile } = useFighterProfiles();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -80,6 +80,15 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (existingProfile) {
+      toast({
+        title: "Error",
+        description: "Este formulario es solo para crear nuevos perfiles. Las ediciones deben realizarse a través del panel de administración.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!formData.first_name || !formData.last_name || !formData.weight_class) {
       toast({
         title: "Error",
@@ -92,19 +101,11 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
     setIsSubmitting(true);
     
     try {
-      if (existingProfile) {
-        await updateFighterProfile(existingProfile.id, formData);
-        toast({
-          title: "Perfil actualizado",
-          description: "Tu perfil de peleador ha sido actualizado exitosamente",
-        });
-      } else {
-        await createFighterProfile(formData);
-        toast({
-          title: "Perfil creado",
-          description: "Tu perfil de peleador ha sido creado exitosamente",
-        });
-      }
+      await createFighterProfile(formData);
+      toast({
+        title: "Perfil creado",
+        description: "Tu perfil de peleador ha sido creado exitosamente",
+      });
       
       onSuccess?.();
     } catch (error) {
@@ -129,8 +130,16 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle className="text-foreground">
-          {existingProfile ? 'Editar Perfil de Peleador' : 'Crear Perfil de Peleador'}
+          Crear Perfil de Peleador
         </CardTitle>
+        {existingProfile && (
+          <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 mt-4">
+            <p className="text-sm text-warning-foreground">
+              <strong>Nota:</strong> Las ediciones de perfiles deben realizarse a través del panel de administración.
+              Este formulario es solo para la creación inicial de perfiles.
+            </p>
+          </div>
+        )}
       </CardHeader>
       
       <CardContent>
@@ -307,7 +316,7 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
               className="flex-1 bg-fighter-primary hover:bg-fighter-secondary text-fighter-primary-foreground font-semibold"
             >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {existingProfile ? 'Actualizar Perfil' : 'Crear Perfil'}
+              Crear Perfil
             </Button>
             
             {onCancel && (

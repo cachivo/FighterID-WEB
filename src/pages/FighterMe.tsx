@@ -19,7 +19,7 @@ const DISCIPLINES = ['MMA','Boxeo','Judo','JiuJitsu','Kickboxing','MuayThai','Gr
 export default function FighterMe() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { getUserFighterProfile, updateFighterProfile } = useFighterProfiles();
+  const { getUserFighterProfile } = useFighterProfiles();
   const { organizations } = useOrganizations();
   const [profile, setProfile] = useState<FighterProfile | null>(null);
 
@@ -42,26 +42,6 @@ export default function FighterMe() {
     );
   }
 
-  const saveBasics = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    try {
-      await updateFighterProfile(profile.id, {
-        fighting_style: String(fd.get('fighting_style') || ''),
-        weight_class: String(fd.get('weight_class') || ''),
-        discipline: String(fd.get('discipline') || 'Otro') as any,
-        level: String(fd.get('level') || ''),
-        country: String(fd.get('country') || ''),
-        bio: String(fd.get('bio') || ''),
-        organization_id: String(fd.get('organization_id') || '') || null,
-      });
-      const refreshed = await getUserFighterProfile();
-      setProfile(refreshed);
-      toast({ title: "Perfil actualizado", description: "Tus cambios han sido guardados exitosamente" });
-    } catch (error) {
-      toast({ title: "Error", description: "No se pudo actualizar el perfil", variant: "destructive" });
-    }
-  };
 
   const addStatus = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -131,58 +111,70 @@ export default function FighterMe() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={saveBasics} className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
             <div className="space-y-2">
-              <Label htmlFor="discipline">Disciplina</Label>
-              <Select name="discipline" defaultValue={profile.discipline || 'MMA'}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona disciplina" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DISCIPLINES.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label className="text-muted-foreground">Disciplina</Label>
+              <div className="p-2 bg-muted/50 rounded border">
+                {profile.discipline || 'No especificada'}
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="level">Nivel</Label>
-              <Input name="level" placeholder="Amateur/Pro/Cinturón" defaultValue={profile.level || ''} />
+              <Label className="text-muted-foreground">Nivel</Label>
+              <div className="p-2 bg-muted/50 rounded border">
+                {profile.level || 'No especificado'}
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="organization_id">Organización</Label>
-              <Select name="organization_id" defaultValue={profile.organization_id || ''}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona organización" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Sin organización</SelectItem>
-                  {organizations.data?.map(org => (
-                    <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-muted-foreground">Organización</Label>
+              <div className="p-2 bg-muted/50 rounded border">
+                {organizations.data?.find(org => org.id === profile.organization_id)?.name || 'Sin organización'}
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="weight_class">División (peso)</Label>
-              <Input name="weight_class" defaultValue={profile.weight_class} />
+              <Label className="text-muted-foreground">División (peso)</Label>
+              <div className="p-2 bg-muted/50 rounded border">
+                {profile.weight_class}
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="fighting_style">Estilo</Label>
-              <Input name="fighting_style" defaultValue={profile.fighting_style || ''} />
+              <Label className="text-muted-foreground">Estilo</Label>
+              <div className="p-2 bg-muted/50 rounded border">
+                {profile.fighting_style || 'No especificado'}
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="country">País</Label>
-              <Input name="country" defaultValue={profile.country} />
+              <Label className="text-muted-foreground">País</Label>
+              <div className="p-2 bg-muted/50 rounded border">
+                {profile.country}
+              </div>
             </div>
             <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="bio">Biografía</Label>
-              <Textarea name="bio" defaultValue={profile.bio || ''} />
+              <Label className="text-muted-foreground">Biografía</Label>
+              <div className="p-2 bg-muted/50 rounded border min-h-[80px]">
+                {profile.bio || 'No hay biografía disponible'}
+              </div>
             </div>
-            <div className="md:col-span-2">
-              <Button type="submit" className="w-full sm:w-auto">
-                Guardar cambios
-              </Button>
+          </div>
+          
+          <div className="bg-muted/30 border border-border/50 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="bg-warning/20 text-warning rounded-full p-2">
+                <Shield className="h-4 w-4" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium text-foreground mb-1">
+                  ¿Necesitas actualizar tu información?
+                </h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Para realizar cambios en tu perfil de peleador, debes contactar con el equipo de administración. 
+                  Esto garantiza la integridad y veracidad de los datos en el sistema.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <strong>Contacto:</strong> Envía un correo a admin@batalla.hn o comunícate a través del panel de administración.
+                </p>
+              </div>
             </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
 
