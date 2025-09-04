@@ -57,7 +57,7 @@ const StrategicAllies = () => {
                       <OptimizedImage
                         src={partner.logo}
                         alt={partner.nombre}
-                        className="w-20 h-20 object-contain filter brightness-0 invert group-hover:brightness-100 group-hover:invert-0 transition-all duration-300"
+                        className="w-20 h-20 object-contain transition-all duration-300"
                         priority={index < 3} // Prioritize first 3 images
                         fallbackIcon={
                           <div className="text-2xl text-purple-neon-primary">
