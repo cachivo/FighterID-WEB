@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,7 @@ export default function Fighters() {
   const [selectedFighter, setSelectedFighter] = useState<FighterProfile | null>(null);
   const [userProfile, setUserProfile] = useState<FighterProfile | null>(null);
   
-  const { fighters, loading, getUserFighterProfile } = useFighterProfiles();
+  const { fighters, loading, loadingUserProfile, getUserFighterProfile } = useFighterProfiles();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -64,12 +64,12 @@ export default function Fighters() {
       }
     });
 
-  const handleCreateSuccess = () => {
+  const handleCreateSuccess = useCallback(() => {
     setIsCreateDialogOpen(false);
     if (user) {
       getUserFighterProfile().then(setUserProfile);
     }
-  };
+  }, [user, getUserFighterProfile]);
 
   const handleFighterClick = (fighter: FighterProfile) => {
     // Navigate to public fighter profile instead of dialog

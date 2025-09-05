@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -111,6 +111,7 @@ export interface AdminFighterFormData {
 export function useFighterProfiles() {
   const [fighters, setFighters] = useState<FighterProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingUserProfile, setLoadingUserProfile] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -192,11 +193,11 @@ export function useFighterProfiles() {
     }
   };
 
-  const getUserFighterProfile = async () => {
+  const getUserFighterProfile = useCallback(async () => {
     if (!user) return null;
 
     try {
-      setLoading(true);
+      setLoadingUserProfile(true);
       // Get user_id from app_user table
       const { data: appUser, error: userError } = await supabase
         .from('app_user')
@@ -222,9 +223,9 @@ export function useFighterProfiles() {
       console.error('Error fetching user fighter profile:', err);
       return null;
     } finally {
-      setLoading(false);
+      setLoadingUserProfile(false);
     }
-  };
+  }, [user]);
 
   // Add function to refresh current user profile
   const refreshUserProfile = async () => {
@@ -373,6 +374,7 @@ export function useFighterProfiles() {
   return {
     fighters,
     loading,
+    loadingUserProfile,
     error,
     createFighterProfile,
     updateFighterProfile,
