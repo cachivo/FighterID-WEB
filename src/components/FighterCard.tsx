@@ -25,35 +25,35 @@ export function FighterCard({ fighter, onClick }: FighterCardProps) {
   
   return (
     <Card 
-      className="cursor-pointer hover:shadow-lg transition-all duration-300 bg-card border-border hover:border-professional-accent/30"
+      className="cursor-pointer hover:shadow-lg transition-all duration-300 bg-card border-border hover:border-professional-accent/30 touch-manipulation"
       onClick={onClick}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-4">
+      <CardHeader className="pb-3 p-4 sm:p-6">
+        <div className="flex items-center gap-3 sm:gap-4">
           {fighter.avatar_url ? (
             <img 
               src={fighter.avatar_url} 
               alt={`${fighter.first_name} ${fighter.last_name}`}
-              className="w-16 h-16 rounded-full object-cover"
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover flex-shrink-0"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-professional-muted flex items-center justify-center">
-              <span className="text-xl font-bold text-professional-primary">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-professional-muted flex items-center justify-center flex-shrink-0">
+              <span className="text-lg sm:text-xl font-bold text-professional-primary">
                 {fighter.first_name[0]}{fighter.last_name[0]}
               </span>
             </div>
           )}
           
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-foreground">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
               {fighter.first_name} {fighter.last_name}
             </h3>
             {fighter.nickname && (
-              <p className="text-sm text-professional-accent font-medium">
+              <p className="text-sm text-professional-accent font-medium truncate">
                 "{fighter.nickname}"
               </p>
             )}
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <Badge variant="secondary" className="text-xs">
                 {fighter.weight_class}
               </Badge>
@@ -65,17 +65,17 @@ export function FighterCard({ fighter, onClick }: FighterCardProps) {
         </div>
       </CardHeader>
       
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4 text-sm">
+      <CardContent className="p-4 sm:p-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm">
           <div>
-            <p className="text-muted-foreground">Record</p>
-            <p className="font-semibold text-foreground">
+            <p className="text-muted-foreground text-xs sm:text-sm">Record</p>
+            <p className="font-semibold text-foreground text-sm sm:text-base">
               {fighter.record_wins}-{fighter.record_losses}-{fighter.record_draws}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">ELO Rating</p>
-            <p className="font-semibold text-foreground">
+            <p className="text-muted-foreground text-xs sm:text-sm">ELO Rating</p>
+            <p className="font-semibold text-foreground text-sm sm:text-base">
               {fighter.elo_rating}
             </p>
           </div>
@@ -127,14 +127,14 @@ export function FighterCard({ fighter, onClick }: FighterCardProps) {
         <Button 
           variant="professional-outline" 
           size="sm" 
-          className="w-full mt-3"
+          className="w-full mt-3 min-h-[44px] touch-manipulation"
           onClick={(e) => {
             e.stopPropagation();
             navigate(`/fighters/license/${fighter.id}`);
           }}
         >
-          <CreditCard className="h-5 w-5 mr-2 text-professional-accent" />
-          Ver Licencia
+          <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-professional-accent" />
+          <span className="text-sm">Ver Licencia</span>
         </Button>
       </CardContent>
     </Card>

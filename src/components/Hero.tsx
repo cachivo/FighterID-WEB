@@ -8,29 +8,39 @@ const Hero = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900"></div>
       
       {/* Content */}
-      <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
-        <div className="mb-6 animate-slide-up">
+      <div className="relative z-10 text-center text-white px-4 sm:px-6 max-w-4xl mx-auto">
+        <div className="mb-8 sm:mb-6 animate-slide-up">
           <img 
             src="/lovable-uploads/07f90240-de72-4763-ba2b-eb451fe8473c.png" 
             alt="Logo" 
-            className="h-24 md:h-32 w-auto mx-auto animate-glow-neon"
+            className="h-16 sm:h-20 md:h-24 lg:h-32 w-auto mx-auto animate-glow-neon"
           />
         </div>
         
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-up">
-          <Button variant="hero" size="lg" className="text-lg px-8 py-4">
+        <div className="flex flex-col gap-4 sm:gap-3 justify-center items-center animate-slide-up">
+          <Button 
+            variant="hero" 
+            size="lg" 
+            className="w-full sm:w-auto text-base sm:text-lg px-8 py-4 min-h-[48px] touch-manipulation"
+          >
             Ver Batalla EN VIVO
           </Button>
-          <Button variant="urban" size="lg" className="text-lg px-8 py-4">
+          <Button 
+            variant="urban" 
+            size="lg" 
+            className="w-full sm:w-auto text-base sm:text-lg px-8 py-4 min-h-[48px] touch-manipulation"
+          >
             Únete Como Jurado
           </Button>
         </div>
         
         {/* Live indicator with cinematic style */}
-        <div className="mt-8 flex items-center justify-center gap-2 text-purple-neon-primary font-semibold">
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-2 text-purple-neon-primary font-semibold">
           <div className="w-3 h-3 bg-purple-neon-primary rounded-full animate-pulse-purple-neon shadow-lg shadow-purple-neon-primary/50"></div>
-          <span className="text-lg tracking-wider">PRÓXIMO EVENTO: 25 ENE 2025</span>
+          <span className="text-sm sm:text-base md:text-lg tracking-wider text-center">
+            PRÓXIMO EVENTO: 25 ENE 2025
+          </span>
         </div>
       </div>
       

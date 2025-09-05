@@ -60,15 +60,15 @@ const Header = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center">
-          <Link to="/" className="hover:opacity-80 transition-opacity">
+          <Link to="/" className="hover:opacity-80 transition-opacity touch-manipulation">
             <img 
               src="/lovable-uploads/07f90240-de72-4763-ba2b-eb451fe8473c.png" 
               alt="Batalla de Gimnasios" 
-              className="h-8 md:h-10 w-auto"
+              className="h-7 sm:h-8 md:h-10 w-auto"
             />
           </Link>
         </div>
@@ -167,24 +167,24 @@ const Header = () => {
           {/* Mobile Menu Trigger */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button variant="ghost" size="icon" className="md:hidden min-h-[44px] min-w-[44px] touch-manipulation">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Abrir menú</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-80 p-0">
+            <SheetContent side="left" className="w-[85vw] max-w-sm p-0">
               <div className="flex flex-col h-full">
                 {/* Header del Sheet */}
-                <div className="border-b border-border p-6">
+                <div className="border-b border-border p-4 sm:p-6">
                   <Link 
                     to="/" 
-                    className="hover:opacity-80 transition-opacity"
+                    className="hover:opacity-80 transition-opacity touch-manipulation"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <img 
                       src="/lovable-uploads/07f90240-de72-4763-ba2b-eb451fe8473c.png" 
                       alt="Batalla de Gimnasios" 
-                      className="h-10 w-auto"
+                      className="h-8 sm:h-10 w-auto"
                     />
                   </Link>
                 </div>
@@ -193,13 +193,13 @@ const Header = () => {
                 <div className="flex-1 py-2">
                   {/* Featured Fighter ID - Only for non-fighters */}
                   {(!user || !hasFighterProfile) && (
-                    <div className="px-4 pb-4">
+                    <div className="px-3 sm:px-4 pb-4">
                       <Link
                         to="/license/dashboard"
-                        className="flex items-center gap-3 rounded-lg px-4 py-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors border-2 border-primary/20"
+                        className="flex items-center gap-3 rounded-lg px-4 py-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors border-2 border-primary/20 min-h-[56px] touch-manipulation"
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        <Shield className="h-6 w-6" />
+                        <Shield className="h-6 w-6 flex-shrink-0" />
                         <div>
                           <span className="font-semibold text-base">Fighter ID</span>
                           <p className="text-xs opacity-90 mt-0.5">
@@ -210,7 +210,7 @@ const Header = () => {
                     </div>
                   )}
                   
-                  <nav className="space-y-1 px-4">
+                  <nav className="space-y-1 px-3 sm:px-4">
                      {navigationItems.slice(1).map((item) => {
                        const IconComponent = item.icon;
                        const isExternalLink = item.href.startsWith('#');
@@ -229,23 +229,23 @@ const Header = () => {
                          );
                        }
                        
-                       return (
-                         <Link
-                           key={item.name}
-                           to={item.href}
-                           className="flex items-center gap-3 rounded-lg px-3 py-3 text-foreground hover:bg-muted hover:text-primary transition-colors"
-                           onClick={() => setMobileMenuOpen(false)}
-                         >
-                           <IconComponent className="h-5 w-5 text-accent-foreground opacity-90 hover:text-primary" />
-                           <span className="font-medium">{item.name}</span>
-                         </Link>
-                       );
+                        return (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            className="flex items-center gap-3 rounded-lg px-3 py-4 text-foreground hover:bg-muted hover:text-primary transition-colors min-h-[48px] touch-manipulation"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <IconComponent className="h-5 w-5 text-accent-foreground opacity-90 hover:text-primary flex-shrink-0" />
+                            <span className="font-medium text-base">{item.name}</span>
+                          </Link>
+                        );
                      })}
                   </nav>
                 </div>
                 
                 {/* Call to Actions */}
-                <div className="border-t border-border p-6 space-y-3">
+                <div className="border-t border-border p-4 sm:p-6 space-y-3">
                   {user ? (
                     <>
                       <div className="text-center mb-4">

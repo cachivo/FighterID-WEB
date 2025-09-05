@@ -38,29 +38,29 @@ const StrategicAllies = () => {
   }
 
   return (
-    <section className="py-16 px-4 bg-gradient-to-b from-black to-urban-dark">
+    <section className="py-12 sm:py-16 px-4 bg-gradient-to-b from-black to-urban-dark">
       <div className="container mx-auto">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white animate-slide-up">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 text-white animate-slide-up">
           Aliados Estratégicos
         </h2>
-        <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto animate-fade-in">
+        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl mx-auto animate-fade-in text-sm sm:text-base">
           Trabajamos con los mejores gimnasios y organizaciones para llevar el combate al siguiente nivel
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
           {partners.map((partner, index) => (
-            <Card key={partner.id} className="bg-urban-darker border-purple-neon-primary/20 hover:border-purple-neon-primary/40 transition-all duration-300 group animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
-              <div className="p-6 text-center">
+            <Card key={partner.id} className="bg-urban-darker border-purple-neon-primary/20 hover:border-purple-neon-primary/40 transition-all duration-300 group animate-slide-up touch-manipulation" style={{ animationDelay: `${index * 100}ms` }}>
+              <div className="p-4 sm:p-6 text-center">
                 <div className="mb-4 flex justify-center">
-                  <div className="w-24 h-24 bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-white/20 transition-colors overflow-hidden">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-white/20 transition-colors overflow-hidden">
                     {partner.logo ? (
                       <OptimizedImage
                         src={partner.logo}
                         alt={partner.nombre}
-                        className="w-20 h-20 object-contain transition-all duration-300"
+                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain transition-all duration-300"
                         priority={index < 3} // Prioritize first 3 images
                         fallbackIcon={
-                          <div className="text-2xl text-purple-neon-primary">
+                          <div className="text-xl sm:text-2xl text-purple-neon-primary">
                             {partner.tipo === "Gimnasio" ? "🥊" : "🏆"}
                           </div>
                         }
@@ -73,15 +73,15 @@ const StrategicAllies = () => {
                   </div>
                 </div>
                 
-                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-purple-neon-primary transition-colors">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-purple-neon-primary transition-colors">
                   {partner.nombre}
                 </h3>
                 
-                <div className="text-sm text-purple-neon-secondary font-medium mb-3 uppercase tracking-wider">
+                <div className="text-xs sm:text-sm text-purple-neon-secondary font-medium mb-3 uppercase tracking-wider">
                   {partner.tipo}
                 </div>
                 
-                <p className="text-gray-400 text-sm leading-relaxed">
+                <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">
                   {partner.descripcion}
                 </p>
               </div>
