@@ -79,15 +79,6 @@ export function DigitalFighterToken({ profile }: DigitalFighterTokenProps) {
           }}
         />
 
-        {/* Background Logo */}
-        <div className="absolute top-4 right-4 opacity-[0.08] pointer-events-none">
-          <img 
-            src="/lovable-uploads/92749e89-b972-4140-9e8f-30cf3e97d782.png" 
-            alt="Logo" 
-            className="w-20 h-20 object-contain"
-          />
-        </div>
-
         {/* Content Container */}
         <div className="relative h-full p-6 flex flex-col">
           
