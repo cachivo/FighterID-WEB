@@ -78,19 +78,26 @@ export default function Fighters() {
     }
   }, [user, getUserFighterProfile]);
 
+  // Load user profile separately
   useEffect(() => {
     if (user) {
       getUserFighterProfile().then(setUserProfile);
     }
-  }, [user, getUserFighterProfile]);
+  }, [user]);
 
+  // Initial load - only once
+  useEffect(() => {
+    fetchFighters(false);
+  }, []);
+
+  // Only reload when toggles change
   useEffect(() => {
     if (readyToFightOnly) {
       fetchFightersWithReadyStatus(includeInactive);
     } else {
       fetchFighters(includeInactive);
     }
-  }, [includeInactive, readyToFightOnly, fetchFighters, fetchFightersWithReadyStatus]);
+  }, [includeInactive, readyToFightOnly]);
 
   const filteredFighters = fighters
     .filter(fighter => {

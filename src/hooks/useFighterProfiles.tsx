@@ -169,7 +169,7 @@ export function useFighterProfiles() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setLoading, setFighters, setError]);
 
   const fetchFightersWithReadyStatus = useCallback(async (includeInactive = false) => {
     try {
@@ -212,7 +212,7 @@ export function useFighterProfiles() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setLoading, setFighters, setError]);
 
   const createFighterProfile = async (profileData: FighterProfileData) => {
     if (!user) throw new Error('Usuario no autenticado');
