@@ -34,8 +34,8 @@ export default function FighterProfile() {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-professional-muted/20 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-professional-primary mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold mb-2">Cargando perfil...</h2>
-          <p className="text-muted-foreground">Por favor espera mientras cargamos la información del peleador</p>
+          <h2 className="text-xl font-semibold mb-2 text-white">Cargando perfil...</h2>
+          <p className="text-gray-400">Por favor espera mientras cargamos la información del peleador</p>
         </div>
       </div>
     );
@@ -45,9 +45,9 @@ export default function FighterProfile() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-professional-muted/20 flex items-center justify-center">
         <div className="text-center">
-          <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Peleador no encontrado</h2>
-          <p className="text-muted-foreground mb-6">El perfil que buscas no existe o no está disponible.</p>
+          <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2 text-white">Peleador no encontrado</h2>
+          <p className="text-gray-400 mb-6">El perfil que buscas no existe o no está disponible.</p>
           <Button asChild>
             <Link to="/fighters">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -123,14 +123,14 @@ export default function FighterProfile() {
                       </p>
                     )}
                     
-                    <h1 className="text-5xl lg:text-7xl font-bold text-foreground tracking-tight">
+                    <h1 className="text-5xl lg:text-7xl font-bold text-white tracking-tight">
                       {fighter.first_name}
                     </h1>
-                    <h1 className="text-5xl lg:text-7xl font-bold text-foreground tracking-tight -mt-4">
+                    <h1 className="text-5xl lg:text-7xl font-bold text-white tracking-tight -mt-4">
                       {fighter.last_name}
                     </h1>
                     
-                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-2 text-gray-300">
                       <MapPin className="h-5 w-5" />
                       <span className="text-lg font-medium">{fighter.country}</span>
                     </div>
@@ -184,7 +184,7 @@ export default function FighterProfile() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-6 text-sm text-gray-300">
                     <span className="flex items-center gap-2">
                       <Trophy className="h-4 w-4 text-fighter-success" />
                       {winPercentage}% Victorias
@@ -263,8 +263,8 @@ export default function FighterProfile() {
                 <div className="p-3 rounded-full bg-professional-accent/20 w-fit mx-auto mb-4">
                   <stat.icon className="h-6 w-6 text-professional-primary" />
                 </div>
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">{stat.label}</p>
-                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                <p className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">{stat.label}</p>
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
               </CardContent>
             </Card>
           ))}
@@ -287,7 +287,7 @@ export default function FighterProfile() {
                 {fighter.bio && (
                   <div>
                     <h3 className="font-semibold text-lg mb-3 text-professional-primary">Biografía</h3>
-                    <p className="text-muted-foreground leading-relaxed">{fighter.bio}</p>
+                    <p className="text-gray-300 leading-relaxed">{fighter.bio}</p>
                   </div>
                 )}
                 
@@ -313,7 +313,7 @@ export default function FighterProfile() {
                   
                   <div>
                     <h3 className="font-semibold text-lg mb-3 text-professional-primary">Estilo de Pelea</h3>
-                    <p className="text-muted-foreground">{fighter.fighting_style || 'No especificado'}</p>
+                    <p className="text-gray-300">{fighter.fighting_style || 'No especificado'}</p>
                   </div>
                 </div>
 
@@ -322,7 +322,7 @@ export default function FighterProfile() {
                     <Separator className="bg-gradient-to-r from-transparent via-professional-accent/40 to-transparent" />
                     <div>
                       <h3 className="font-semibold text-lg mb-3 text-professional-primary">Gimnasio</h3>
-                      <p className="text-muted-foreground">{fighter.gym_name}</p>
+                      <p className="text-gray-300">{fighter.gym_name}</p>
                     </div>
                   </>
                 )}
@@ -346,18 +346,18 @@ export default function FighterProfile() {
                 {fighter.license_number && (
                   <div className="p-3 rounded-lg bg-background/50 border border-professional-border/30">
                     <p className="text-sm font-medium text-professional-accent uppercase tracking-wide">Número</p>
-                    <p className="font-mono font-bold text-foreground mt-1">{fighter.license_number}</p>
+                    <p className="font-mono font-bold text-white mt-1">{fighter.license_number}</p>
                   </div>
                 )}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Estado</span>
+                  <span className="text-sm font-medium text-gray-400">Estado</span>
                   <Badge className={`${getStatusColor(fighter.license_status)} border-0 font-medium`}>
                     {fighter.license_status === 'active' ? 'Activa' : fighter.license_status}
                   </Badge>
                 </div>
                 {fighter.level && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">Nivel</span>
+                    <span className="text-sm font-medium text-gray-400">Nivel</span>
                     <Badge variant="outline" className="border-professional-accent/40 text-professional-primary">
                       {fighter.level}
                     </Badge>
