@@ -105,7 +105,17 @@ export function FighterEditModal({ fighter, open, onClose }: FighterEditModalPro
 
       console.log('Enviando datos para actualizar:', finalFormData);
       
-      const success = await adminUpdateFighterProfile(fighter.id, finalFormData);
+      // Prepare form data with proper null handling for empty/undefined values
+      const sanitizedData = {
+        ...finalFormData,
+        // Convert undefined to null for proper database handling
+        discipline: finalFormData.discipline === undefined ? null : finalFormData.discipline,
+        nickname: finalFormData.nickname === '' ? null : finalFormData.nickname,
+      };
+      
+      console.log('Datos sanitizados enviados a la BD:', sanitizedData);
+      
+      const success = await adminUpdateFighterProfile(fighter.id, sanitizedData);
       if (success) {
         toast({
           title: "¡Actualización exitosa!",
@@ -185,13 +195,14 @@ export function FighterEditModal({ fighter, open, onClose }: FighterEditModalPro
                 <div>
                   <Label htmlFor="discipline">Disciplina</Label>
                   <Select 
-                    value={formData.discipline || ''} 
-                    onValueChange={(value) => handleChange('discipline', value as any)}
+                    value={formData.discipline || undefined} 
+                    onValueChange={(value) => handleChange('discipline', value === 'none' ? undefined : value as any)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona una disciplina" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">Sin disciplina específica</SelectItem>
                       {DISCIPLINES.map(discipline => (
                         <SelectItem key={discipline} value={discipline}>
                           {discipline}
