@@ -128,7 +128,7 @@ export function DigitalFighterToken({ profile }: DigitalFighterTokenProps) {
               className="bg-slate-800/80 text-purple-300 border-purple-500/30 px-2 py-1 text-xs font-medium"
             >
               <Award className="h-3 w-3 mr-1" />
-              {profile.level || 'N/A'}
+              {profile.level || 'Active'}
             </Badge>
           </div>
 
