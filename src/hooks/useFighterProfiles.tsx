@@ -30,7 +30,13 @@ export interface FighterProfile {
   license_expires_date?: string;
   license_status?: string;
   discipline?: 'MMA' | 'Boxeo' | 'Judo' | 'JiuJitsu' | 'Kickboxing' | 'MuayThai' | 'Grappling' | 'Otro';
+  martial_arts?: string[];
   organization_id?: string | null;
+  gender?: string;
+  sherdog_url?: string;
+  tapology_url?: string;
+  stance?: string;
+  level?: string;
 }
 
 export interface FighterProfileData {
@@ -47,7 +53,13 @@ export interface FighterProfileData {
   bio?: string;
   avatar_url?: string;
   discipline?: 'MMA' | 'Boxeo' | 'Judo' | 'JiuJitsu' | 'Kickboxing' | 'MuayThai' | 'Grappling' | 'Otro';
+  martial_arts?: string[];
   organization_id?: string | null;
+  gender?: string;
+  sherdog_url?: string;
+  tapology_url?: string;
+  stance?: string;
+  level?: string;
 }
 
 export interface AdminFighterFormData {
@@ -58,10 +70,16 @@ export interface AdminFighterFormData {
   weight_class: string;
   avatar_url?: string;
   discipline?: 'MMA' | 'Boxeo' | 'Judo' | 'JiuJitsu' | 'Kickboxing' | 'MuayThai' | 'Grappling' | 'Otro';
+  martial_arts?: string[];
   record_wins?: number;
   record_losses?: number;
   record_draws?: number;
   elo_rating?: number;
+  gender?: string;
+  sherdog_url?: string;
+  tapology_url?: string;
+  stance?: string;
+  level?: string;
 }
 
 export function useFighterProfiles() {
@@ -78,10 +96,11 @@ export function useFighterProfiles() {
         .from('fighter_profiles')
         .select(`
           *,
-        license_number,
-        license_issued_date,
-        license_expires_date,
-        license_status
+          martial_arts,
+          license_number,
+          license_issued_date,
+          license_expires_date,
+          license_status
         `)
         .eq('active', true)
         .order('elo_rating', { ascending: false });

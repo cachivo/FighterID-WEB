@@ -113,9 +113,12 @@ export default function FighterMe() {
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4 mb-6">
             <div className="space-y-2">
-              <Label className="text-muted-foreground">Disciplina</Label>
+              <Label className="text-muted-foreground">Artes Marciales / Estilos</Label>
               <div className="p-2 bg-muted/50 rounded border">
-                {profile.discipline || 'No especificada'}
+                {profile.martial_arts && profile.martial_arts.length > 0 
+                  ? profile.martial_arts.join(', ')
+                  : profile.discipline || 'No especificada'
+                }
               </div>
             </div>
             <div className="space-y-2">

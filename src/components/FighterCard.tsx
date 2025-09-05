@@ -73,9 +73,34 @@ export function FighterCard({ fighter, onClick }: FighterCardProps) {
               {fighter.record_wins}-{fighter.record_losses}-{fighter.record_draws}
             </p>
           </div>
+          <div>
+            <p className="text-muted-foreground">ELO Rating</p>
+            <p className="font-semibold text-foreground">
+              {fighter.elo_rating}
+            </p>
+          </div>
+          {(fighter.martial_arts && fighter.martial_arts.length > 0) || fighter.discipline ? (
+            <div className="col-span-2">
+              <p className="text-muted-foreground">Artes Marciales</p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {fighter.martial_arts && fighter.martial_arts.length > 0 
+                  ? fighter.martial_arts.map(art => (
+                      <Badge key={art} variant="outline" className="text-xs">
+                        {art}
+                      </Badge>
+                    ))
+                  : fighter.discipline && (
+                      <Badge variant="outline" className="text-xs">
+                        {fighter.discipline}
+                      </Badge>
+                    )
+                }
+              </div>
+            </div>
+          ) : null}
           {fighter.fighting_style && (
             <div className="col-span-2">
-              <p className="text-muted-foreground">Estilo</p>
+              <p className="text-muted-foreground">Estilo de Pelea</p>
               <p className="font-medium text-foreground">{fighter.fighting_style}</p>
             </div>
           )}

@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileUpload } from '@/components/ui/file-upload';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { useFighterProfiles, FighterProfile, AdminFighterFormData } from '@/hooks/useFighterProfiles';
 
@@ -16,7 +18,7 @@ const WEIGHT_CLASSES = [
   'Lightweight', 'Welterweight', 'Middleweight', 'Light Heavyweight', 'Heavyweight'
 ];
 
-const DISCIPLINES = [
+const MARTIAL_ARTS = [
   'MMA', 'Boxeo', 'Judo', 'JiuJitsu', 'Kickboxing', 'MuayThai', 'Grappling', 'Otro'
 ];
 
@@ -37,6 +39,7 @@ export function FighterEditModal({ fighter, open, onClose }: FighterEditModalPro
     weight_class: 'Lightweight',
     avatar_url: '',
     discipline: undefined,
+    martial_arts: [],
     record_wins: 0,
     record_losses: 0,
     record_draws: 0,
@@ -52,6 +55,7 @@ export function FighterEditModal({ fighter, open, onClose }: FighterEditModalPro
         weight_class: fighter.weight_class,
         avatar_url: fighter.avatar_url || '',
         discipline: fighter.discipline || undefined,
+        martial_arts: fighter.martial_arts || (fighter.discipline ? [fighter.discipline] : []),
         record_wins: fighter.record_wins,
         record_losses: fighter.record_losses,
         record_draws: fighter.record_draws,
@@ -64,6 +68,24 @@ export function FighterEditModal({ fighter, open, onClose }: FighterEditModalPro
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleMartialArtsChange = (art: string, checked: boolean) => {
+    const currentArts = formData.martial_arts || [];
+    if (checked) {
+      setFormData(prev => ({
+        ...prev,
+        martial_arts: [...currentArts, art],
+        discipline: currentArts.length === 0 ? art as any : prev.discipline
+      }));
+    } else {
+      const newArts = currentArts.filter(a => a !== art);
+      setFormData(prev => ({
+        ...prev,
+        martial_arts: newArts,
+        discipline: newArts.length > 0 ? newArts[0] as any : undefined
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -192,23 +214,33 @@ export function FighterEditModal({ fighter, open, onClose }: FighterEditModalPro
                 </div>
 
                 <div>
-                  <Label htmlFor="discipline">Disciplina</Label>
-                  <Select 
-                    value={formData.discipline || undefined} 
-                    onValueChange={(value) => handleChange('discipline', value === 'none' ? undefined : value as any)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una disciplina" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin disciplina específica</SelectItem>
-                      {DISCIPLINES.map(discipline => (
-                        <SelectItem key={discipline} value={discipline}>
-                          {discipline}
-                        </SelectItem>
+                  <Label>Artes Marciales / Estilos de Pelea</Label>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Selecciona todas las artes marciales que practica
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {MARTIAL_ARTS.map((art) => (
+                      <div key={art} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={art}
+                          checked={formData.martial_arts?.includes(art) || false}
+                          onCheckedChange={(checked) => handleMartialArtsChange(art, checked as boolean)}
+                        />
+                        <Label htmlFor={art} className="text-sm font-normal cursor-pointer">
+                          {art}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  {formData.martial_arts && formData.martial_arts.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {formData.martial_arts.map((art) => (
+                        <Badge key={art} variant="secondary" className="text-xs">
+                          {art}
+                        </Badge>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

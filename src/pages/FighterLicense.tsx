@@ -139,6 +139,25 @@ export function FighterLicense() {
                     <span className="font-medium">Record:</span>
                     <span className="ml-2">{fighter.record_wins}-{fighter.record_losses}-{fighter.record_draws}</span>
                   </div>
+                  {((fighter.martial_arts && fighter.martial_arts.length > 0) || fighter.discipline) && (
+                    <div className="col-span-2">
+                      <span className="font-medium">Artes Marciales:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {fighter.martial_arts && fighter.martial_arts.length > 0 
+                          ? fighter.martial_arts.map(art => (
+                              <Badge key={art} variant="secondary" className="text-xs">
+                                {art}
+                              </Badge>
+                            ))
+                          : fighter.discipline && (
+                              <Badge variant="secondary" className="text-xs">
+                                {fighter.discipline}
+                              </Badge>
+                            )
+                        }
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
