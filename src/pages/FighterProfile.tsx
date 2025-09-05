@@ -99,7 +99,7 @@ export default function FighterProfile() {
           </div>
           
           {/* Professional accent line */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-professional-accent/60 to-transparent shadow-sm"></div>
           
           <div className="relative p-8 lg:p-16">
             <div className="max-w-7xl mx-auto">
@@ -138,16 +138,16 @@ export default function FighterProfile() {
                   {/* Record Type Toggle */}
                   <div className="mb-6">
                     <Tabs value={recordType} onValueChange={(value) => setRecordType(value as RecordType)}>
-                      <TabsList className="bg-gray-900/90 border border-purple-500/30 w-full shadow-lg shadow-purple-500/20">
+                      <TabsList className="bg-card/95 border border-professional-border/40 w-full shadow-xl backdrop-blur-sm">
                         <TabsTrigger 
                           value="AMATEUR" 
-                          className="flex-1 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-purple-500/50 bg-transparent text-muted-foreground hover:bg-purple-500/20 transition-all duration-300"
+                          className="flex-1 data-[state=active]:bg-professional-accent data-[state=active]:text-professional-accent-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-professional-accent/30 bg-transparent text-muted-foreground hover:bg-professional-accent/10 transition-all duration-300 font-medium"
                         >
                           Amateur
                         </TabsTrigger>
                         <TabsTrigger 
                           value="PROFESSIONAL" 
-                          className="flex-1 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-purple-500/50 bg-transparent text-muted-foreground hover:bg-purple-500/20 transition-all duration-300"
+                          className="flex-1 data-[state=active]:bg-professional-accent data-[state=active]:text-professional-accent-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-professional-accent/30 bg-transparent text-muted-foreground hover:bg-professional-accent/10 transition-all duration-300 font-medium"
                         >
                           Profesional
                         </TabsTrigger>
@@ -158,7 +158,7 @@ export default function FighterProfile() {
                   {/* Fight Stats */}
                   <div className="grid grid-cols-3 gap-8">
                     <div className="text-center">
-                      <div className="text-4xl lg:text-6xl font-bold text-purple-400 font-mono mb-2 drop-shadow-lg">
+                      <div className="text-4xl lg:text-6xl font-bold text-professional-accent font-mono mb-2 drop-shadow-2xl" style={{textShadow: '0 4px 12px rgba(0,0,0,0.3)'}}>
                         {currentRecord.wins}
                       </div>
                       <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
@@ -166,7 +166,7 @@ export default function FighterProfile() {
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-4xl lg:text-6xl font-bold text-red-400 font-mono mb-2 drop-shadow-lg">
+                      <div className="text-4xl lg:text-6xl font-bold text-foreground font-mono mb-2 drop-shadow-2xl" style={{textShadow: '0 4px 12px rgba(0,0,0,0.4)'}}>
                         {currentRecord.losses}
                       </div>
                       <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
@@ -174,7 +174,7 @@ export default function FighterProfile() {
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-4xl lg:text-6xl font-bold text-yellow-400 font-mono mb-2 drop-shadow-lg">
+                      <div className="text-4xl lg:text-6xl font-bold text-muted-foreground font-mono mb-2 drop-shadow-2xl" style={{textShadow: '0 4px 12px rgba(0,0,0,0.3)'}}>
                         {currentRecord.draws}
                       </div>
                       <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
@@ -200,27 +200,28 @@ export default function FighterProfile() {
                   <div className="relative">
                     {fighter.avatar_url ? (
                       <div className="relative">
-                        {/* Background glow effect */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-professional-primary/30 via-professional-accent/20 to-transparent rounded-3xl blur-2xl scale-110"></div>
+                        {/* Professional shadow base */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-professional-accent/10 via-muted/5 to-transparent rounded-3xl blur-xl scale-105"></div>
                         
-                        {/* Fighter image container */}
+                        {/* Fighter image container with UFC-style presentation */}
                         <div className="relative h-96 lg:h-[500px] w-64 lg:w-80 flex items-end justify-center">
                           <img 
                             src={fighter.avatar_url} 
                             alt={`${fighter.first_name} ${fighter.last_name}`}
-                            className="h-full w-full object-contain drop-shadow-2xl hover-scale transition-all duration-500"
+                            className="h-full w-full object-contain hover-scale transition-all duration-500"
                             style={{
-                              filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.4)) drop-shadow(0 0 20px rgba(var(--professional-primary), 0.2))'
+                              filter: 'drop-shadow(0 25px 50px rgba(0,0,0,0.5)) drop-shadow(0 15px 30px rgba(0,0,0,0.3)) drop-shadow(0 5px 15px rgba(0,0,0,0.2))'
                             }}
                           />
                         </div>
                         
-                        {/* Subtle accent elements */}
-                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-2 bg-gradient-professional rounded-full opacity-60"></div>
+                        {/* Professional base accent */}
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-gradient-to-r from-transparent via-professional-accent/40 to-transparent rounded-full shadow-lg"></div>
+                        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-20 h-0.5 bg-professional-accent/60 rounded-full"></div>
                       </div>
                     ) : (
-                      <div className="h-96 lg:h-[500px] w-64 lg:w-80 bg-gradient-professional rounded-3xl flex items-center justify-center shadow-professional">
-                        <div className="text-8xl font-bold text-professional-primary-foreground">
+                      <div className="h-96 lg:h-[500px] w-64 lg:w-80 bg-gradient-to-b from-muted/50 to-card/80 rounded-3xl flex items-center justify-center shadow-2xl border border-professional-border/20">
+                        <div className="text-8xl font-bold text-foreground/80" style={{textShadow: '0 4px 12px rgba(0,0,0,0.3)'}}>
                           {fighter.first_name?.charAt(0) || 'F'}
                           {fighter.last_name?.charAt(0) || 'F'}
                         </div>
