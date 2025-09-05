@@ -142,7 +142,7 @@ export function useFighterProfiles() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const fetchFighters = async (includeInactive = false) => {
+  const fetchFighters = useCallback(async (includeInactive = false) => {
     try {
       setLoading(true);
       let query = supabase
@@ -169,9 +169,9 @@ export function useFighterProfiles() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchFightersWithReadyStatus = async (includeInactive = false) => {
+  const fetchFightersWithReadyStatus = useCallback(async (includeInactive = false) => {
     try {
       setLoading(true);
       let query = supabase
@@ -212,7 +212,7 @@ export function useFighterProfiles() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const createFighterProfile = async (profileData: FighterProfileData) => {
     if (!user) throw new Error('Usuario no autenticado');
