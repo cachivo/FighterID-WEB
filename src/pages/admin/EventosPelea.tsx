@@ -62,45 +62,8 @@ export default function EventosPelea() {
   const [availableFighters, setAvailableFighters] = useState<FighterProfile[]>([]);
   const [eventFighters, setEventFighters] = useState<string[]>([]);
   
-  // Predefined event types
-  const eventTypes = {
-    'HHF_x_BDG': {
-      name: 'HHF x BDG',
-      description: 'Evento colaborativo entre HHF y Batalla de Gimnasios, presentando las mejores peleas de MMA y artes marciales',
-      disciplines: ['MMA', 'Boxeo', 'Kickboxing', 'Muay Thai', 'Jiu-Jitsu'],
-      defaultDiscipline: 'MMA',
-      venue: 'Arena Principal HHF',
-      icon: '🥊'
-    },
-    'UCC': {
-      name: 'UCC',
-      description: 'Ultimate College Championship - Campeonato universitario de deportes de combate',
-      disciplines: ['MMA', 'Boxeo'],
-      defaultDiscipline: 'MMA',
-      venue: 'Campus Universitario',
-      icon: '🎓'
-    },
-    'KING_OF_THE_BLOCK': {
-      name: 'King of the block',
-      description: 'Competencia de rap y freestyle urbano, donde los mejores MCs se enfrentan en batallas épicas',
-      disciplines: ['Rap', 'Freestyle'],
-      defaultDiscipline: 'Rap',
-      venue: 'Escenario Urbano',
-      icon: '🎤'
-    },
-    'TORNEOS_CHESS': {
-      name: 'Torneos de Chess',
-      description: 'Torneos de ajedrez clásico y rápido con participación de maestros locales e internacionales',
-      disciplines: ['Ajedrez', 'Speed Chess'],
-      defaultDiscipline: 'Ajedrez',
-      venue: 'Salón de Ajedrez',
-      icon: '♟️'
-    }
-  };
-
   // Form states
   const [formData, setFormData] = useState({
-    eventType: '',
     name: '',
     description: '',
     discipline: 'MMA',
@@ -137,51 +100,11 @@ export default function EventosPelea() {
     }
   };
 
-  const getNextEventNumber = async (eventType: string) => {
-    try {
-      const baseName = eventTypes[eventType as keyof typeof eventTypes].name;
-      const { data, error } = await supabase
-        .from('bdg_event')
-        .select('name')
-        .ilike('name', `${baseName} #%`)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        const lastEvent = data[0].name;
-        const match = lastEvent.match(/#(\d+)$/);
-        return match ? parseInt(match[1]) + 1 : 1;
-      }
-      
-      return 1;
-    } catch (error) {
-      console.error('Error getting next event number:', error);
-      return 1;
-    }
-  };
-
-  const handleEventTypeChange = async (eventType: string) => {
-    const selectedType = eventTypes[eventType as keyof typeof eventTypes];
-    if (selectedType) {
-      const nextNumber = await getNextEventNumber(eventType);
-      setFormData(prev => ({
-        ...prev,
-        eventType,
-        name: `${selectedType.name} #${nextNumber}`,
-        description: selectedType.description,
-        discipline: selectedType.defaultDiscipline,
-        venue: selectedType.venue
-      }));
-    }
-  };
-
   const handleCreateEvent = async () => {
-    if (!formData.eventType || !formData.name || !formData.discipline) {
+    if (!formData.name || !formData.discipline) {
       toast({
         title: 'Error',
-        description: 'El tipo de evento, nombre y disciplina son obligatorios',
+        description: 'El nombre y disciplina son obligatorios',
         variant: 'destructive',
       });
       return;
@@ -194,17 +117,12 @@ export default function EventosPelea() {
         discipline: formData.discipline,
         venue: formData.venue,
         start_time: formData.start_time,
-        end_time: formData.end_time,
-        meta: {
-          eventType: formData.eventType,
-          icon: eventTypes[formData.eventType as keyof typeof eventTypes].icon
-        }
+        end_time: formData.end_time
       };
       
       await createEvent(eventData);
       setShowCreateDialog(false);
       setFormData({
-        eventType: '',
         name: '',
         description: '',
         discipline: 'MMA',
@@ -311,18 +229,8 @@ export default function EventosPelea() {
     }
   };
 
-  const getEventIcon = (event: BdgEvent) => {
-    const eventType = event.meta?.eventType;
-    if (!eventType) return '📅';
-    
-    const icons = {
-      'HHF_x_BDG': '🥊',
-      'UCC': '🎓',
-      'KING_OF_THE_BLOCK': '🎤',
-      'TORNEOS_CHESS': '♟️'
-    };
-    
-    return icons[eventType as keyof typeof icons] || '📅';
+  const getEventIcon = () => {
+    return '🥊';
   };
 
   const eventFightersData = eventFighters.map(fighterId => 
@@ -358,62 +266,43 @@ export default function EventosPelea() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="eventType">Tipo de Evento *</Label>
-                <Select value={formData.eventType} onValueChange={handleEventTypeChange}>
+                <Label htmlFor="name">Nombre del Evento *</Label>
+                <Input
+                  id="name"
+                  placeholder="Ej: Batalla de Gimnasios #1"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="description">Descripción</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Describe el evento"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="discipline">Disciplina *</Label>
+                <Select value={formData.discipline} onValueChange={(value) => setFormData(prev => ({...prev, discipline: value}))}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona el tipo de evento" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(eventTypes).map(([key, type]) => (
-                      <SelectItem key={key} value={key}>
-                        <div className="flex items-center gap-2">
-                          <span>{type.icon}</span>
-                          <span>{type.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="MMA">MMA</SelectItem>
+                    <SelectItem value="Boxeo">Boxeo</SelectItem>
+                    <SelectItem value="Kickboxing">Kickboxing</SelectItem>
+                    <SelectItem value="Muay Thai">Muay Thai</SelectItem>
+                    <SelectItem value="Jiu-Jitsu">Jiu-Jitsu</SelectItem>
+                    <SelectItem value="Karate">Karate</SelectItem>
+                    <SelectItem value="Taekwondo">Taekwondo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              {formData.eventType && (
-                <>
-                  <div>
-                    <Label htmlFor="name">Nombre del Evento *</Label>
-                    <Input
-                      id="name"
-                      placeholder="Nombre generado automáticamente"
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="description">Descripción</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Descripción generada automáticamente"
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="discipline">Disciplina *</Label>
-                    <Select value={formData.discipline} onValueChange={(value) => setFormData(prev => ({...prev, discipline: value}))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {eventTypes[formData.eventType as keyof typeof eventTypes].disciplines.map((discipline) => (
-                          <SelectItem key={discipline} value={discipline}>{discipline}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
 
               <div>
                 <Label htmlFor="venue">Sede</Label>
@@ -482,7 +371,7 @@ export default function EventosPelea() {
                 <TableRow key={event.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{getEventIcon(event)}</span>
+                      <span className="text-lg">{getEventIcon()}</span>
                       {event.name}
                     </div>
                   </TableCell>

@@ -13,27 +13,6 @@ import Footer from '@/components/Footer';
 
 const Events = () => {
   const { events, loading } = useEvents();
-  const [eventTypeFilter, setEventTypeFilter] = useState('all');
-
-  const eventTypes = {
-    'HHF_x_BDG': { name: 'HHF x BDG', icon: '🥊', color: 'bg-destructive', textColor: 'text-destructive-foreground' },
-    'UCC': { name: 'UCC', icon: '🎓', color: 'bg-primary', textColor: 'text-primary-foreground' },
-    'KING_OF_THE_BLOCK': { name: 'King of the block', icon: '🎤', color: 'bg-accent', textColor: 'text-accent-foreground' },
-    'TORNEOS_CHESS': { name: 'Torneos de Chess', icon: '♟️', color: 'bg-secondary', textColor: 'text-secondary-foreground' }
-  };
-
-  const getEventTypeFromName = (name: string) => {
-    if (name.includes('HHF x BDG')) return 'HHF_x_BDG';
-    if (name.includes('UCC')) return 'UCC';
-    if (name.includes('King of the block')) return 'KING_OF_THE_BLOCK';
-    if (name.includes('Torneos de Chess')) return 'TORNEOS_CHESS';
-    return 'HHF_x_BDG'; // default
-  };
-
-  const filteredEvents = events.filter(event => {
-    if (eventTypeFilter === 'all') return true;
-    return getEventTypeFromName(event.name) === eventTypeFilter;
-  });
 
   const getStateColor = (state: string) => {
     switch (state) {
@@ -109,71 +88,33 @@ const Events = () => {
         </div>
       </section>
 
-      {/* Filter Section */}
-      <section className="py-8 border-b border-border/50">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-muted-foreground" />
-              <span className="text-sm font-medium">Filtrar por tipo:</span>
-            </div>
-            <Select value={eventTypeFilter} onValueChange={setEventTypeFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los eventos</SelectItem>
-                {Object.entries(eventTypes).map(([key, type]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center gap-2">
-                      <span>{type.icon}</span>
-                      <span>{type.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </section>
 
       {/* Events Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          {filteredEvents.length === 0 ? (
+          {events.length === 0 ? (
             <div className="text-center py-12">
               <Trophy className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-2xl font-bold mb-2">
-                {eventTypeFilter === 'all' ? 'No hay eventos disponibles' : 'No hay eventos de este tipo'}
-              </h3>
+              <h3 className="text-2xl font-bold mb-2">No hay eventos disponibles</h3>
               <p className="text-muted-foreground">
-                {eventTypeFilter === 'all' ? 'Pronto habrá nuevos eventos emocionantes.' : 'Selecciona otro tipo de evento o espera próximos eventos.'}
+                Pronto habrá nuevos eventos emocionantes.
               </p>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredEvents.map((event) => {
-                const eventType = getEventTypeFromName(event.name);
-                const typeConfig = eventTypes[eventType as keyof typeof eventTypes];
-                return (
+              {events.map((event) => (
                 <Card key={event.id} className="border-border/50 hover:border-primary/50 transition-colors group">
                   <CardHeader>
                     <div className="flex justify-between items-start mb-2">
                       <Badge className={getStateColor(event.state)}>
                         {getStateText(event.state)}
                       </Badge>
-                      <div className="flex items-center gap-2">
-                        <Badge className={`${typeConfig.color} ${typeConfig.textColor} text-xs`}>
-                          <span className="mr-1">{typeConfig.icon}</span>
-                          {typeConfig.name}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {event.discipline.toUpperCase()}
-                        </Badge>
-                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {event.discipline.toUpperCase()}
+                      </Badge>
                     </div>
                     <CardTitle className="text-xl group-hover:text-primary transition-colors flex items-center gap-2">
-                      <span className="text-2xl">{typeConfig.icon}</span>
+                      <span className="text-2xl">🥊</span>
                       {event.name}
                     </CardTitle>
                     {event.description && (
@@ -202,11 +143,7 @@ const Events = () => {
 
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Users className="w-4 h-4" />
-                      <span>
-                        {eventType === 'KING_OF_THE_BLOCK' ? 'Ver MCs y batallas' : 
-                         eventType === 'TORNEOS_CHESS' ? 'Ver jugadores y partidas' : 
-                         'Ver peleadores y peleas'}
-                      </span>
+                      <span>Ver peleadores y peleas</span>
                     </div>
 
                     <div className="pt-4">
@@ -218,8 +155,7 @@ const Events = () => {
                     </div>
                   </CardContent>
                 </Card>
-                );
-              })}
+              ))}
             </div>
           )}
         </div>
