@@ -133,6 +133,8 @@ export function useFights(eventId?: string) {
   const fetchFights = async () => {
     try {
       setLoading(true);
+      console.log('useFights - Fetching fights for eventId:', eventId);
+      
       let query = supabase
         .from('fights')
         .select(`
@@ -146,11 +148,16 @@ export function useFights(eventId?: string) {
         query = query.eq('event_id', eventId);
       }
 
+      console.log('useFights - About to execute query');
       const { data, error } = await query;
+
+      console.log('useFights - Query result:', { data, error, eventId });
 
       if (error) throw error;
       setFights(data || []);
+      setError(null);
     } catch (err) {
+      console.error('useFights - Error:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
