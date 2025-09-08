@@ -5,17 +5,15 @@ export function useSystemStats() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['system-stats'],
     queryFn: async () => {
-      const [eventosDeportivos, eventosDigitales, servicios, estadisticas] = await Promise.all([
+      const [eventosDeportivos, eventosDigitales, estadisticas] = await Promise.all([
         supabase.from('eventos_deportivos').select('id').eq('activo', true),
         supabase.from('eventos_digitales').select('id').eq('activo', true),
-        supabase.from('servicios').select('id').eq('activo', true),
         supabase.from('estadisticas').select('id').eq('activo', true)
       ]);
 
       return {
         eventosDeportivos: eventosDeportivos.data?.length || 0,
         eventosDigitales: eventosDigitales.data?.length || 0,
-        servicios: servicios.data?.length || 0,
         estadisticas: estadisticas.data?.length || 0,
       };
     },

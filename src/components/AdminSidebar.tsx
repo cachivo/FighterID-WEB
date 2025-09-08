@@ -37,7 +37,6 @@ const adminItems = [
   { title: 'Eventos Deportivos', url: '/admin/eventos-deportivos', icon: Calendar },
   { title: 'Eventos de Pelea', url: '/admin/eventos-pelea', icon: Users },
   { title: 'Eventos Digitales', url: '/admin/eventos-digitales', icon: Monitor },
-  { title: 'Servicios', url: '/admin/servicios', icon: Briefcase },
   { title: 'Aliados Estratégicos', url: '/admin/aliados-estrategicos', icon: HandHeart },
   { title: 'Peleadores', url: '/admin/fighters', icon: Users },
   { title: 'Ranking', url: '/admin/ranking', icon: TrendingUp },

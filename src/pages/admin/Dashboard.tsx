@@ -26,12 +26,6 @@ export default function Dashboard() {
       icon: Monitor,
     },
     {
-      title: 'Servicios',
-      value: stats?.servicios?.toString() || '0',
-      description: 'Servicios principales',
-      icon: Briefcase,
-    },
-    {
       title: 'Estadísticas',
       value: stats?.estadisticas?.toString() || '0',
       description: 'Métricas en el ranking',
