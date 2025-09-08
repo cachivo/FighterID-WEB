@@ -144,6 +144,7 @@ export function useFighterProfiles() {
   const fetchFighters = useCallback(async (includeInactive = false) => {
     try {
       setLoading(true);
+      console.log('📋 Fetching public fighters...');
       let query = supabase
         .from('fighter_profiles')
         .select(`
@@ -162,8 +163,16 @@ export function useFighterProfiles() {
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('📋 Public fighters fetched:', data?.length, 'fighters');
+      const moises = data?.find(f => f.first_name === 'Moises' && f.last_name === 'Cardenas');
+      if (moises) {
+        console.log('📋 Moises record:', { wins: moises.record_wins, losses: moises.record_losses, draws: moises.record_draws });
+      }
+      
       setFighters(data || []);
     } catch (err) {
+      console.error('📋 Public fighters fetch error:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
