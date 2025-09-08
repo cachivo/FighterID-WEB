@@ -80,7 +80,7 @@ export function useAdminFighters() {
       console.log('🔧 Profile data being sent:', profileData);
       
       // Usar la nueva función administrativa de base de datos
-      const { error } = await supabase.rpc('admin_update_fighter_profile_v5', {
+      const { error } = await supabase.rpc('admin_update_fighter_profile_v6', {
         p_fighter_id: fighterId,
         p_profile_data: profileData as any
       });
