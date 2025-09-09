@@ -31,120 +31,125 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       console.log('Checking license status for user:', userId);
       
-      // Set a timeout to prevent infinite loading
+      // Set a more reasonable timeout
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 10000)
+        setTimeout(() => reject(new Error('License check timeout')), 8000)
       );
 
-      const checkPromise = (async () => {
-        // First check if user exists in app_user table
-        const { data: appUser } = await supabase
-          .from('app_user')
-          .select('*')
-          .eq('auth_user_id', userId)
-          .maybeSingle();
-        
-        console.log('App user data:', appUser);
-        
-        if (!appUser) {
-          console.log('No app user found');
-          setLicenseData(null);
-          setHasActiveLicense(false);
-          return;
-        }
-
-        // Get user's fighter profile
-        const { data: profile, error: profileError } = await supabase
-          .from('fighter_profiles')
-          .select('*')
-          .eq('user_id', appUser.id)
-          .eq('active', true)
-          .maybeSingle();
-
-        console.log('Profile data:', profile);
-        console.log('Profile error:', profileError);
-
-        if (!profile) {
-          console.log('No fighter profile found');
-          setLicenseData(null);
-          setHasActiveLicense(false);
-          return;
-        }
-
-        // Get any license for this fighter with profile data included
-        const { data: licenses, error: licenseError } = await supabase
-          .from('fighter_licenses')
-          .select(`
-            *,
-            fighter_profiles!fighter_licenses_fighter_id_fkey(
-              first_name,
-              last_name,
-              nickname,
-              country,
-              weight_class,
-              avatar_url,
-            record_wins,
-            record_losses,
-            record_draws,
-            discipline,
-              document_number,
-              document_type,
-              birthdate,
-              blood_type,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relation,
-              medical_conditions,
-              medical_allergies,
-              height_cm,
-              weight_kg,
-              reach_cm,
-              fighting_style,
-              martial_arts,
-              gym_name,
-              bio,
-              stance,
-              gender,
-              birthplace,
-              insurance_company,
-              insurance_policy,
-              level
+      // Combined query to get all data in one request
+      const dataPromise = supabase
+        .from('app_user')
+        .select(`
+          id,
+          email,
+          is_admin,
+          fighter_profiles!inner (
+            id,
+            first_name,
+            last_name,
+            active,
+            fighter_licenses!fighter_licenses_fighter_id_fkey (
+              id,
+              license_number,
+              status,
+              license_level,
+              issued_at,
+              expires_at,
+              suspension_reason,
+              suspension_until,
+              is_primary,
+              fighter_profiles!fighter_licenses_fighter_id_fkey (
+                first_name,
+                last_name,
+                nickname,
+                country,
+                weight_class,
+                avatar_url,
+                record_wins,
+                record_losses,
+                record_draws,
+                discipline,
+                document_number,
+                document_type,
+                birthdate,
+                blood_type,
+                emergency_contact_name,
+                emergency_contact_phone,
+                emergency_contact_relation,
+                medical_conditions,
+                medical_allergies,
+                height_cm,
+                weight_kg,
+                reach_cm,
+                fighting_style,
+                martial_arts,
+                gym_name,
+                bio,
+                stance,
+                gender,
+                birthplace,
+                insurance_company,
+                insurance_policy,
+                level
+              )
             )
-          `)
-          .eq('fighter_id', profile.id)
-          .order('created_at', { ascending: false });
+          )
+        `)
+        .eq('auth_user_id', userId)
+        .eq('fighter_profiles.active', true)
+        .maybeSingle();
 
-        console.log('Licenses data:', licenses);
-        console.log('License error:', licenseError);
+      const result = await Promise.race([dataPromise, timeoutPromise]) as any;
+      const { data, error } = result;
+      
+      if (error) {
+        console.log('License query error:', error.message);
+        setLicenseData(null);
+        setHasActiveLicense(false);
+        return;
+      }
 
-        if (licenses && licenses.length > 0) {
-          // Get the most recent license
-          const latestLicense = licenses[0];
-          console.log('Latest license found:', latestLicense);
-          setLicenseData(latestLicense);
-          const isActive = latestLicense.status === 'ACTIVE';
-          setHasActiveLicense(isActive);
-          
-          // Invalidate relevant queries when license status changes
-          if (isActive) {
-            queryClient.invalidateQueries({ queryKey: ['license'] });
-            queryClient.invalidateQueries({ queryKey: ['admin_licenses'] });
-            queryClient.invalidateQueries({ queryKey: ['pending-licenses'] });
-          }
-        } else {
-          console.log('No licenses found');
-          setLicenseData(null);
-          setHasActiveLicense(false);
+      console.log('App user data:', data);
+
+      if (!data || !data.fighter_profiles?.[0]) {
+        console.log('No fighter profile found');
+        setLicenseData(null);
+        setHasActiveLicense(false);
+        return;
+      }
+
+      const profile = data.fighter_profiles[0];
+      const licenses = profile.fighter_licenses || [];
+      
+      // Find primary license or most recent license
+      const primaryLicense = licenses.find((l: any) => l.is_primary) || licenses[0];
+
+      console.log('Latest license found:', primaryLicense);
+
+      if (primaryLicense) {
+        setLicenseData({
+          ...primaryLicense,
+          fighter_profiles: primaryLicense.fighter_profiles
+        });
+        const isActive = primaryLicense.status === 'ACTIVE';
+        setHasActiveLicense(isActive);
+        
+        // Invalidate relevant queries when license status changes
+        if (isActive) {
+          queryClient.invalidateQueries({ queryKey: ['license'] });
+          queryClient.invalidateQueries({ queryKey: ['admin_licenses'] });
+          queryClient.invalidateQueries({ queryKey: ['pending-licenses'] });
         }
-      })();
-
-      await Promise.race([checkPromise, timeoutPromise]);
+      } else {
+        console.log('No licenses found');
+        setLicenseData(null);
+        setHasActiveLicense(false);
+      }
     } catch (error) {
       console.error('Error checking license status:', error);
       setHasActiveLicense(false);
       setLicenseData(null);
     } finally {
-      // Always ensure loading is set to false
       setLoading(false);
     }
   };

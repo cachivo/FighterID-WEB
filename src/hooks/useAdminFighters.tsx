@@ -66,6 +66,7 @@ export function useAdminFighters() {
         `)
         .eq('active', true)
         .eq('fighter_licenses.is_primary', true)
+        .in('fighter_licenses.status', ['ACTIVE', 'PENDING_REVIEW'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;

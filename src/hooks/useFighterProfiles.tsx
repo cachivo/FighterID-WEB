@@ -154,7 +154,7 @@ export function useFighterProfiles() {
           license_issued_date,
           license_expires_date,
           license_status,
-          fighter_licenses!inner(
+          fighter_licenses!fighter_licenses_fighter_id_fkey!inner(
             license_number,
             status,
             is_primary
@@ -165,8 +165,9 @@ export function useFighterProfiles() {
         query = query.eq('active', true);
       }
       
-      // Always filter by primary license
-      query = query.eq('fighter_licenses.is_primary', true);
+      // Always filter by primary license and show ACTIVE or PENDING licenses
+      query = query.eq('fighter_licenses.is_primary', true)
+                   .in('fighter_licenses.status', ['ACTIVE', 'PENDING_REVIEW']);
       
       const { data, error } = await query.order('created_at', { ascending: false });
 
