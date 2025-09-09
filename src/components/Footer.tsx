@@ -6,7 +6,7 @@ const Footer = () => {
           <div className="sm:col-span-2 md:col-span-2">
             <div className="mb-4">
               <img 
-                src="/lovable-uploads/047f0269-860f-4365-9dc4-8e1343a62359.png" 
+                src="/lovable-uploads/bb65655f-0fa7-4fab-8f39-1e4a2e0e8f09.png" 
                 alt="Fighter ID" 
                 className="h-6 sm:h-8 w-auto"
               />

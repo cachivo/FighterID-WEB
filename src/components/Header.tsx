@@ -66,7 +66,7 @@ const Header = () => {
         <div className="flex items-center">
           <Link to="/" className="hover:opacity-80 transition-opacity touch-manipulation">
             <img 
-              src="/lovable-uploads/047f0269-860f-4365-9dc4-8e1343a62359.png" 
+              src="/lovable-uploads/bb65655f-0fa7-4fab-8f39-1e4a2e0e8f09.png" 
               alt="Fighter ID" 
               className="h-7 sm:h-8 md:h-10 w-auto"
             />
@@ -182,7 +182,7 @@ const Header = () => {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <img 
-                      src="/lovable-uploads/047f0269-860f-4365-9dc4-8e1343a62359.png" 
+                      src="/lovable-uploads/bb65655f-0fa7-4fab-8f39-1e4a2e0e8f09.png" 
                       alt="Fighter ID" 
                       className="h-8 sm:h-10 w-auto"
                     />
