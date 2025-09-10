@@ -51,6 +51,14 @@ export default function LicenseProtectedRoute({
     return <Navigate to="/license/auth" replace />;
   }
 
+  // Redirect users with ACTIVE licenses away from pending/onboarding pages
+  if (hasActiveLicense && licenseData?.status === 'ACTIVE') {
+    const currentPath = window.location.pathname;
+    if (currentPath === '/license/pending' || currentPath === '/license/onboarding') {
+      return <Navigate to="/license/dashboard" replace />;
+    }
+  }
+
   if (requireActiveLicense && !hasActiveLicense) {
     // Handle different license states appropriately
     const licenseStatus = licenseData?.status;

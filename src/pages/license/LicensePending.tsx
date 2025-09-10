@@ -14,6 +14,15 @@ export default function LicensePending() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  // Immediate redirect check for users with ACTIVE licenses
+  useEffect(() => {
+    if (licenseData?.status === 'ACTIVE') {
+      console.log('User has ACTIVE license, redirecting to dashboard immediately');
+      navigate('/license/dashboard', { replace: true });
+      return;
+    }
+  }, [licenseData?.status, navigate]);
+
   const getStatusSteps = () => {
     const currentStatus = licenseData?.status;
     
