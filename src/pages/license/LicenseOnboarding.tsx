@@ -332,7 +332,7 @@ export default function LicenseOnboarding() {
         record_draws: formData.level === 'Profesional'
           ? (formData.proDraws ? parseInt(formData.proDraws) : 0)
           : (formData.amateurDraws ? parseInt(formData.amateurDraws) : 0),
-        record_type: formData.level === 'Profesional' ? 'PROFESSIONAL' : 'AMATEUR',
+        record_type: formData.level === 'Profesional' ? 'Profesional' : 'Amateur',
         gender: formData.gender || null,
         boxrec_url: formData.boxrecUrl || null,
         tapology_url: formData.tapologyUrl || null,
@@ -422,6 +422,9 @@ export default function LicenseOnboarding() {
         if (supabaseError.code === '23505') {
           toast.success('Ya tienes un perfil de peleador. Redirigiendo...');
           navigate('/license/dashboard', { replace: true });
+          return;
+        } else if (supabaseError.code === '23514') {
+          toast.error('Error en los datos del perfil. Verifica que el tipo de récord sea Amateur o Profesional.');
           return;
         } else if (supabaseError.code === '42501') {
           toast.error('Tu perfil se creó pero hubo un problema con la licencia. Contacta al administrador.');

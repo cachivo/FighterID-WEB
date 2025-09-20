@@ -92,7 +92,7 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
           record_draws,
           discipline,
           active,
-          fighter_licenses (
+          fighter_licenses!fighter_licenses_fighter_id_fkey (
             id,
             license_number,
             status,
