@@ -30,40 +30,54 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const checkLicenseStatus = async (userId: string) => {
     try {
       console.log('Checking license status for user:', userId);
-      
-      // Set a shorter timeout for better UX
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('License check timeout')), 5000)
-      );
 
-      // Step 1: Get app_user data
-      const userPromise = supabase
+      // Step 1: Check/create app_user
+      let { data: userData, error: userError } = await supabase
         .from('app_user')
         .select('id, email, is_admin')
         .eq('auth_user_id', userId)
         .maybeSingle();
 
-      const userResult = await Promise.race([userPromise, timeoutPromise]) as any;
-      const { data: userData, error: userError } = userResult;
-      
-      if (userError) {
-        console.error('User query error:', userError.message);
+      // If no app_user exists, create one automatically
+      if (!userData && (userError?.code === 'PGRST116' || !userError)) {
+        console.log('Creating new app_user for:', userId);
+        
+        // Get user email from auth
+        const { data: authUser } = await supabase.auth.getUser();
+        
+        const { data: newUser, error: createError } = await supabase
+          .from('app_user')
+          .insert([{
+            auth_user_id: userId,
+            email: authUser.user?.email || '',
+            handle: authUser.user?.email?.split('@')[0] || `user_${Date.now()}`,
+            is_admin: false
+          }])
+          .select('id, email, is_admin')
+          .single();
+
+        if (createError) {
+          console.error('Error creating app user:', createError.message);
+          // Don't fail - allow onboarding to proceed
+          setLicenseData(null);
+          setHasActiveLicense(false);
+          setLoading(false);
+          return;
+        }
+        
+        userData = newUser;
+        console.log('New app_user created:', userData);
+      } else if (userError && userError.code !== 'PGRST116') {
+        console.error('Unexpected user query error:', userError.message);
+        // Allow onboarding to continue even with errors
         setLicenseData(null);
         setHasActiveLicense(false);
+        setLoading(false);
         return;
       }
 
-      if (!userData) {
-        console.log('No app user found');
-        setLicenseData(null);
-        setHasActiveLicense(false);
-        return;
-      }
-
-      console.log('App user found:', userData);
-
-      // Step 2: Get fighter profile
-      const profilePromise = supabase
+      // Step 2: Check for fighter profile (simplified)
+      const { data: profileData, error: profileError } = await supabase
         .from('fighter_profiles')
         .select(`
           id,
@@ -77,129 +91,64 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
           record_losses,
           record_draws,
           discipline,
-          active
+          active,
+          fighter_licenses (
+            id,
+            license_number,
+            status,
+            license_level,
+            issued_at,
+            expires_at,
+            is_primary
+          )
         `)
-        .eq('user_id', userData.id)
+        .eq('user_id', userData?.id)
         .eq('active', true)
         .maybeSingle();
 
-      const profileResult = await Promise.race([profilePromise, timeoutPromise]) as any;
-      const { data: profileData, error: profileError } = profileResult;
-      
-      if (profileError) {
+      if (profileError && profileError.code !== 'PGRST116') {
         console.error('Profile query error:', profileError.message);
-        setLicenseData(null);
-        setHasActiveLicense(false);
-        return;
+        // Don't fail - this is normal for new users
       }
 
       if (!profileData) {
-        console.log('No fighter profile found');
+        console.log('No fighter profile found - user can proceed with onboarding');
         setLicenseData(null);
         setHasActiveLicense(false);
+        setLoading(false);
         return;
       }
 
       console.log('Fighter profile found:', profileData);
 
-      // Step 3: Get licenses for this fighter
-      const licensePromise = supabase
-        .from('fighter_licenses')
-        .select(`
-          id,
-          license_number,
-          status,
-          license_level,
-          issued_at,
-          expires_at,
-          suspension_reason,
-          suspension_until,
-          is_primary
-        `)
-        .eq('fighter_id', profileData.id)
-        .order('created_at', { ascending: false });
-
-      const licenseResult = await Promise.race([licensePromise, timeoutPromise]) as any;
-      const { data: licensesData, error: licenseError } = licenseResult;
+      // Check for active license
+      const licenses = Array.isArray(profileData.fighter_licenses) 
+        ? profileData.fighter_licenses 
+        : profileData.fighter_licenses ? [profileData.fighter_licenses] : [];
       
-      if (licenseError) {
-        console.error('License query error:', licenseError.message);
+      const activeLicense = licenses.find((license: any) => 
+        license.status === 'ACTIVE' || license.status === 'PENDING'
+      );
+
+      if (activeLicense) {
+        console.log('Active license found:', activeLicense);
+        const combinedLicenseData = {
+          ...activeLicense,
+          fighter_profiles: profileData
+        };
+        setLicenseData(combinedLicenseData);
+        setHasActiveLicense(activeLicense.status === 'ACTIVE');
+      } else {
+        console.log('No active license found');
         setLicenseData(null);
         setHasActiveLicense(false);
-        return;
       }
-
-      console.log('Licenses found:', licensesData);
-
-      if (!licensesData || licensesData.length === 0) {
-        console.log('No licenses found for fighter');
-        setLicenseData(null);
-        setHasActiveLicense(false);
-        return;
-      }
-
-      // Find primary license or most recent license
-      const primaryLicense = licensesData.find((l: any) => l.is_primary) || licensesData[0];
-
-      console.log('Primary license found:', primaryLicense);
-      console.log('Primary license status:', primaryLicense.status);
-      
-      // Combine all data
-      const combinedLicenseData = {
-        ...primaryLicense,
-        fighter_profiles: profileData
-      };
-
-      setLicenseData(combinedLicenseData);
-      const isActive = primaryLicense.status === 'ACTIVE';
-      console.log('License is active:', isActive);
-      setHasActiveLicense(isActive);
-      
-      // Invalidate relevant queries when license status changes
-      queryClient.invalidateQueries({ queryKey: ['license'] });
-      queryClient.invalidateQueries({ queryKey: ['admin_licenses'] });
-      queryClient.invalidateQueries({ queryKey: ['pending-licenses'] });
 
     } catch (error) {
       console.error('Error checking license status:', error);
-      
-      // Fallback: Try direct license check
-      try {
-        console.log('Attempting fallback license check...');
-        const fallbackResult = await supabase
-          .from('fighter_licenses')
-          .select(`
-            id,
-            status,
-            license_number,
-            license_level,
-            issued_at,
-            expires_at,
-            fighter_profiles!inner (
-              id,
-              first_name,
-              last_name,
-              nickname,
-              user_id
-            )
-          `)
-          .eq('fighter_profiles.user_id', (await supabase.from('app_user').select('id').eq('auth_user_id', userId).single()).data?.id)
-          .eq('is_primary', true)
-          .maybeSingle();
-
-        if (fallbackResult.data && fallbackResult.data.status === 'ACTIVE') {
-          console.log('Fallback found active license:', fallbackResult.data);
-          setLicenseData(fallbackResult.data);
-          setHasActiveLicense(true);
-        } else {
-          setHasActiveLicense(false);
-          setLicenseData(null);
-        }
-      } catch (fallbackError) {
-        console.error('Fallback license check also failed:', fallbackError);
-        setHasActiveLicense(false);
-        setLicenseData(null);
-      }
+      // Don't block onboarding process
+      setHasActiveLicense(false);
+      setLicenseData(null);
     } finally {
       setLoading(false);
     }
