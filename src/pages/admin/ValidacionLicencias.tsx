@@ -819,6 +819,20 @@ export default function ValidacionLicencias() {
                         </div>
 
                         <div className="space-y-2">
+                          <Label>Alcance (cm)</Label>
+                          <p className="text-sm bg-muted/50 p-2 rounded">
+                            {reviewingLicense.fighter?.reach_cm || 'No proporcionado'}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Estilo de Pelea</Label>
+                          <p className="text-sm bg-muted/50 p-2 rounded">
+                            {reviewingLicense.fighter?.fighting_style || 'No proporcionado'}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
                           <Label>Gimnasio</Label>
                           <p className="text-sm bg-muted/50 p-2 rounded">
                             {reviewingLicense.fighter?.gym_name || 'No proporcionado'}
@@ -838,8 +852,15 @@ export default function ValidacionLicencias() {
                       <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                           <Award className="h-4 w-4" />
-                          Récord de Peleas ({reviewingLicense.fighter?.record_type || 'No especificado'})
+                          Récord de Peleas
                         </Label>
+                        {reviewingLicense.fighter?.record_type && (
+                          <div className="mb-2">
+                            <Badge variant="outline" className="text-xs">
+                              Récord {reviewingLicense.fighter.record_type === 'PROFESIONAL' ? 'Profesional' : 'Amateur/Semi-profesional'}
+                            </Badge>
+                          </div>
+                        )}
                         <div className="grid grid-cols-3 gap-4">
                           <div className="text-center p-3 bg-green-50 rounded">
                             <div className="text-2xl font-bold text-green-600">

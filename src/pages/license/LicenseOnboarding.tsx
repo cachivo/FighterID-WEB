@@ -330,7 +330,7 @@ export default function LicenseOnboarding() {
         record_draws: formData.level === 'Profesional'
           ? (formData.proDraws ? parseInt(formData.proDraws) : 0)
           : (formData.amateurDraws ? parseInt(formData.amateurDraws) : 0),
-        record_type: formData.level === 'Profesional' ? 'Profesional' : 'Amateur',
+        record_type: formData.level === 'Profesional' ? 'PROFESIONAL' : 'AMATEUR',
         gender: formData.gender || null,
         bio: formData.bio || null
       };
@@ -582,7 +582,22 @@ export default function LicenseOnboarding() {
                 </div>
                 <div>
                   <Label htmlFor="level">Nivel *</Label>
-                  <Select value={formData.level} onValueChange={(value) => setFormData({...formData, level: value as any})}>
+                  <Select 
+                    value={formData.level} 
+                    onValueChange={(value) => {
+                      // Clear record fields when level changes
+                      setFormData({
+                        ...formData, 
+                        level: value as any,
+                        amateurWins: '',
+                        amateurLosses: '',
+                        amateurDraws: '',
+                        proWins: '',
+                        proLosses: '',
+                        proDraws: ''
+                      });
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona tu nivel" />
                     </SelectTrigger>
@@ -734,87 +749,80 @@ export default function LicenseOnboarding() {
                 </div>
 
                 <div className="space-y-6">
-                  <h4 className="font-medium text-sm text-center">Récord de Peleas</h4>
+                  <div className="text-center">
+                    <h4 className="font-medium text-sm">Récord de Peleas</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Ingresa tu récord correspondiente al nivel seleccionado: {formData.level || 'No seleccionado'}
+                    </p>
+                  </div>
                   
-                  {/* Amateur Record Section */}
-                  <div className="border rounded-lg p-4 bg-card">
-                    <h5 className="font-medium text-sm mb-3 text-primary">Récord Amateur</h5>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <Label htmlFor="amateurWins">Victorias</Label>
-                        <Input
-                          id="amateurWins"
-                          type="number"
-                          min="0"
-                          value={formData.amateurWins}
-                          onChange={(e) => setFormData({...formData, amateurWins: e.target.value})}
-                          placeholder="0"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="amateurLosses">Derrotas</Label>
-                        <Input
-                          id="amateurLosses"
-                          type="number"
-                          min="0"
-                          value={formData.amateurLosses}
-                          onChange={(e) => setFormData({...formData, amateurLosses: e.target.value})}
-                          placeholder="0"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="amateurDraws">Empates</Label>
-                        <Input
-                          id="amateurDraws"
-                          type="number"
-                          min="0"
-                          value={formData.amateurDraws}
-                          onChange={(e) => setFormData({...formData, amateurDraws: e.target.value})}
-                          placeholder="0"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Professional Record Section */}
-                  <div className="border rounded-lg p-4 bg-card">
-                    <h5 className="font-medium text-sm mb-3 text-primary">Récord Profesional</h5>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <Label htmlFor="proWins">Victorias</Label>
-                        <Input
-                          id="proWins"
-                          type="number"
-                          min="0"
-                          value={formData.proWins}
-                          onChange={(e) => setFormData({...formData, proWins: e.target.value})}
-                          placeholder="0"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="proLosses">Derrotas</Label>
-                        <Input
-                          id="proLosses"
-                          type="number"
-                          min="0"
-                          value={formData.proLosses}
-                          onChange={(e) => setFormData({...formData, proLosses: e.target.value})}
-                          placeholder="0"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="proDraws">Empates</Label>
-                        <Input
-                          id="proDraws"
-                          type="number"
-                          min="0"
-                          value={formData.proDraws}
-                          onChange={(e) => setFormData({...formData, proDraws: e.target.value})}
-                          placeholder="0"
-                        />
+                  {/* Show record fields based on selected level */}
+                  {formData.level && (
+                    <div className="border rounded-lg p-4 bg-card">
+                      <h5 className="font-medium text-sm mb-3 text-primary">
+                        Récord {formData.level === 'Profesional' ? 'Profesional' : 'Amateur/Semi-profesional'}
+                      </h5>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <Label htmlFor="recordWins">Victorias</Label>
+                          <Input
+                            id="recordWins"
+                            type="number"
+                            min="0"
+                            value={formData.level === 'Profesional' ? formData.proWins : formData.amateurWins}
+                            onChange={(e) => {
+                              if (formData.level === 'Profesional') {
+                                setFormData({...formData, proWins: e.target.value, amateurWins: ''});
+                              } else {
+                                setFormData({...formData, amateurWins: e.target.value, proWins: ''});
+                              }
+                            }}
+                            placeholder="0"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="recordLosses">Derrotas</Label>
+                          <Input
+                            id="recordLosses"
+                            type="number"
+                            min="0"
+                            value={formData.level === 'Profesional' ? formData.proLosses : formData.amateurLosses}
+                            onChange={(e) => {
+                              if (formData.level === 'Profesional') {
+                                setFormData({...formData, proLosses: e.target.value, amateurLosses: ''});
+                              } else {
+                                setFormData({...formData, amateurLosses: e.target.value, proLosses: ''});
+                              }
+                            }}
+                            placeholder="0"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="recordDraws">Empates</Label>
+                          <Input
+                            id="recordDraws"
+                            type="number"
+                            min="0"
+                            value={formData.level === 'Profesional' ? formData.proDraws : formData.amateurDraws}
+                            onChange={(e) => {
+                              if (formData.level === 'Profesional') {
+                                setFormData({...formData, proDraws: e.target.value, amateurDraws: ''});
+                              } else {
+                                setFormData({...formData, amateurDraws: e.target.value, proDraws: ''});
+                              }
+                            }}
+                            placeholder="0"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+                  
+                  {!formData.level && (
+                    <div className="text-center py-4 text-muted-foreground text-sm">
+                      Selecciona tu nivel en el paso anterior para ingresar tu récord
+                    </div>
+                  )}
                 </div>
 
 
@@ -843,7 +851,7 @@ export default function LicenseOnboarding() {
                   <Button type="button" variant="outline" onClick={() => setStep(1)}>
                     Atrás
                   </Button>
-                  <Button type="submit" disabled={loading || !identityDocument}>
+                  <Button type="submit" disabled={loading || !identityDocument || !formData.level}>
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
