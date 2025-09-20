@@ -1952,25 +1952,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "round_contestants_contestant_id_fkey"
-            columns: ["contestant_id"]
-            isOneToOne: false
-            referencedRelation: "vw_round_leaderboard"
-            referencedColumns: ["contestant_id"]
-          },
-          {
             foreignKeyName: "round_contestants_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
             referencedRelation: "rounds"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "round_contestants_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "vw_round_leaderboard"
-            referencedColumns: ["round_id"]
           },
         ]
       }
@@ -2002,25 +1988,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "round_totals_contestant_id_fkey"
-            columns: ["contestant_id"]
-            isOneToOne: false
-            referencedRelation: "vw_round_leaderboard"
-            referencedColumns: ["contestant_id"]
-          },
-          {
             foreignKeyName: "round_totals_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
             referencedRelation: "rounds"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "round_totals_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "vw_round_leaderboard"
-            referencedColumns: ["round_id"]
           },
         ]
       }
@@ -2334,13 +2306,6 @@ export type Database = {
             referencedRelation: "rounds"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "votes_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "vw_round_leaderboard"
-            referencedColumns: ["round_id"]
-          },
         ]
       }
       wallet: {
@@ -2421,17 +2386,7 @@ export type Database = {
       }
     }
     Views: {
-      vw_round_leaderboard: {
-        Row: {
-          contestant_id: string | null
-          contestant_name: string | null
-          position: number | null
-          round_id: string | null
-          round_name: string | null
-          total: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       admin_delete_fighter_profile: {
