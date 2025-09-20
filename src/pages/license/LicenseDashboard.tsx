@@ -97,7 +97,7 @@ export default function LicenseDashboard() {
           </div>
         </div>
 
-        {/* Fighter Profile Card */}
+        {/* Fighter Profile Card - Información Personal Completa */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -107,7 +107,7 @@ export default function LicenseDashboard() {
                   {fighterProfile?.first_name?.[0]}{fighterProfile?.last_name?.[0]}
                 </AvatarFallback>
               </Avatar>
-              Información del Peleador
+              Información Personal Completa
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -121,28 +121,34 @@ export default function LicenseDashboard() {
                   )}
                 </div>
                 <div>
+                  <p className="text-sm font-medium text-muted-foreground">Género</p>
+                  <p>{fighterProfile?.gender || 'No especificado'}</p>
+                </div>
+                <div>
                   <p className="text-sm font-medium text-muted-foreground">País</p>
                   <p>{fighterProfile?.country || 'No especificado'}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Categoría de Peso</p>
-                  <p>{fighterProfile?.weight_class}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Fecha de Nacimiento</p>
+                  <p>{fighterProfile?.birthdate ? format(new Date(fighterProfile.birthdate), 'PP', { locale: es }) : 'No especificada'}</p>
                 </div>
               </div>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Récord Profesional</p>
-                  <p className="font-mono text-lg">
-                    {fighterProfile?.record_wins || 0}-{fighterProfile?.record_losses || 0}-{fighterProfile?.record_draws || 0}
-                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">Lugar de Nacimiento</p>
+                  <p>{fighterProfile?.birthplace || 'No especificado'}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Disciplina</p>
-                  <p>{fighterProfile?.discipline || licenseData.discipline || 'No especificada'}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Tipo de Documento</p>
+                  <p>{fighterProfile?.document_type || 'No especificado'}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Gimnasio</p>
-                  <p>{fighterProfile?.gym_name || 'No especificado'}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Número de Documento</p>
+                  <p>{fighterProfile?.document_number || 'No especificado'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Tipo de Sangre</p>
+                  <p>{fighterProfile?.blood_type || 'No especificado'}</p>
                 </div>
               </div>
               <div className="space-y-3">
@@ -158,6 +164,205 @@ export default function LicenseDashboard() {
                   <p className="text-sm font-medium text-muted-foreground">Versión</p>
                   <p>v{licenseData.version || 1}</p>
                 </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Nivel</p>
+                  <p>{fighterProfile?.level || 'No especificado'}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Información Física */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Información Física</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Categoría de Peso</p>
+                  <p className="font-semibold">{fighterProfile?.weight_class}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Peso (kg)</p>
+                  <p>{fighterProfile?.weight_kg ? `${fighterProfile.weight_kg} kg` : 'No especificado'}</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Altura (cm)</p>
+                  <p>{fighterProfile?.height_cm ? `${fighterProfile.height_cm} cm` : 'No especificado'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Alcance (cm)</p>
+                  <p>{fighterProfile?.reach_cm ? `${fighterProfile.reach_cm} cm` : 'No especificado'}</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Postura</p>
+                  <p>{fighterProfile?.stance || 'No especificada'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Estilo de Pelea</p>
+                  <p>{fighterProfile?.fighting_style || 'No especificado'}</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Gimnasio/Academia</p>
+                  <p>{fighterProfile?.gym_name || 'No especificado'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Disciplina Principal</p>
+                  <p>{fighterProfile?.discipline || licenseData.discipline || 'No especificada'}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Información de Combate y Artes Marciales */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Información de Combate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Récord Profesional</p>
+                  <div className="flex items-center gap-4">
+                    <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border">
+                      <p className="font-bold text-2xl text-green-600">{fighterProfile?.record_wins || 0}</p>
+                      <p className="text-xs text-green-600">Victorias</p>
+                    </div>
+                    <div className="text-center p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border">
+                      <p className="font-bold text-2xl text-red-600">{fighterProfile?.record_losses || 0}</p>
+                      <p className="text-xs text-red-600">Derrotas</p>
+                    </div>
+                    <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border">
+                      <p className="font-bold text-2xl text-yellow-600">{fighterProfile?.record_draws || 0}</p>
+                      <p className="text-xs text-yellow-600">Empates</p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Tipo de Récord</p>
+                  <p>{fighterProfile?.record_type || 'No especificado'}</p>
+                </div>
+                {fighterProfile?.martial_arts && fighterProfile.martial_arts.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Artes Marciales</p>
+                    <div className="flex flex-wrap gap-2">
+                      {fighterProfile.martial_arts.map((art, index) => (
+                        <Badge key={index} variant="secondary">{art}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-4">
+                {fighterProfile?.bio && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Biografía</p>
+                    <div className="p-3 bg-muted/20 rounded-lg border">
+                      <p className="text-sm leading-relaxed">{fighterProfile.bio}</p>
+                    </div>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Perfiles Externos</p>
+                  {fighterProfile?.boxrec_url && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">BoxRec:</span>
+                      <a href={fighterProfile.boxrec_url} target="_blank" rel="noopener noreferrer" 
+                         className="text-sm text-primary hover:underline truncate">
+                        {fighterProfile.boxrec_url}
+                      </a>
+                    </div>
+                  )}
+                  {fighterProfile?.tapology_url && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Tapology:</span>
+                      <a href={fighterProfile.tapology_url} target="_blank" rel="noopener noreferrer"
+                         className="text-sm text-primary hover:underline truncate">
+                        {fighterProfile.tapology_url}
+                      </a>
+                    </div>
+                  )}
+                  {!fighterProfile?.boxrec_url && !fighterProfile?.tapology_url && (
+                    <p className="text-sm text-muted-foreground">Sin perfiles externos registrados</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Información Médica y de Emergencia */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Información Médica</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Condiciones Médicas</p>
+                  <div className="p-3 bg-muted/20 rounded-lg border min-h-[60px]">
+                    <p className="text-sm">{fighterProfile?.medical_conditions || 'Sin condiciones médicas reportadas'}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Alergias</p>
+                  <div className="p-3 bg-muted/20 rounded-lg border min-h-[60px]">
+                    <p className="text-sm">{fighterProfile?.medical_allergies || 'Sin alergias reportadas'}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Contacto de Emergencia</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Nombre del Contacto</p>
+                  <p>{fighterProfile?.emergency_contact_name || 'No especificado'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Relación</p>
+                  <p>{fighterProfile?.emergency_contact_relation || 'No especificada'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Teléfono</p>
+                  <p className="font-mono">{fighterProfile?.emergency_contact_phone || 'No especificado'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Información de Seguro */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Información de Seguro</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Compañía de Seguro</p>
+                <p>{fighterProfile?.insurance_company || 'No especificada'}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Número de Póliza</p>
+                <p className="font-mono">{fighterProfile?.insurance_policy || 'No especificado'}</p>
               </div>
             </div>
           </CardContent>
