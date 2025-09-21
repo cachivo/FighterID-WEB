@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Edit, User, Trash2 } from 'lucide-react';
+import { Search, Edit, User, Trash2, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { OptimizedImage } from '@/components/ui/optimized-image';
 import { FighterEditModal } from '@/components/admin/FighterEditModal';
 import { DeleteFighterDialog } from '@/components/admin/DeleteFighterDialog';
+import { FighterDetailModal } from '@/components/admin/FighterDetailModal';
 import { useAdminFighters, AdminFighterProfile } from '@/hooks/useAdminFighters';
 import { FighterProfile } from '@/hooks/useFighterProfiles';
 
@@ -23,6 +24,7 @@ export default function Fighters() {
   const [sortBy, setSortBy] = useState<string>('name');
   const [editingFighter, setEditingFighter] = useState<AdminFighterProfile | null>(null);
   const [deletingFighter, setDeletingFighter] = useState<AdminFighterProfile | null>(null);
+  const [viewingFighter, setViewingFighter] = useState<string | null>(null);
 
   // Filtrar y ordenar peleadores
   const filteredFighters = fighters
@@ -173,8 +175,18 @@ export default function Fighters() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => setViewingFighter(fighter.id)}
+                      className="h-8 w-8"
+                      title="Ver información completa"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => setEditingFighter(fighter)}
                       className="h-8 w-8"
+                      title="Editar peleador"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -183,6 +195,7 @@ export default function Fighters() {
                       size="icon"
                       onClick={() => setDeletingFighter(fighter)}
                       className="h-8 w-8 text-destructive hover:text-destructive"
+                      title="Eliminar peleador"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -233,6 +246,13 @@ export default function Fighters() {
           ))}
         </div>
       )}
+
+      {/* Detail Modal */}
+      <FighterDetailModal
+        fighterId={viewingFighter}
+        open={!!viewingFighter}
+        onClose={() => setViewingFighter(null)}
+      />
 
       {/* Edit Modal */}
       {editingFighter && (
