@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -100,7 +101,14 @@ export default function SocialFeed() {
     <div className="min-h-screen bg-background">
       {/* Modern Feed Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="max-w-2xl mx-auto px-4 py-4">
+        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/lovable-uploads/7570ef51-ab69-44ed-8ffd-ce52f760de49.png" 
+              alt="Fighter ID"
+              className="h-8 w-auto hover:scale-105 hover:opacity-90 transition-all duration-300"
+            />
+          </Link>
           <h1 className="text-xl font-semibold text-foreground">Feed</h1>
         </div>
       </div>
