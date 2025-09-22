@@ -54,7 +54,7 @@ export default function LicenseDashboard() {
   };
 
   const handleUpdateInfo = () => {
-    navigate('/profile-change-request', { 
+    navigate('/profile/request-changes', { 
       state: { 
         fighterProfileId: licenseData?.fighter_profiles?.id,
         returnTo: '/license/dashboard'
