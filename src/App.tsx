@@ -16,6 +16,7 @@ import FighterMe from './pages/FighterMe';
 import MyProfile from './pages/MyProfile';
 import UserProfile from './pages/UserProfile';
 import FighterProfile from './pages/FighterProfile';
+import ProfileSetup from './pages/profile/ProfileSetup';
 import VerifyLicense from './pages/VerifyLicense';
 import ValidacionLicencias from './pages/admin/ValidacionLicencias';
 import AdminFighters from './pages/admin/Fighters';
@@ -123,6 +124,13 @@ const App = () => (
                 <Route index element={<Navigate to="/license/dashboard" replace />} />
                 <Route path="dashboard" element={<LicenseDashboard />} />
               </Route>
+
+              {/* Profile Setup Route - For regular users */}
+              <Route path="/profile/setup" element={
+                <ProtectedRoute>
+                  <ProfileSetup />
+                </ProtectedRoute>
+              } />
 
               {/* User Profile Route - General profile for all users */}
               <Route path="/profile" element={

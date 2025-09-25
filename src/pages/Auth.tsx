@@ -23,7 +23,7 @@ const signUpSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   userType: z.enum(['fighter', 'user'], {
-    required_error: 'Debes seleccionar un tipo de usuario',
+    message: 'Debes seleccionar un tipo de usuario',
   }),
 });
 
