@@ -144,7 +144,7 @@ export function useFighterProfiles() {
   const fetchFighters = useCallback(async (includeInactive = false) => {
     try {
       setLoading(true);
-      console.log('📋 Fetching public fighters...');
+      console.log('[FIGHTERS] Fetching public fighters...');
       
       // Simplified query - first get all active fighters
       let query = supabase
@@ -158,14 +158,14 @@ export function useFighterProfiles() {
       const { data: fightersData, error: fightersError } = await query.order('created_at', { ascending: false });
 
       if (fightersError) {
-        console.error('📋 Fighters query error:', fightersError);
+        console.error('[FIGHTERS] Fighters query error:', fightersError);
         throw fightersError;
       }
       
-      console.log('📋 Raw fighters fetched:', fightersData?.length, 'fighters');
+      console.log('[FIGHTERS] Raw fighters fetched:', fightersData?.length, 'fighters');
       
       if (!fightersData || fightersData.length === 0) {
-        console.log('📋 No fighters found in database');
+        console.log('[FIGHTERS] No fighters found in database');
         setFighters([]);
         return;
       }
@@ -177,15 +177,15 @@ export function useFighterProfiles() {
         martial_arts: fighter.martial_arts || [],
       }));
       
-      console.log('📋 Processed fighters:', fightersWithLicenses.length, 'fighters');
+      console.log('[FIGHTERS] Processed fighters:', fightersWithLicenses.length, 'fighters');
       const moises = fightersWithLicenses.find(f => f.first_name === 'Moises' && f.last_name === 'Cardenas');
       if (moises) {
-        console.log('📋 Moises record:', { wins: moises.record_wins, losses: moises.record_losses, draws: moises.record_draws });
+        console.log('[FIGHTERS] Moises record:', { wins: moises.record_wins, losses: moises.record_losses, draws: moises.record_draws });
       }
       
       setFighters(fightersWithLicenses);
     } catch (err) {
-      console.error('📋 Public fighters fetch error:', err);
+      console.error('[FIGHTERS] Public fighters fetch error:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
       // Set empty array on error so UI shows "no fighters" instead of loading forever
       setFighters([]);
@@ -475,7 +475,7 @@ export function useFighterProfiles() {
   // Add a window listener to refresh public fighters when admin makes changes
   useEffect(() => {
     const handleAdminUpdate = () => {
-      console.log('📋 Admin update detected, refreshing public fighters...');
+      console.log('[FIGHTERS] Admin update detected, refreshing public fighters...');
       setTimeout(() => fetchFighters(), 1000); // Delay to ensure DB update is complete
     };
     

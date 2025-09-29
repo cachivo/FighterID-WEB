@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFighterProfiles, FighterProfile } from '@/hooks/useFighterProfiles';
@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BackButton } from '@/components/ui/back-button';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, User, Plus, ExternalLink, Eye, FileText, AlertCircle, Calendar, Users, Settings, Edit } from 'lucide-react';
+import { Shield, User, Plus, ExternalLink, Eye, FileText, AlertCircle, Calendar, Users, Settings, Edit, Ruler, Scale, Dumbbell } from 'lucide-react';
 import { FighterProfileForm } from '@/components/FighterProfileForm';
 import { UserProfileForm } from '@/components/UserProfileForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -342,12 +342,12 @@ export default function UserProfile() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Quick Stats */}
             {[
-              { label: 'Altura', value: profile.height_cm ? `${profile.height_cm} cm` : 'N/A', icon: '📏' },
-              { label: 'Peso', value: profile.weight_kg ? `${profile.weight_kg} kg` : 'N/A', icon: '⚖️' },
-              { label: 'Gimnasio', value: profile.gym_name || 'N/A', icon: '🥊' }
+              { label: 'Altura', value: profile.height_cm ? `${profile.height_cm} cm` : 'N/A', Icon: Ruler },
+              { label: 'Peso', value: profile.weight_kg ? `${profile.weight_kg} kg` : 'N/A', Icon: Scale },
+              { label: 'Gimnasio', value: profile.gym_name || 'N/A', Icon: Dumbbell }
             ].map((stat, index) => (
               <Card key={index} className="text-center p-6 border border-professional-border/30 bg-gradient-to-br from-background to-professional-muted/10">
-                <div className="text-2xl mb-2">{stat.icon}</div>
+                <stat.Icon className="h-8 w-8 mx-auto mb-2 text-professional-primary" />
                 <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
                 <p className="text-lg font-bold text-foreground mt-2">{stat.value}</p>
               </Card>

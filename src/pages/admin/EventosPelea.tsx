@@ -291,9 +291,7 @@ export default function EventosPelea() {
     }
   };
 
-  const getEventIcon = () => {
-    return '🥊';
-  };
+  const EventIcon = Trophy;
 
   const eventFightersData = eventFighters.map(fighterId => 
     availableFighters.find(f => f.id === fighterId)
@@ -433,7 +431,7 @@ export default function EventosPelea() {
                 <TableRow key={event.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{getEventIcon()}</span>
+                      <EventIcon className="h-5 w-5" />
                       {event.name}
                     </div>
                   </TableCell>

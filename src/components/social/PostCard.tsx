@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Newspaper, MessageSquare, Image as ImageIcon, Video, Star } from 'lucide-react';
 import { SocialPost } from '@/hooks/useSocialPosts';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -70,8 +70,9 @@ export default function PostCard({ post, onLike, onDelete, isOwner }: PostCardPr
                   </Badge>
                 )}
                 {post.featured && (
-                  <Badge variant="default" className="text-xs">
-                    ⭐ Destacado
+                  <Badge variant="default" className="text-xs flex items-center gap-1">
+                    <Star className="h-3 w-3" />
+                    Destacado
                   </Badge>
                 )}
               </div>
@@ -166,11 +167,11 @@ export default function PostCard({ post, onLike, onDelete, isOwner }: PostCardPr
             </Button>
           </div>
 
-          <div className="text-xs text-muted-foreground">
-            {post.post_type === 'news' && '📰 Noticia'}
-            {post.post_type === 'text' && '💬 Post'}
-            {post.post_type === 'image' && '📸 Imagen'}
-            {post.post_type === 'video' && '🎥 Video'}
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            {post.post_type === 'news' && <><Newspaper className="h-3 w-3" /> Noticia</>}
+            {post.post_type === 'text' && <><MessageSquare className="h-3 w-3" /> Post</>}
+            {post.post_type === 'image' && <><ImageIcon className="h-3 w-3" /> Imagen</>}
+            {post.post_type === 'video' && <><Video className="h-3 w-3" /> Video</>}
           </div>
         </div>
       </CardContent>

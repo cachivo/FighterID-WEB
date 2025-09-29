@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Trophy } from "lucide-react";
+import { Trophy, Calendar, Users, Monitor, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Ranking = () => {
@@ -7,22 +7,22 @@ const Ranking = () => {
     {
       numero: "150+",
       descripcion: "Eventos Producidos",
-      icono: "🎪"
+      Icon: Calendar
     },
     {
       numero: "50K+",
       descripcion: "Participantes",
-      icono: "👥"
+      Icon: Users
     },
     {
       numero: "2M+",
       descripcion: "Visualizaciones Online",
-      icono: "📺"
+      Icon: Monitor
     },
     {
       numero: "25+",
       descripcion: "Ciudades Alcanzadas",
-      icono: "🌎"
+      Icon: Globe
     }
   ];
 
@@ -70,7 +70,7 @@ const Ranking = () => {
           {estadisticas.map((stat, index) => (
             <Card key={index} className="bg-black/60 border-purple-neon-primary/30 backdrop-blur-sm text-center group hover:scale-105 transition-all duration-300 touch-manipulation">
               <CardContent className="p-4 sm:p-6">
-                <div className="text-2xl sm:text-3xl mb-2">{stat.icono}</div>
+                <stat.Icon className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-2 text-purple-neon-primary" />
                 <div className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-neon-primary mb-2 group-hover:animate-pulse-purple-neon">
                   {stat.numero}
                 </div>

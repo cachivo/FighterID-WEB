@@ -175,10 +175,10 @@ export default function Predicciones() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas las disciplinas</SelectItem>
-                  <SelectItem value="boxing">🥊 Boxing</SelectItem>
-                  <SelectItem value="rap">🎤 Rap Battle</SelectItem>
-                  <SelectItem value="chess">♟️ Chess</SelectItem>
-                  <SelectItem value="esports">🎮 Esports</SelectItem>
+                  <SelectItem value="boxing">Boxing</SelectItem>
+                  <SelectItem value="rap">Rap Battle</SelectItem>
+                  <SelectItem value="chess">Chess</SelectItem>
+                  <SelectItem value="esports">Esports</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={stateFilter} onValueChange={setStateFilter}>

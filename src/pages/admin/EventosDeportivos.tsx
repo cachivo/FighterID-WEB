@@ -163,18 +163,18 @@ export default function EventosDeportivos() {
   };
 
   const toggleActivo = async (id: string, activo: boolean) => {
-    console.log('🔄 Iniciando toggleActivo:', { id, activo, currentState: eventos.find(e => e.id === id)?.activo });
+    console.log('[TOGGLE] Iniciando toggleActivo:', { id, activo, currentState: eventos.find(e => e.id === id)?.activo });
     
     // VERIFICACIÓN DE AUTENTICACIÓN
-    console.log('🔐 Estado de autenticación:', { 
+    console.log('[AUTH] Estado de autenticación:', { 
       user: user?.id, 
       userEmail: user?.email, 
       session: !!session,
-      sessionAccessToken: session?.access_token ? '✅' : '❌'
+      sessionAccessToken: session?.access_token ? 'YES' : 'NO'
     });
     
     if (!user || !session) {
-      console.error('❌ Usuario no autenticado');
+      console.error('[ERROR] Usuario no autenticado');
       toast({
         title: 'Error de Autenticación',
         description: 'Debes estar autenticado para realizar esta acción',
@@ -192,7 +192,7 @@ export default function EventosDeportivos() {
     setToggleLoading(prev => ({ ...prev, [id]: true }));
 
     try {
-      console.log('📤 Enviando request a Supabase:', { 
+      console.log('[REQUEST] Enviando request a Supabase:', { 
         table: 'eventos_deportivos', 
         update: { activo }, 
         where: { id },
@@ -202,10 +202,10 @@ export default function EventosDeportivos() {
       
       // Verificar que el cliente tenga la sesión actualizada
       const currentSession = await supabase.auth.getSession();
-      console.log('🔍 Sesión actual de Supabase:', {
+      console.log('[SESSION] Sesión actual de Supabase:', {
         hasSession: !!currentSession.data.session,
         userId: currentSession.data.session?.user?.id,
-        accessToken: currentSession.data.session?.access_token ? '✅' : '❌'
+        accessToken: currentSession.data.session?.access_token ? 'YES' : 'NO'
       });
       
       const { data, error } = await supabase
@@ -214,11 +214,11 @@ export default function EventosDeportivos() {
         .eq('id', id)
         .select('*');
         
-      console.log('📥 Respuesta de Supabase:', { data, error });
+      console.log('[RESPONSE] Respuesta de Supabase:', { data, error });
 
       if (error) {
-        console.error('❌ Error de Supabase:', error);
-        console.error('❌ Detalles del error:', {
+        console.error('[ERROR] Error de Supabase:', error);
+        console.error('[ERROR] Detalles del error:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
@@ -232,7 +232,7 @@ export default function EventosDeportivos() {
         throw error;
       }
 
-      console.log('✅ Update exitoso, refrescando datos...');
+      console.log('[SUCCESS] Update exitoso, refrescando datos...');
       await fetchEventos();
       
       toast({
@@ -240,7 +240,7 @@ export default function EventosDeportivos() {
         description: `Evento ${activo ? 'activado' : 'desactivado'} correctamente`,
       });
     } catch (error) {
-      console.error('❌ Error completo en toggleActivo:', error);
+      console.error('[ERROR] Error completo en toggleActivo:', error);
       
       let errorMessage = 'Error desconocido';
       if (error?.message) {

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Shield, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Shield, CheckCircle, XCircle, Clock, AlertTriangle, MapPin, Scale, Target } from 'lucide-react';
 
 export default function VerifyLicense() {
   const { licenseNumber } = useParams();
@@ -182,9 +182,9 @@ export default function VerifyLicense() {
                 </p>
               )}
               <div className="flex gap-4 text-sm text-muted-foreground">
-                <span>📍 {licenseData.fighter?.country}</span>
-                <span>⚖️ {licenseData.fighter?.weight_class}</span>
-                <span>🥊 {licenseData.discipline}</span>
+                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {licenseData.fighter?.country}</span>
+                <span className="flex items-center gap-1"><Scale className="h-3 w-3" /> {licenseData.fighter?.weight_class}</span>
+                <span className="flex items-center gap-1"><Target className="h-3 w-3" /> {licenseData.discipline}</span>
               </div>
             </div>
           </div>

@@ -115,7 +115,7 @@ const Events = () => {
                       </Badge>
                     </div>
                     <CardTitle className="text-xl group-hover:text-primary transition-colors flex items-center gap-2">
-                      <span className="text-2xl">🥊</span>
+                      <Trophy className="h-5 w-5" />
                       {event.name}
                     </CardTitle>
                     {event.description && (

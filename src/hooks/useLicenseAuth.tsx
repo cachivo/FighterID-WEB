@@ -28,7 +28,7 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const navigate = useNavigate();
 
   const checkLicenseStatus = async (userId: string) => {
-    console.log('🔍 [LICENSE AUTH] Starting check for user:', userId);
+    console.log('[LICENSE AUTH] Starting check for user:', userId);
     
     try {
       // 1) Get app_user to resolve internal user_id
@@ -38,20 +38,20 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .eq('auth_user_id', userId)
         .maybeSingle();
 
-      console.log('📧 [LICENSE AUTH] App user result:', { 
+      console.log('[LICENSE AUTH] App user result:', { 
         found: !!appUser, 
         email: appUser?.email,
         error: appUserErr?.message 
       });
 
       if (appUserErr) {
-        console.error('❌ [LICENSE AUTH] app_user fetch error:', appUserErr);
+        console.error('[LICENSE AUTH] app_user fetch error:', appUserErr);
         throw appUserErr;
       }
 
       // If no app_user, allow onboarding
       if (!appUser?.id) {
-        console.log('⚠️ [LICENSE AUTH] No app_user - allowing onboarding');
+        console.log('[WARNING] [LICENSE AUTH] No app_user - allowing onboarding');
         setLicenseData(null);
         setHasActiveLicense(false);
         return;
@@ -65,7 +65,7 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .eq('active', true)
         .maybeSingle();
 
-      console.log('👤 [LICENSE AUTH] Fighter profile result:', { 
+      console.log('[LICENSE AUTH] Fighter profile result:', { 
         found: !!profile,
         profileId: profile?.id,
         name: profile ? `${profile.first_name} ${profile.last_name}` : 'N/A',
@@ -73,19 +73,19 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       });
 
       if (profileErr) {
-        console.error('❌ [LICENSE AUTH] fighter_profiles fetch error:', profileErr);
+        console.error('[LICENSE AUTH] fighter_profiles fetch error:', profileErr);
         throw profileErr;
       }
 
       if (!profile?.id) {
-        console.log('⚠️ [LICENSE AUTH] No fighter profile - allowing onboarding');
+        console.log('[WARNING] [LICENSE AUTH] No fighter profile - allowing onboarding');
         setLicenseData(null);
         setHasActiveLicense(false);
         return;
       }
 
       // 3) Resolve license with robust fallbacks (prefer ACTIVE primary)
-      console.log('🎯 [LICENSE AUTH] Looking for license for fighter_id:', profile.id);
+      console.log('[LICENSE AUTH] Looking for license for fighter_id:', profile.id);
 
       // Try ACTIVE primary first
       const { data: license, error: licenseErr } = await supabase
@@ -96,7 +96,7 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .eq('is_primary', true)
         .maybeSingle();
 
-      console.log('🏆 [LICENSE AUTH] License query result:', { 
+      console.log('[LICENSE AUTH] License query result:', { 
         found: !!license,
         licenseNumber: license?.license_number,
         status: license?.status,
@@ -105,27 +105,27 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       });
 
       if (licenseErr) {
-        console.error('❌ [LICENSE AUTH] License fetch error:', licenseErr);
+        console.error('[LICENSE AUTH] License fetch error:', licenseErr);
         throw licenseErr;
       }
 
       if (license) {
-        console.log('✅ [LICENSE AUTH] ACTIVE license found!');
+        console.log('[SUCCESS] [LICENSE AUTH] ACTIVE license found!');
         const combinedLicenseData = { ...license, fighter_profiles: profile };
         setLicenseData(combinedLicenseData);
         setHasActiveLicense(true);
       } else {
-        console.log('⚠️ [LICENSE AUTH] No ACTIVE license found');
+        console.log('[WARNING] [LICENSE AUTH] No ACTIVE license found');
         setLicenseData({ fighter_profiles: profile });
         setHasActiveLicense(false);
       }
 
     } catch (error) {
-      console.error('💥 [LICENSE AUTH] Fatal error:', error);
+      console.error('[ERROR] [LICENSE AUTH] Fatal error:', error);
       setHasActiveLicense(false);
       setLicenseData(null);
     } finally {
-      console.log('🏁 [LICENSE AUTH] Check complete. Setting loading to false.');
+      console.log('[LICENSE AUTH] Check complete. Setting loading to false.');
       setLoading(false);
     }
   };
@@ -149,14 +149,14 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   useEffect(() => {
-    console.log('🚀 [LICENSE AUTH] useEffect started - setting up auth listeners');
+    console.log('[LICENSE AUTH] useEffect started - setting up auth listeners');
     let mounted = true;
     let realtimeChannel: any = null;
 
     // Set a backup timeout to prevent infinite loading
     const backupTimeout = setTimeout(() => {
       if (mounted) {
-        console.log('⏰ [LICENSE AUTH] Backup timeout triggered, stopping loading');
+        console.log('[TIMEOUT] [LICENSE AUTH] Backup timeout triggered, stopping loading');
         setLoading(false);
       }
     }, 15000);
@@ -164,19 +164,19 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔄 [LICENSE AUTH] Auth state changed:', event, session?.user?.id);
+        console.log('[LICENSE AUTH] Auth state changed:', event, session?.user?.id);
         if (!mounted) return;
         
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('👤 [LICENSE AUTH] User found, calling checkLicenseStatus');
+          console.log('[LICENSE AUTH] User found, calling checkLicenseStatus');
           setTimeout(() => {
             checkLicenseStatus(session.user.id);
           }, 0);
         } else {
-          console.log('❌ [LICENSE AUTH] No user, setting defaults');
+          console.log('[LICENSE AUTH] No user, setting defaults');
           setHasActiveLicense(false);
           setLicenseData(null);
           setLoading(false);
@@ -185,25 +185,25 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     );
 
     // Check for existing session
-    console.log('🔍 [LICENSE AUTH] Checking for existing session...');
+    console.log('[LICENSE AUTH] Checking for existing session...');
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('📋 [LICENSE AUTH] Existing session result:', session?.user?.id);
+      console.log('[LICENSE AUTH] Existing session result:', session?.user?.id);
       if (!mounted) return;
       
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        console.log('👤 [LICENSE AUTH] Existing user found, calling checkLicenseStatus');
+        console.log('[LICENSE AUTH] Existing user found, calling checkLicenseStatus');
         setTimeout(() => {
           checkLicenseStatus(session.user.id);
         }, 0);
       } else {
-        console.log('❌ [LICENSE AUTH] No existing session');
+        console.log('[LICENSE AUTH] No existing session');
         setLoading(false);
       }
     }).catch((error) => {
-      console.error('💥 [LICENSE AUTH] Error getting session:', error);
+      console.error('[ERROR] [LICENSE AUTH] Error getting session:', error);
       if (mounted) {
         setLoading(false);
       }
