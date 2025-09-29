@@ -210,11 +210,130 @@ export default function LicenseDashboard() {
           </div>
         </div>
 
+        {/* Prominent Fighter Profile Section */}
+        <Card className="overflow-hidden border-2 shadow-lg">
+          <CardContent className="p-0">
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6">
+              <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
+                {/* Large Avatar */}
+                <div className="relative flex-shrink-0">
+                  <div className="relative">
+                    <Avatar className="h-32 w-32 md:h-40 md:w-40 ring-4 ring-primary/20 ring-offset-4 ring-offset-background shadow-xl">
+                      <AvatarImage src={fighterProfile?.avatar_url} className="object-cover" />
+                      <AvatarFallback className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+                        {fighterProfile?.first_name?.[0]}{fighterProfile?.last_name?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    {licenseData.status === 'ACTIVE' && (
+                      <div className="absolute -bottom-2 -right-2 bg-fighter-success rounded-full p-2 ring-4 ring-background shadow-lg">
+                        <CheckCircle className="h-6 w-6 text-white" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Fighter Info */}
+                <div className="flex-1 text-center md:text-left space-y-4">
+                  <div>
+                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                      {fighterProfile?.first_name} {fighterProfile?.last_name}
+                    </h2>
+                    {fighterProfile?.nickname && (
+                      <p className="text-xl md:text-2xl text-muted-foreground font-medium mt-1">
+                        "{fighterProfile.nickname}"
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Badges Row */}
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                    <Badge className={getStatusColor(licenseData.status)} variant="default">
+                      {getStatusText(licenseData.status)}
+                    </Badge>
+                    <Badge className={getLevelColor(licenseData.license_level)} variant="outline">
+                      {licenseData.license_level}
+                    </Badge>
+                    {fighterProfile?.discipline && (
+                      <Badge variant="secondary" className="font-semibold">
+                        {fighterProfile.discipline}
+                      </Badge>
+                    )}
+                    {fighterProfile?.weight_class && (
+                      <Badge variant="outline">
+                        {fighterProfile.weight_class}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Fighter Record */}
+                  <div className="flex items-center justify-center md:justify-start gap-6 pt-2">
+                    <div className="text-center">
+                      <p className="text-2xl md:text-3xl font-bold text-fighter-success">
+                        {fighterProfile?.record_wins || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Victorias</p>
+                    </div>
+                    <Separator orientation="vertical" className="h-12" />
+                    <div className="text-center">
+                      <p className="text-2xl md:text-3xl font-bold text-fighter-danger">
+                        {fighterProfile?.record_losses || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Derrotas</p>
+                    </div>
+                    <Separator orientation="vertical" className="h-12" />
+                    <div className="text-center">
+                      <p className="text-2xl md:text-3xl font-bold text-fighter-warning">
+                        {fighterProfile?.record_draws || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Empates</p>
+                    </div>
+                  </div>
+
+                  {/* Additional Quick Info */}
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-muted-foreground pt-2">
+                    {fighterProfile?.country && (
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium">📍</span>
+                        <span>{fighterProfile.country}</span>
+                      </div>
+                    )}
+                    {fighterProfile?.gym_name && (
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium">🥋</span>
+                        <span>{fighterProfile.gym_name}</span>
+                      </div>
+                    )}
+                    {fighterProfile?.stance && (
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium">🥊</span>
+                        <span>{fighterProfile.stance}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* License Number Badge */}
+                <div className="flex-shrink-0 text-center md:text-right">
+                  <div className="inline-block bg-card border-2 rounded-lg p-4 shadow-md">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Licencia</p>
+                    <p className="text-lg font-mono font-bold text-primary">{licenseData.license_number}</p>
+                    {licenseData.expires_at && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Vence: {format(new Date(licenseData.expires_at), 'PP', { locale: es })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Fighter Profile Card - Información Personal Completa */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-10 w-10">
                 <AvatarImage src={fighterProfile?.avatar_url} />
                 <AvatarFallback>
                   {fighterProfile?.first_name?.[0]}{fighterProfile?.last_name?.[0]}
