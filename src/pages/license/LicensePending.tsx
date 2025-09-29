@@ -40,18 +40,22 @@ export default function LicensePending() {
 
         if (!appUser) return;
 
-        // Check for active license directly
+        // Check for active license directly (robust path without ambiguous embeds)
+        // 1) Find fighter profile id for this app user
+        const { data: profile } = await supabase
+          .from('fighter_profiles')
+          .select('id')
+          .eq('user_id', appUser.id)
+          .eq('active', true)
+          .maybeSingle();
+
+        if (!profile?.id) return;
+
+        // 2) Find primary ACTIVE license for that fighter profile
         const { data: license } = await supabase
           .from('fighter_licenses')
-          .select(`
-            id,
-            status,
-            license_number,
-            fighter_profiles!inner (
-              user_id
-            )
-          `)
-          .eq('fighter_profiles.user_id', appUser.id)
+          .select('id, status, license_number')
+          .eq('fighter_id', profile.id)
           .eq('status', 'ACTIVE')
           .eq('is_primary', true)
           .maybeSingle();
