@@ -3,14 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFighterProfiles, FighterProfile } from '@/hooks/useFighterProfiles';
 import { useLicenseAuth } from '@/hooks/useLicenseAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BackButton } from '@/components/ui/back-button';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, User, Plus, ExternalLink, Eye, FileText, AlertCircle, Calendar, Users } from 'lucide-react';
+import { Shield, User, Plus, ExternalLink, Eye, FileText, AlertCircle, Calendar, Users, Settings, Edit } from 'lucide-react';
 import { FighterProfileForm } from '@/components/FighterProfileForm';
+import { UserProfileForm } from '@/components/UserProfileForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FighterUpdateForm from '@/components/FighterUpdateForm';
 import FighterUpdatesFeed from '@/components/FighterUpdatesFeed';
@@ -21,8 +23,10 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const { getUserFighterProfile } = useFighterProfiles();
   const { hasActiveLicense, licenseData } = useLicenseAuth();
+  const { profile: userProfile } = useUserProfile();
   const [profile, setProfile] = useState<FighterProfile | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { 
@@ -88,25 +92,53 @@ export default function UserProfile() {
       <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-professional"></div>
       
       <CardContent className="p-8">
-        <div className="flex items-center gap-6 mb-6">
-          <Avatar className="h-20 w-20 border-4 border-professional-accent/50 shadow-professional">
-            <AvatarFallback className="bg-gradient-professional text-professional-primary-foreground text-2xl font-bold">
-              {user.email?.charAt(0).toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">
-              Usuario de la Plataforma
-            </h2>
-            <p className="text-lg text-professional-accent">
-              {user.email}
-            </p>
-            <Badge variant="outline" className="border-professional-accent/40 text-professional-primary">
-              Cuenta Activa
-            </Badge>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-6">
+            <Avatar className="h-20 w-20 border-4 border-professional-accent/50 shadow-professional">
+              <AvatarImage src={userProfile?.avatar_url || ''} alt="Avatar" />
+              <AvatarFallback className="bg-gradient-professional text-professional-primary-foreground text-2xl font-bold">
+                {userProfile?.first_name?.charAt(0) || userProfile?.last_name?.charAt(0) || user.email?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-foreground">
+                {userProfile?.first_name && userProfile?.last_name 
+                  ? `${userProfile.first_name} ${userProfile.last_name}`
+                  : 'Usuario de la Plataforma'
+                }
+              </h2>
+              <p className="text-lg text-professional-accent">
+                {user.email}
+              </p>
+              <div className="flex gap-2">
+                <Badge variant="outline" className="border-professional-accent/40 text-professional-primary">
+                  Cuenta Activa
+                </Badge>
+                {userProfile?.birthdate && (
+                  <Badge variant="outline" className="border-professional-border/40">
+                    {new Date().getFullYear() - new Date(userProfile.birthdate).getFullYear()} años
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
+
+          <Button 
+            variant="outline" 
+            onClick={() => setShowEditDialog(true)}
+            className="border-professional-accent/40 hover:bg-professional-accent/10"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Editar Perfil
+          </Button>
         </div>
+
+        {userProfile?.bio && (
+          <div className="mb-6 p-4 bg-professional-muted/5 rounded-lg">
+            <p className="text-sm text-muted-foreground">{userProfile.bio}</p>
+          </div>
+        )}
 
         <div className="bg-professional-muted/10 border border-professional-border/30 rounded-lg p-6">
           <div className="flex items-start gap-3">
@@ -115,11 +147,11 @@ export default function UserProfile() {
             </div>
             <div className="flex-1">
               <h4 className="font-medium text-foreground mb-2">
-                Estado de tu cuenta
+                ¿Quieres ser peleador?
               </h4>
               <p className="text-sm text-muted-foreground mb-4">
-                Tienes una cuenta de usuario activa en la plataforma. Puedes crear un perfil de peleador 
-                para acceder a funcionalidades adicionales como sparring, estadísticas y solicitar licencias oficiales.
+                Puedes crear un perfil de peleador para acceder a funcionalidades adicionales como 
+                sparring, estadísticas, participar en eventos y solicitar licencias oficiales.
               </p>
               <Button onClick={() => setShowCreateDialog(true)} className="bg-professional-primary hover:bg-professional-primary/90">
                 <Plus className="h-4 w-4 mr-2" />
@@ -357,6 +389,19 @@ export default function UserProfile() {
             <DialogTitle className="text-2xl">Crear Perfil de Peleador</DialogTitle>
           </DialogHeader>
           <FighterProfileForm onSuccess={handleCreateProfile} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Profile Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Editar Mi Perfil
+            </DialogTitle>
+          </DialogHeader>
+          <UserProfileForm onSuccess={() => setShowEditDialog(false)} />
         </DialogContent>
       </Dialog>
     </div>

@@ -17,50 +17,65 @@ export type Database = {
       app_user: {
         Row: {
           auth_user_id: string | null
+          avatar_url: string | null
           beber_loyalty_id: string | null
+          bio: string | null
           birthdate: string | null
           birthdate_verified_at: string | null
           country: string | null
           created_at: string | null
           email: string | null
+          first_name: string | null
           handle: string
           id: string
           is_admin: boolean | null
           kyc_level: number | null
+          last_name: string | null
           phone: string | null
           phone_verified: boolean | null
+          profile_visibility: Json | null
           updated_at: string | null
         }
         Insert: {
           auth_user_id?: string | null
+          avatar_url?: string | null
           beber_loyalty_id?: string | null
+          bio?: string | null
           birthdate?: string | null
           birthdate_verified_at?: string | null
           country?: string | null
           created_at?: string | null
           email?: string | null
+          first_name?: string | null
           handle: string
           id?: string
           is_admin?: boolean | null
           kyc_level?: number | null
+          last_name?: string | null
           phone?: string | null
           phone_verified?: boolean | null
+          profile_visibility?: Json | null
           updated_at?: string | null
         }
         Update: {
           auth_user_id?: string | null
+          avatar_url?: string | null
           beber_loyalty_id?: string | null
+          bio?: string | null
           birthdate?: string | null
           birthdate_verified_at?: string | null
           country?: string | null
           created_at?: string | null
           email?: string | null
+          first_name?: string | null
           handle?: string
           id?: string
           is_admin?: boolean | null
           kyc_level?: number | null
+          last_name?: string | null
           phone?: string | null
           phone_verified?: boolean | null
+          profile_visibility?: Json | null
           updated_at?: string | null
         }
         Relationships: []
