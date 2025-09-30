@@ -21,10 +21,12 @@ const buttonVariants = cva(
         // Professional variants for sober, elegant look
         professional: "bg-professional-primary text-professional-primary-foreground hover:bg-professional-primary/90 shadow-professional",
         "professional-outline": "border border-professional-border bg-transparent text-professional-primary hover:bg-professional-primary hover:text-professional-primary-foreground",
-        // Urban variants for home page only - these preserve neon colors
-        hero: "bg-gradient-to-r from-purple-neon-primary to-purple-neon-secondary text-white hover:shadow-purple-neon transition-all duration-300 font-semibold border border-purple-neon-primary/20",
-        urban: "bg-transparent border border-purple-neon-primary text-purple-neon-primary hover:bg-purple-neon-primary hover:text-black transition-all duration-300 font-medium backdrop-blur-sm",
-        vote: "bg-vote-inactive text-white hover:bg-vote-active transition-all duration-200 font-medium border border-vote-inactive hover:border-vote-active"
+        // Urban Combat 2.0 - Modern neon variants
+        hero: "bg-gradient-to-r from-purple-neon-primary to-purple-neon-secondary text-white hover:scale-105 hover:shadow-[0_0_30px_hsl(285_100%_68%/0.5)] transition-all duration-300 font-bold",
+        urban: "bg-transparent border-2 border-purple-neon-primary text-purple-neon-primary hover:bg-purple-neon-primary hover:text-white hover:shadow-[0_0_20px_hsl(285_100%_68%/0.4)] transition-all duration-300 font-semibold backdrop-blur-sm",
+        neon: "bg-purple-neon-primary text-white hover:bg-purple-neon-glow hover:shadow-[0_0_25px_hsl(315_90%_70%/0.6)] transition-all duration-300 font-semibold",
+        cyber: "bg-gradient-to-r from-purple-neon-secondary to-cyan-neon text-white hover:scale-105 hover:shadow-[0_0_30px_hsl(220_100%_60%/0.5)] transition-all duration-300 font-bold",
+        vote: "bg-vote-inactive text-white hover:bg-vote-active hover:shadow-[0_0_20px_hsl(285_100%_68%/0.4)] transition-all duration-200 font-medium border border-vote-inactive hover:border-vote-active"
       },
       size: {
         default: "h-10 px-4 py-2",

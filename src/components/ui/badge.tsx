@@ -22,6 +22,10 @@ const badgeVariants = cva(
         warning: "border-transparent bg-fighter-warning text-white",
         danger: "border-transparent bg-fighter-danger text-white",
         info: "border-transparent bg-fighter-info text-white",
+        // Urban Combat 2.0 variants
+        neon: "border-transparent bg-purple-neon-primary text-white shadow-[0_0_10px_hsl(285_100%_68%/0.3)]",
+        cyber: "border-transparent bg-purple-neon-secondary text-white shadow-[0_0_10px_hsl(220_100%_60%/0.3)]",
+        glow: "border-transparent bg-purple-neon-glow text-white shadow-[0_0_10px_hsl(315_90%_70%/0.3)]",
       },
     },
     defaultVariants: {

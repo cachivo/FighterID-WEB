@@ -43,15 +43,18 @@ All colors MUST be HSL.
     --input: 210 10% 94%;
     --ring: 210 15% 20%;
 
-    /* Urban-specific tokens - neon purple theme */
-    --urban-gray: 0 0% 25%;
+    /* Urban Combat 2.0 - Modern vibrant palette */
+    --urban-gray: 0 0% 10%;
     --urban-light: 0 0% 96%;
-    --street-accent: 280 100% 70%;
-    --purple-neon-primary: 280 100% 70%;
-    --purple-neon-secondary: 270 90% 60%;
-    --purple-neon-glow: 280 100% 80%;
-    --vote-active: 280 100% 70%;
-    --vote-inactive: 0 0% 70%;
+    --street-accent: 285 100% 68%;
+    
+    /* Neon colors - Urban Combat 2.0 */
+    --purple-neon-primary: 285 100% 68%; /* Magenta intense */
+    --purple-neon-secondary: 220 100% 60%; /* Electric blue */
+    --purple-neon-glow: 315 90% 70%; /* Neon pink */
+    --cyan-neon: 180 100% 50%; /* Cyan complement */
+    --vote-active: 285 100% 68%;
+    --vote-inactive: 0 0% 50%;
 
     /* Professional Fighter Theme - Light mode readable */
     --fighter-primary: 210 11% 25%; /* Readable dark */
@@ -80,19 +83,24 @@ All colors MUST be HSL.
     --professional-muted: 210 10% 85%; /* Light gray-blue */
     --professional-border: 210 12% 25%; /* Dark border */
     
-    /* Gradients for urban aesthetics - neon purple theme */
-    --gradient-hero: linear-gradient(135deg, hsl(0 0% 8%) 0%, hsl(280 50% 15%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(0 0% 97%) 100%);
-    --gradient-purple-neon: linear-gradient(90deg, hsl(280 100% 70%) 0%, hsl(270 90% 60%) 100%);
+    /* Urban Combat 2.0 Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 8%) 0%, hsl(285 60% 12%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(285 10% 97%) 100%);
+    --gradient-cyber: linear-gradient(135deg, hsl(285 100% 68%) 0%, hsl(220 100% 60%) 100%);
+    --gradient-neon: linear-gradient(90deg, hsl(285 100% 68%) 0%, hsl(315 90% 70%) 100%);
+    --gradient-accent: linear-gradient(120deg, hsl(220 100% 60%) 0%, hsl(180 100% 50%) 100%);
     
     /* Professional gradients - elegant and subtle */
     --gradient-professional: linear-gradient(135deg, hsl(210 15% 20%) 0%, hsl(210 12% 35%) 100%);
     --gradient-professional-light: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 10% 96%) 100%);
 
-    /* Shadows with urban feel - neon purple theme */
-    --shadow-urban: 0 4px 20px -2px hsl(0 0% 8% / 0.1);
-    --shadow-card: 0 2px 12px -3px hsl(0 0% 8% / 0.08);
-    --shadow-purple-neon: 0 4px 20px -4px hsl(280 100% 70% / 0.4);
+    /* Urban Combat 2.0 Shadows */
+    --shadow-urban: 0 4px 20px -2px hsl(0 0% 8% / 0.12);
+    --shadow-card: 0 2px 12px -3px hsl(285 30% 30% / 0.08);
+    --shadow-neon-magenta: 0 4px 24px -4px hsl(285 100% 68% / 0.5);
+    --shadow-neon-blue: 0 4px 24px -4px hsl(220 100% 60% / 0.4);
+    --shadow-neon-pink: 0 4px 24px -4px hsl(315 90% 70% / 0.45);
+    --shadow-glow-intense: 0 0 30px hsl(285 100% 68% / 0.3);
     
     /* Professional shadows - subtle and elegant */
     --shadow-professional: 0 4px 16px -2px hsl(210 15% 20% / 0.15);
@@ -210,20 +218,31 @@ All colors MUST be HSL.
   }
 
   @keyframes pulse-purple-neon {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--purple-neon-primary) / 0.4); }
-    50% { box-shadow: 0 0 0 8px hsl(var(--purple-neon-primary) / 0); }
+    0%, 100% { box-shadow: 0 0 0 0 hsl(285 100% 68% / 0.5); }
+    50% { box-shadow: 0 0 0 12px hsl(285 100% 68% / 0); }
   }
 
   @keyframes glow-neon {
     0%, 100% { 
-      box-shadow: 0 0 5px hsl(var(--purple-neon-primary) / 0.5),
-                  0 0 10px hsl(var(--purple-neon-primary) / 0.4),
-                  0 0 15px hsl(var(--purple-neon-primary) / 0.3);
+      box-shadow: 0 0 8px hsl(285 100% 68% / 0.6),
+                  0 0 16px hsl(285 100% 68% / 0.4),
+                  0 0 24px hsl(285 100% 68% / 0.3);
     }
     50% { 
-      box-shadow: 0 0 10px hsl(var(--purple-neon-primary) / 0.8),
-                  0 0 20px hsl(var(--purple-neon-primary) / 0.6),
-                  0 0 30px hsl(var(--purple-neon-primary) / 0.4);
+      box-shadow: 0 0 16px hsl(285 100% 68% / 0.9),
+                  0 0 32px hsl(285 100% 68% / 0.6),
+                  0 0 48px hsl(285 100% 68% / 0.4);
+    }
+  }
+
+  @keyframes glow-cyber {
+    0%, 100% { 
+      box-shadow: 0 0 10px hsl(220 100% 60% / 0.5),
+                  0 0 20px hsl(220 100% 60% / 0.3);
+    }
+    50% { 
+      box-shadow: 0 0 20px hsl(220 100% 60% / 0.8),
+                  0 0 40px hsl(220 100% 60% / 0.5);
     }
   }
 
@@ -241,6 +260,10 @@ All colors MUST be HSL.
 
   .animate-glow-neon {
     animation: glow-neon 2s ease-in-out infinite;
+  }
+
+  .animate-glow-cyber {
+    animation: glow-cyber 2s ease-in-out infinite;
   }
 
   /* Urban home page - preserve neon aesthetic for main page only */
