@@ -99,7 +99,7 @@ const App = () => (
               <Route path="/social" element={<SocialFeed />} />
               <Route path="/social/friends" element={<Friends />} />
               <Route path="/social/discover" element={<Discover />} />
-              <Route path="/social/profile/:handle" element={<SocialUserProfile />} />
+              <Route path="/social/profile/:id" element={<SocialUserProfile />} />
               <Route path="/verify/license/:licenseNumber" element={<VerifyLicense />} />
               <Route path="/import-event" element={<ImportEvent />} />
               <Route path="/predicciones" element={<Predicciones />} />

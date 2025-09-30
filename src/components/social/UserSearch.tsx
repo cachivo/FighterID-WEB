@@ -24,7 +24,7 @@ export const UserSearch = () => {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Buscar usuarios por nombre o handle..."
+          placeholder="Buscar usuarios por nombre o email..."
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           className="pl-10"
@@ -48,7 +48,7 @@ export const UserSearch = () => {
             user={user}
             isFriend={isFriend(user.id)}
             isPending={isPending(user.id)}
-            onAddFriend={() => sendFriendRequest(user.handle)}
+            onAddFriend={() => sendFriendRequest(user.id)}
           />
         ))}
       </div>

@@ -14,7 +14,7 @@ import { useSocialPosts } from '@/hooks/useSocialPosts';
 import { toast } from 'sonner';
 
 const UserProfile = () => {
-  const { handle } = useParams<{ handle: string }>();
+  const { id } = useParams<{ id: string }>();
   const [user, setUser] = useState<any>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ const UserProfile = () => {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (!handle) return;
+      if (!id) return;
 
       try {
         setLoading(true);
@@ -38,18 +38,18 @@ const UserProfile = () => {
         if (currentUser) {
           const { data: currentAppUser } = await supabase
             .from('app_user')
-            .select('handle')
+            .select('id')
             .eq('auth_user_id', currentUser.id)
             .single();
           
-          setIsOwnProfile(currentAppUser?.handle === handle);
+          setIsOwnProfile(currentAppUser?.id === id);
         }
 
         // Fetch user profile
         const { data: userData, error } = await supabase
           .from('app_user')
-          .select('id, handle, first_name, last_name, avatar_url, bio, country')
-          .eq('handle', handle)
+          .select('id, first_name, last_name, avatar_url, bio, country, email')
+          .eq('id', id)
           .single();
 
         if (error) throw error;
@@ -70,9 +70,8 @@ const UserProfile = () => {
             ...post,
             author_name: userData.first_name && userData.last_name
               ? `${userData.first_name} ${userData.last_name}`
-              : userData.handle,
+              : userData.email || 'Usuario',
             author_avatar: userData.avatar_url,
-            author_handle: userData.handle,
             isLiked: false
           }));
           setUserPosts(enrichedPosts);
@@ -86,7 +85,7 @@ const UserProfile = () => {
     };
 
     fetchUserProfile();
-  }, [handle]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -119,24 +118,24 @@ const UserProfile = () => {
   const getInitials = () => {
     const first = user.first_name?.[0] || '';
     const last = user.last_name?.[0] || '';
-    return (first + last).toUpperCase() || user.handle[0].toUpperCase();
+    return (first + last).toUpperCase() || user.email?.[0]?.toUpperCase() || 'U';
   };
 
   const displayName = user.first_name && user.last_name
     ? `${user.first_name} ${user.last_name}`
-    : user.handle;
+    : user.email || 'Usuario';
 
   const handleFriendAction = async () => {
     if (isFriend) {
       await removeFriend(user.id);
     } else {
-      await sendFriendRequest(user.handle);
+      await sendFriendRequest(user.id);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title={`Perfil de @${user.handle}`} />
+      <PageHeader title={`Perfil de ${displayName}`} />
       
       <div className="flex">
         <SocialSidebar />
@@ -153,7 +152,9 @@ const UserProfile = () => {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <h1 className="text-2xl font-bold text-foreground">{displayName}</h1>
-                    <p className="text-muted-foreground">@{user.handle}</p>
+                    {user.email && (
+                      <p className="text-muted-foreground">{user.email}</p>
+                    )}
                   </div>
                   
                   {!isOwnProfile && (

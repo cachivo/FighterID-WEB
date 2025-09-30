@@ -3,11 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface SearchUser {
   id: string;
-  handle: string;
   first_name: string | null;
   last_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  email: string | null;
 }
 
 export const useUserSearch = () => {
@@ -24,8 +24,8 @@ export const useUserSearch = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('app_user')
-        .select('id, handle, first_name, last_name, avatar_url, bio')
-        .or(`handle.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%`)
+        .select('id, first_name, last_name, avatar_url, bio, email')
+        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,email.ilike.%${query}%`)
         .limit(20);
 
       if (error) throw error;

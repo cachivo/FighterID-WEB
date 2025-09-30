@@ -10,20 +10,20 @@ export interface FriendRequest {
   created_at: string;
   sender?: {
     id: string;
-    handle: string;
     first_name: string | null;
     last_name: string | null;
     avatar_url: string | null;
+    email: string | null;
   };
 }
 
 export interface Friend {
   id: string;
-  handle: string;
   first_name: string | null;
   last_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  email: string | null;
 }
 
 export const useFriends = () => {
@@ -49,7 +49,7 @@ export const useFriends = () => {
         .from('friendships')
         .select(`
           friend_id,
-          friend:app_user!friendships_friend_id_fkey(id, handle, first_name, last_name, avatar_url, bio)
+          friend:app_user!friendships_friend_id_fkey(id, first_name, last_name, avatar_url, bio, email)
         `)
         .eq('user_id', appUser.id);
 
@@ -80,7 +80,7 @@ export const useFriends = () => {
         .from('friend_requests')
         .select(`
           *,
-          sender:app_user!friend_requests_sender_id_fkey(id, handle, first_name, last_name, avatar_url)
+          sender:app_user!friend_requests_sender_id_fkey(id, first_name, last_name, avatar_url, email)
         `)
         .eq('receiver_id', appUser.id)
         .eq('status', 'pending');
@@ -102,7 +102,7 @@ export const useFriends = () => {
     }
   };
 
-  const sendFriendRequest = async (receiverHandle: string) => {
+  const sendFriendRequest = async (receiverId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -116,18 +116,12 @@ export const useFriends = () => {
         .eq('auth_user_id', user.id)
         .single();
 
-      const { data: receiver } = await supabase
-        .from('app_user')
-        .select('id')
-        .eq('handle', receiverHandle)
-        .single();
-
-      if (!appUser || !receiver) {
+      if (!appUser) {
         toast.error('Usuario no encontrado');
         return false;
       }
 
-      if (appUser.id === receiver.id) {
+      if (appUser.id === receiverId) {
         toast.error('No puedes enviarte una solicitud a ti mismo');
         return false;
       }
@@ -136,7 +130,7 @@ export const useFriends = () => {
         .from('friend_requests')
         .insert({
           sender_id: appUser.id,
-          receiver_id: receiver.id
+          receiver_id: receiverId
         });
 
       if (error) {
