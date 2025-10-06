@@ -26,6 +26,7 @@ import ProfileChangeRequests from './pages/admin/ProfileChangeRequests';
 import ProfileChangeRequest from './pages/ProfileChangeRequest';
 import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import UserRoles from './pages/admin/UserRoles';
 
 // Lazy loaded components
 const FightResults = lazy(() => import('./pages/admin/FightResults'));
@@ -226,6 +227,11 @@ const App = () => (
                       <Route path="/configuracion" element={<Configuracion />} />
                       <Route path="/licencias" element={<ValidacionLicencias />} />
                       <Route path="/profile-requests" element={<ProfileChangeRequests />} />
+                      <Route path="/user-roles" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <UserRoles />
+                        </Suspense>
+                      } />
                     </Routes>
                   </AdminLayout>
                 </AdminProtectedRoute>
