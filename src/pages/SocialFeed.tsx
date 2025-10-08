@@ -16,12 +16,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFighterProfiles } from '@/hooks/useFighterProfiles';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { FriendSuggestions } from '@/components/social/FriendSuggestions';
 
 export default function SocialFeed() {
   const [activeTab, setActiveTab] = useState('all');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [postAsAdmin, setPostAsAdmin] = useState(true); // true = News, false = Fighter profile
-  const { posts, loading, createPost, toggleLike, deletePost, fetchPosts } = useSocialPosts();
+  const { posts, loading, createPost, toggleLike, deletePost, fetchPosts, fetchFriendsPosts } = useSocialPosts();
   const { user } = useAuth();
   const { getUserFighterProfile } = useFighterProfiles();
   const [userFighter, setUserFighter] = useState<any>(null);
@@ -49,6 +50,15 @@ export default function SocialFeed() {
 
     checkUserType();
   }, [user]);
+
+  // Load posts based on active tab
+  useEffect(() => {
+    if (activeTab === 'friends') {
+      fetchFriendsPosts();
+    } else {
+      fetchPosts();
+    }
+  }, [activeTab]);
 
   const handleCreatePost = async (postData: any) => {
     console.log('🔍 [SOCIAL FEED] handleCreatePost iniciado');
@@ -93,6 +103,7 @@ export default function SocialFeed() {
 
   const filteredPosts = posts.filter(post => {
     if (activeTab === 'all') return true;
+    if (activeTab === 'friends') return true; // Friends tab uses fetchFriendsPosts
     if (activeTab === 'fighters') return post.author_type === 'fighter';
     if (activeTab === 'news') return post.author_type === 'admin';
     if (activeTab === 'featured') return post.featured;
@@ -247,13 +258,20 @@ export default function SocialFeed() {
           </Card>
         )}
 
+        {/* Friend Suggestions (only on Friends tab) */}
+        {activeTab === 'friends' && user && <FriendSuggestions />}
+
         {/* Filters Tabs */}
         <Card className="border-border/50">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-4 w-full bg-muted/30">
+            <TabsList className="grid grid-cols-5 w-full bg-muted/30">
               <TabsTrigger value="all" className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
                 Todos
+              </TabsTrigger>
+              <TabsTrigger value="friends" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Amigos
               </TabsTrigger>
               <TabsTrigger value="fighters" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
@@ -284,10 +302,12 @@ export default function SocialFeed() {
                   <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p className="text-lg font-medium mb-2">No hay posts aún</p>
                   <p className="text-sm">
-                    {activeTab === 'all' 
-                      ? '¡Sé el primero en compartir algo!'
-                      : `No hay posts en la categoría "${activeTab}"`
-                    }
+                  {activeTab === 'all' 
+                    ? '¡Sé el primero en compartir algo!'
+                    : activeTab === 'friends'
+                    ? 'Aún no tienes posts de amigos. ¡Agrega amigos para ver su contenido!'
+                    : `No hay posts en la categoría "${activeTab}"`
+                  }
                   </p>
                 </div>
               </CardContent>

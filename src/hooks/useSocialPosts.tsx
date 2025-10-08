@@ -22,6 +22,7 @@ export interface SocialPost {
   author_nickname?: string;
   author_avatar?: string;
   is_liked?: boolean;
+  is_friend?: boolean; // NEW: Indicates if the author is a friend
 }
 
 export interface CreatePostData {
@@ -43,6 +44,26 @@ export function useSocialPosts() {
     
     try {
       console.log('[SOCIAL POSTS] Fetching posts...');
+      
+      // Get current user's friends list (if authenticated)
+      let friendIds: string[] = [];
+      if (user) {
+        const { data: appUser } = await supabase
+          .from('app_user')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .single();
+
+        if (appUser) {
+          const { data: friendships } = await supabase
+            .from('friendships')
+            .select('friend_id')
+            .eq('user_id', appUser.id);
+
+          friendIds = friendships?.map(f => f.friend_id) || [];
+          console.log('[SOCIAL POSTS] Friend IDs:', friendIds);
+        }
+      }
       
       // Get posts first
       const { data: postsData, error: postsError } = await supabase
@@ -114,7 +135,8 @@ export function useSocialPosts() {
             : post.author_type === 'user'
             ? userProfile?.avatar_url
             : '/lovable-uploads/7570ef51-ab69-44ed-8ffd-ce52f760de49.png',
-          is_liked: likesData.some(like => like.post_id === post.id)
+          is_liked: likesData.some(like => like.post_id === post.id),
+          is_friend: friendIds.includes(post.author_id) // Check if author is friend
         };
       }) || [];
 
@@ -390,11 +412,141 @@ export function useSocialPosts() {
     fetchPosts();
   }, []);
 
+  const fetchFriendsPosts = async (limit = 20, offset = 0) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      if (!user) {
+        console.log('[FRIENDS POSTS] No user authenticated');
+        return;
+      }
+
+      // Get current user's app_user id
+      const { data: appUser } = await supabase
+        .from('app_user')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (!appUser) {
+        console.log('[FRIENDS POSTS] No app_user found');
+        return;
+      }
+
+      // Get list of friends IDs
+      const { data: friendships } = await supabase
+        .from('friendships')
+        .select('friend_id')
+        .eq('user_id', appUser.id);
+
+      const friendIds = friendships?.map(f => f.friend_id) || [];
+      
+      console.log('[FRIENDS POSTS] Friend IDs:', friendIds);
+
+      if (friendIds.length === 0) {
+        console.log('[FRIENDS POSTS] No friends found');
+        setPosts([]);
+        return;
+      }
+
+      // Fetch posts from friends
+      const { data: postsData, error: postsError } = await supabase
+        .from('social_posts')
+        .select('*')
+        .eq('active', true)
+        .in('author_id', friendIds)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (postsError) throw postsError;
+      
+      console.log(`[FRIENDS POSTS] Fetched ${postsData?.length || 0} posts from friends`);
+
+      // Get fighter info for fighter posts
+      const fighterPosts = postsData?.filter(p => p.author_type === 'fighter') || [];
+      let fighterProfiles: any[] = [];
+      
+      if (fighterPosts.length > 0) {
+        const { data: profiles } = await supabase
+          .from('fighter_profiles')
+          .select('id, first_name, last_name, nickname, avatar_url')
+          .in('id', fighterPosts.map(p => p.author_id));
+        
+        fighterProfiles = profiles || [];
+      }
+
+      // Get user info for user posts
+      const userPosts = postsData?.filter(p => p.author_type === 'user') || [];
+      let userProfiles: any[] = [];
+      
+      if (userPosts.length > 0) {
+        const { data: profiles } = await supabase
+          .from('app_user')
+          .select('id, first_name, last_name, handle, avatar_url, email')
+          .in('id', userPosts.map(p => p.author_id));
+        
+        userProfiles = profiles || [];
+      }
+
+      // Get likes for current user
+      let likesData: any[] = [];
+      if (postsData?.length) {
+        const { data: userLikes } = await supabase
+          .from('post_likes')
+          .select('post_id')
+          .in('post_id', postsData.map(p => p.id));
+        
+        likesData = userLikes || [];
+      }
+
+      const enrichedPosts: SocialPost[] = postsData?.map(post => {
+        const fighterProfile = fighterProfiles.find(fp => fp.id === post.author_id);
+        const userProfile = userProfiles.find(up => up.id === post.author_id);
+        
+        return {
+          ...post,
+          media_files: post.media_files ? (Array.isArray(post.media_files) ? post.media_files : null) : null,
+          author_type: post.author_type as 'fighter' | 'admin' | 'user',
+          post_type: post.post_type as 'text' | 'image' | 'video' | 'news',
+          author_name: post.author_type === 'fighter' 
+            ? `${fighterProfile?.first_name || ''} ${fighterProfile?.last_name || ''}`.trim() || 'Peleador'
+            : post.author_type === 'user'
+            ? userProfile?.first_name || userProfile?.handle || userProfile?.email?.split('@')[0] || 'Usuario'
+            : 'News',
+          author_nickname: post.author_type === 'fighter' ? fighterProfile?.nickname : userProfile?.handle,
+          author_avatar: post.author_type === 'fighter' 
+            ? fighterProfile?.avatar_url 
+            : post.author_type === 'user'
+            ? userProfile?.avatar_url
+            : '/lovable-uploads/7570ef51-ab69-44ed-8ffd-ce52f760de49.png',
+          is_liked: likesData.some(like => like.post_id === post.id),
+          is_friend: true // All posts from this fetch are from friends
+        };
+      }) || [];
+
+      console.log(`[FRIENDS POSTS] Enriched ${enrichedPosts.length} posts`);
+
+      if (offset === 0) {
+        setPosts(enrichedPosts);
+      } else {
+        setPosts(prev => [...prev, ...enrichedPosts]);
+      }
+
+    } catch (err) {
+      console.error('[FRIENDS POSTS ERROR]:', err);
+      setError('Error al cargar posts de amigos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     posts,
     loading,
     error,
     fetchPosts,
+    fetchFriendsPosts,
     createPost,
     toggleLike,
     deletePost

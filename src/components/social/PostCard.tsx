@@ -16,9 +16,10 @@ interface PostCardProps {
   onLike: (postId: string) => void;
   onDelete?: (postId: string) => void;
   isOwner?: boolean;
+  showFriendBadge?: boolean; // NEW: Show friend badge
 }
 
-export default function PostCard({ post, onLike, onDelete, isOwner }: PostCardProps) {
+export default function PostCard({ post, onLike, onDelete, isOwner, showFriendBadge = true }: PostCardProps) {
   const [imageError, setImageError] = useState<Set<string>>(new Set());
   const [mediaFiles, setMediaFiles] = useState<Array<{ url: string; type: 'image' | 'video' }>>([]);
   const { user } = useAuth();
@@ -114,6 +115,11 @@ export default function PostCard({ post, onLike, onDelete, isOwner }: PostCardPr
                   <span className="text-muted-foreground text-sm truncate">
                     @{post.author_nickname}
                   </span>
+                )}
+                {post.author_type === 'fighter' && showFriendBadge && post.is_friend && (
+                  <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">
+                    👥 Amigo
+                  </Badge>
                 )}
                 {post.author_type === 'admin' && (
                   <Badge variant="secondary" className="text-xs">
