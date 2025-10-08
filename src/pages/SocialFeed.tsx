@@ -160,7 +160,6 @@ export default function SocialFeed() {
   const filteredPosts = posts.filter(post => {
     if (activeTab === 'all') return true;
     if (activeTab === 'friends') return true; // Friends tab uses fetchFriendsPosts
-    if (activeTab === 'fighters') return post.author_type === 'fighter';
     if (activeTab === 'news') return post.author_type === 'admin';
     if (activeTab === 'featured') return post.featured;
     return true;
@@ -322,7 +321,7 @@ export default function SocialFeed() {
         {/* Filters Tabs */}
         <Card className="border-border/50">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-5 w-full bg-muted/30">
+            <TabsList className="grid grid-cols-4 w-full bg-muted/30">
               <TabsTrigger value="all" className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
                 Todos
@@ -330,10 +329,6 @@ export default function SocialFeed() {
               <TabsTrigger value="friends" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Amigos
-              </TabsTrigger>
-              <TabsTrigger value="fighters" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Luchadores
               </TabsTrigger>
               <TabsTrigger value="news" className="flex items-center gap-2">
                 <Rss className="h-4 w-4" />
