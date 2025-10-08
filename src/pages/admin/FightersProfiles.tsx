@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Edit, User, Trash2, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Edit, User, Trash2, Eye, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,7 +18,8 @@ const WEIGHT_CLASSES = [
   'Lightweight', 'Welterweight', 'Middleweight', 'Light Heavyweight', 'Heavyweight'
 ];
 
-export default function Fighters() {
+export default function FightersProfiles() {
+  const navigate = useNavigate();
   const { fighters, loading, error } = useAdminFighters();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedWeightClass, setSelectedWeightClass] = useState<string>('all');
@@ -79,11 +81,17 @@ export default function Fighters() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold mb-2">Gestión de Peleadores</h1>
-        <p className="text-muted-foreground">
-          Administra los perfiles de todos los peleadores registrados
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Gestión de Perfiles de Peleadores</h1>
+          <p className="text-muted-foreground">
+            Administra los perfiles de todos los peleadores registrados
+          </p>
+        </div>
+        <Button onClick={() => navigate('/admin/fighters-profiles/create')} size="lg">
+          <Plus className="mr-2 h-5 w-5" />
+          Crear Nuevo Perfil
+        </Button>
       </div>
 
       {/* Filters */}

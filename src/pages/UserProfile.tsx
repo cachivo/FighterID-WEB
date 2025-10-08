@@ -14,7 +14,7 @@ import { Shield, User, Plus, ExternalLink, Eye, FileText, AlertCircle, Calendar,
 import { FighterProfileForm } from '@/components/FighterProfileForm';
 import { UserProfileForm } from '@/components/UserProfileForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import FighterUpdateForm from '@/components/FighterUpdateForm';
+import FighterStatusUpdateForm from '@/components/FighterStatusUpdateForm';
 import FighterUpdatesFeed from '@/components/FighterUpdatesFeed';
 
 export default function UserProfile() {
@@ -318,7 +318,7 @@ export default function UserProfile() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <FighterUpdateForm fighterId={profile.id} />
+              <FighterStatusUpdateForm fighterId={profile.id} />
             </CardContent>
           </Card>
         )}

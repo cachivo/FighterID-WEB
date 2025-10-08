@@ -90,18 +90,21 @@ export default function ValidacionLicencias() {
     },
   });
 
-  // Fetch only fighters with active licenses for dropdown
+  // Fetch ALL active fighter profiles for dropdown (with or without licenses)
   const { data: fighters } = useQuery({
-    queryKey: ['fighters_with_licenses'],
+    queryKey: ['all_fighters_for_license'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('fighter_profiles')
         .select(`
-          id, first_name, last_name, nickname,
-          fighter_licenses!fighter_licenses_fighter_id_fkey!inner(status)
+          id, 
+          first_name, 
+          last_name, 
+          nickname,
+          license_number,
+          primary_license_id
         `)
         .eq('active', true)
-        .in('fighter_licenses.status', ['ACTIVE', 'SUSPENDED'])
         .order('first_name');
       if (error) throw error;
       return data || [];
@@ -360,14 +363,29 @@ export default function ValidacionLicencias() {
                     <SelectValue placeholder="Selecciona un peleador" />
                   </SelectTrigger>
                   <SelectContent>
-                    {fighters?.map(fighter => (
-                      <SelectItem key={fighter.id} value={fighter.id}>
-                        {fighter.first_name} {fighter.last_name}
-                        {fighter.nickname ? ` "${fighter.nickname}"` : ''}
-                      </SelectItem>
-                    ))}
+                    {fighters?.map(fighter => {
+                      const hasLicense = !!fighter.primary_license_id;
+                      return (
+                        <SelectItem key={fighter.id} value={fighter.id}>
+                          <div className="flex items-center gap-2">
+                            <span>
+                              {fighter.first_name} {fighter.last_name}
+                              {fighter.nickname ? ` "${fighter.nickname}"` : ''}
+                            </span>
+                            {hasLicense ? (
+                              <span className="text-xs text-green-600">✓ Con Licencia</span>
+                            ) : (
+                              <span className="text-xs text-amber-600">⚠ Sin Licencia</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  Selecciona un peleador para emitirle una nueva licencia
+                </p>
               </div>
 
               <div className="space-y-2">

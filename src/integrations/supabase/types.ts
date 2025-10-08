@@ -2887,6 +2887,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_fighter_profile: {
+        Args: { p_profile_data: Json }
+        Returns: string
+      }
       admin_delete_fighter_profile: {
         Args: { p_fighter_id: string }
         Returns: undefined

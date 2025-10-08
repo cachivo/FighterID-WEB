@@ -11,7 +11,9 @@ export const MAIN_ROUTES = {
 
 export const ADMIN_ROUTES = {
   DASHBOARD: '/admin/dashboard',
-  FIGHTERS: '/admin/peleadores',
+  FIGHTERS_PROFILES: '/admin/fighters-profiles',
+  FIGHTERS_PROFILES_CREATE: '/admin/fighters-profiles/create',
+  LICENSE_VALIDATION: '/admin/licencias',
   EVENTS: '/admin/eventos-pelea',
   BETTING: '/admin/apuestas',
   RANKING: '/admin/ranking',
@@ -39,9 +41,18 @@ export const BREADCRUMB_CONFIG = {
     { label: 'Admin', href: '/admin' },
     { label: 'Dashboard', isActive: true }
   ],
-  '/admin/peleadores': [
+  '/admin/fighters-profiles': [
     { label: 'Admin', href: '/admin' },
-    { label: 'Peleadores', isActive: true }
+    { label: 'Perfiles de Peleadores', isActive: true }
+  ],
+  '/admin/fighters-profiles/create': [
+    { label: 'Admin', href: '/admin' },
+    { label: 'Perfiles de Peleadores', href: '/admin/fighters-profiles' },
+    { label: 'Crear Perfil', isActive: true }
+  ],
+  '/admin/licencias': [
+    { label: 'Admin', href: '/admin' },
+    { label: 'Licencias Fighter ID', isActive: true }
   ]
 };
 

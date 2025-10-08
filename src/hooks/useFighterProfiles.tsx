@@ -491,6 +491,34 @@ export function useFighterProfiles() {
     };
   }, [fetchFighters]);
 
+  /**
+   * Admin creates a new fighter profile (no user_id required)
+   */
+  const adminCreateFighterProfile = async (profileData: Partial<FighterProfileData>): Promise<string | null> => {
+    try {
+      console.log('Admin creating fighter profile:', profileData);
+      
+      const { data, error } = await supabase.rpc('admin_create_fighter_profile', {
+        p_profile_data: profileData as any
+      });
+
+      if (error) {
+        console.error('Error creating fighter profile:', error);
+        throw error;
+      }
+
+      console.log('Fighter profile created successfully:', data);
+      
+      // Refresh fighters list
+      await fetchFighters();
+      
+      return data;
+    } catch (error) {
+      console.error('Exception in adminCreateFighterProfile:', error);
+      throw error;
+    }
+  };
+
   return {
     fighters,
     loading,
@@ -503,6 +531,7 @@ export function useFighterProfiles() {
     fetchFighters,
     fetchFightersWithReadyStatus,
     adminUpdateFighterProfile,
+    adminCreateFighterProfile,
     deleteLicense,
     deleteFighterProfile,
     refreshUserProfile

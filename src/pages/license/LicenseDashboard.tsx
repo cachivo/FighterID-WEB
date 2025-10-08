@@ -6,7 +6,7 @@ import { useDopingTests } from '@/hooks/useDopingTests';
 import { EnhancedFighterID } from '@/components/EnhancedFighterID';
 import { UserFighterProfileEditForm } from '@/components/UserFighterProfileEditForm';
 import { ProfileCompletionPrompt } from '@/components/ProfileCompletionPrompt';
-import FighterUpdateForm from '@/components/FighterUpdateForm';
+import FighterStatusUpdateForm from '@/components/FighterStatusUpdateForm';
 import FighterUpdatesFeed from '@/components/FighterUpdatesFeed';
 import { DopingTestCard } from '@/components/DopingTestCard';
 import { DopingTestUploadForm } from '@/components/DopingTestUploadForm';
@@ -739,7 +739,7 @@ export default function LicenseDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <FighterUpdateForm 
+              <FighterStatusUpdateForm 
                 fighterId={fighterProfile?.id} 
                 onUpdateCreated={() => {
                   // Refresh the feed when a new update is created
