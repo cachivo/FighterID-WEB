@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +11,7 @@ import PostCard from '@/components/social/PostCard';
 import CreatePostForm from '@/components/social/CreatePostForm';
 import { NewsPostGenerator } from '@/components/social/NewsPostGenerator';
 import { SocialSidebar } from '@/components/social/SocialSidebar';
+import TrendingPanel from '@/components/social/TrendingPanel';
 import { useSocialPosts } from '@/hooks/useSocialPosts';
 import { useAuth } from '@/hooks/useAuth';
 import { useFighterProfiles } from '@/hooks/useFighterProfiles';
@@ -19,6 +20,7 @@ import { toast } from 'sonner';
 import { FriendSuggestions } from '@/components/social/FriendSuggestions';
 
 export default function SocialFeed() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [postAsAdmin, setPostAsAdmin] = useState(true); // true = News, false = Fighter profile
@@ -28,6 +30,10 @@ export default function SocialFeed() {
   const [userFighter, setUserFighter] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [appUser, setAppUser] = useState<any>(null);
+
+  const handleHashtagClick = (hashtag: string) => {
+    navigate('/social/trending', { state: { hashtag } });
+  };
 
   useEffect(() => {
     const checkUserType = async () => {
@@ -310,10 +316,11 @@ export default function SocialFeed() {
         </div>
       </div>
 
-      <div className="flex">
+      <div className="flex gap-6">
         <SocialSidebar />
         
-        <div className="flex-1 max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* Main Content */}
+        <div className="flex-1 max-w-2xl px-4 py-6 space-y-6">
         {/* Create Post Section */}
         {canCreatePost && (
           <Card className="border-border/50">
@@ -443,6 +450,11 @@ export default function SocialFeed() {
             </>
           )}
         </div>
+        </div>
+
+        {/* Trending Panel - Right Side */}
+        <div className="hidden xl:block w-80 px-4 py-6 space-y-4">
+          <TrendingPanel onHashtagClick={handleHashtagClick} />
         </div>
       </div>
     </div>

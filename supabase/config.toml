@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.send-fighter-invitation]
 verify_jwt = true
+
+[functions.fetch-link-metadata]
+verify_jwt = false

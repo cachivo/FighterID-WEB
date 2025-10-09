@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { parseContent } from '@/lib/textParser';
 
 export interface SocialPost {
   id: string;
@@ -331,6 +332,66 @@ export function useSocialPosts() {
         await supabase
           .from('post_media')
           .insert(mediaRecords);
+      }
+
+      // Parse and save mentions and hashtags
+      const parsed = parseContent(postData.content);
+      
+      // Save mentions
+      if (parsed.mentions.length > 0) {
+        console.log('💬 [CREATE POST] Saving mentions:', parsed.mentions);
+        
+        // For each mention, try to find the user
+        for (const mention of parsed.mentions) {
+          // Check if it's a fighter
+          const { data: fighter } = await supabase
+            .from('fighter_profiles')
+            .select('id, user_id')
+            .or(`nickname.ilike.${mention.username}`)
+            .single();
+
+          if (fighter) {
+            await supabase
+              .from('post_mentions')
+              .insert({
+                post_id: data.id,
+                mentioned_user_id: fighter.id,
+                mentioned_user_type: 'fighter'
+              });
+            continue;
+          }
+
+          // Check if it's a regular user
+          const { data: regularUser } = await supabase
+            .from('app_user')
+            .select('id')
+            .or(`handle.ilike.${mention.username}`)
+            .single();
+
+          if (regularUser) {
+            await supabase
+              .from('post_mentions')
+              .insert({
+                post_id: data.id,
+                mentioned_user_id: regularUser.id,
+                mentioned_user_type: 'user'
+              });
+          }
+        }
+      }
+
+      // Save hashtags
+      if (parsed.hashtags.length > 0) {
+        console.log('🏷️ [CREATE POST] Saving hashtags:', parsed.hashtags);
+        
+        const hashtagRecords = parsed.hashtags.map(h => ({
+          post_id: data.id,
+          hashtag: h.tag.toLowerCase()
+        }));
+
+        await supabase
+          .from('post_hashtags')
+          .insert(hashtagRecords);
       }
 
       // OPTIMISTIC UPDATE: Agregar post localmente de inmediato con flag

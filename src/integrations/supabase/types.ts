@@ -1858,6 +1858,48 @@ export type Database = {
           },
         ]
       }
+      link_previews: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          embed_html: string | null
+          embed_type: string | null
+          expires_at: string | null
+          id: string
+          image_url: string | null
+          metadata: Json | null
+          site_name: string | null
+          title: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          embed_html?: string | null
+          embed_type?: string | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          metadata?: Json | null
+          site_name?: string | null
+          title?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          embed_html?: string | null
+          embed_type?: string | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          metadata?: Json | null
+          site_name?: string | null
+          title?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       market: {
         Row: {
           created_at: string | null
@@ -2191,6 +2233,35 @@ export type Database = {
           },
         ]
       }
+      post_hashtags: {
+        Row: {
+          created_at: string | null
+          hashtag: string
+          id: string
+          post_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hashtag: string
+          id?: string
+          post_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hashtag?: string
+          id?: string
+          post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_hashtags_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_likes: {
         Row: {
           created_at: string
@@ -2263,6 +2334,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "post_media_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_mentions: {
+        Row: {
+          created_at: string | null
+          id: string
+          mentioned_user_id: string
+          mentioned_user_type: string
+          post_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mentioned_user_id: string
+          mentioned_user_type: string
+          post_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mentioned_user_id?: string
+          mentioned_user_type?: string
+          post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_mentions_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "social_posts"
@@ -2717,6 +2820,30 @@ export type Database = {
         }
         Relationships: []
       }
+      trending_hashtags: {
+        Row: {
+          count: number | null
+          hashtag: string
+          id: string
+          period: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          count?: number | null
+          hashtag: string
+          id?: string
+          period?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          count?: number | null
+          hashtag?: string
+          id?: string
+          period?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_follows: {
         Row: {
           created_at: string | null
@@ -2823,6 +2950,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      video_processing_jobs: {
+        Row: {
+          created_at: string | null
+          duration_seconds: number | null
+          error_message: string | null
+          file_size_bytes: number | null
+          id: string
+          metadata: Json | null
+          original_path: string
+          post_id: string | null
+          processed_path: string | null
+          progress: number | null
+          resolution: string | null
+          status: string | null
+          thumbnail_path: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          error_message?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          metadata?: Json | null
+          original_path: string
+          post_id?: string | null
+          processed_path?: string | null
+          progress?: number | null
+          resolution?: string | null
+          status?: string | null
+          thumbnail_path?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          error_message?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          metadata?: Json | null
+          original_path?: string
+          post_id?: string | null
+          processed_path?: string | null
+          progress?: number | null
+          resolution?: string | null
+          status?: string | null
+          thumbnail_path?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_processing_jobs_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       votes: {
         Row: {
