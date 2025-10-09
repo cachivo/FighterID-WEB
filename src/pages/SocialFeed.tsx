@@ -242,32 +242,32 @@ export default function SocialFeed() {
       
       {/* Optimized Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+              <Link to="/" className="flex-shrink-0">
                 <img 
                   src="/lovable-uploads/7570ef51-ab69-44ed-8ffd-ce52f760de49.png" 
                   alt="Fighter ID" 
-                  className="h-8 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+                  className="h-7 sm:h-8 w-auto cursor-pointer hover:opacity-80 transition-opacity"
                 />
               </Link>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent truncate">
                   {userFighter ? 'Red Social de Peleadores' : 
                    isAdmin ? 'Panel Social Administrativo' : 'Comunidad Fighter ID'}
                 </h1>
-                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                  <Rss className="h-3 w-3" />
-                  <span>
+                <div className="hidden md:flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <Rss className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">
                     {userFighter ? 'Noticias automáticas cada 30 min' : 
                      isAdmin ? 'Sistema de noticias inteligente activo' : 'Feed con noticias en tiempo real'}
                   </span>
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse flex-shrink-0"></div>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
@@ -307,7 +307,7 @@ export default function SocialFeed() {
                   }
                 }}
                 disabled={loading}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground min-h-[40px] min-w-[40px] touch-manipulation"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
@@ -316,15 +316,18 @@ export default function SocialFeed() {
         </div>
       </div>
 
-      <div className="flex gap-6">
-        <SocialSidebar />
+      <div className="flex gap-4 sm:gap-6">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block">
+          <SocialSidebar />
+        </div>
         
         {/* Main Content */}
-        <div className="flex-1 max-w-2xl px-4 py-6 space-y-6">
+        <div className="flex-1 max-w-2xl px-2 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Create Post Section */}
         {canCreatePost && (
           <Card className="border-border/50">
-            <CardContent className="pt-6">
+            <CardContent className="p-3 sm:pt-6">
               {showCreateForm ? (
                 <CreatePostForm
                   onSubmit={handleCreatePost}
@@ -339,18 +342,18 @@ export default function SocialFeed() {
                 />
               ) : (
                 <div 
-                  className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors"
+                  className="flex items-center gap-3 p-3 sm:p-4 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors touch-manipulation min-h-[56px]"
                   onClick={() => setShowCreateForm(true)}
                 >
-                  <Avatar className="h-10 w-10">
+                  <Avatar className="h-10 w-10 flex-shrink-0">
                     <AvatarImage src={authorInfo!.avatar} alt={authorInfo!.name} />
                     <AvatarFallback>{authorInfo!.name?.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 text-muted-foreground">
+                  <div className="flex-1 text-sm sm:text-base text-muted-foreground">
                     ¿Qué está pasando en el ring?
                   </div>
-                  <Button size="sm" variant="ghost" className="text-primary">
-                    <Plus className="h-4 w-4" />
+                  <Button size="sm" variant="ghost" className="text-primary flex-shrink-0">
+                    <Plus className="h-5 w-5" />
                   </Button>
                 </div>
               )}
@@ -365,21 +368,21 @@ export default function SocialFeed() {
         <Card className="border-border/50">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-4 w-full bg-muted/30">
-              <TabsTrigger value="all" className="flex items-center gap-2">
+              <TabsTrigger value="all" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                 <TrendingUp className="h-4 w-4" />
-                Todos
+                <span className="hidden sm:inline">Todos</span>
               </TabsTrigger>
-              <TabsTrigger value="friends" className="flex items-center gap-2">
+              <TabsTrigger value="friends" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                 <Users className="h-4 w-4" />
-                Amigos
+                <span className="hidden sm:inline">Amigos</span>
               </TabsTrigger>
-              <TabsTrigger value="news" className="flex items-center gap-2">
+              <TabsTrigger value="news" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                 <Rss className="h-4 w-4" />
-                Noticias
+                <span className="hidden sm:inline">Noticias</span>
               </TabsTrigger>
-              <TabsTrigger value="featured" className="flex items-center gap-2">
+              <TabsTrigger value="featured" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                 <Star className="h-4 w-4" />
-                Destacados
+                <span className="hidden sm:inline">Destacados</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -393,11 +396,11 @@ export default function SocialFeed() {
             </div>
           ) : filteredPosts.length === 0 ? (
             <Card className="border-border/50">
-              <CardContent className="py-12 text-center">
+              <CardContent className="py-12 text-center px-4">
                 <div className="text-muted-foreground">
                   <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium mb-2">No hay posts aún</p>
-                  <p className="text-sm">
+                  <p className="text-base sm:text-lg font-medium mb-2">No hay posts aún</p>
+                  <p className="text-xs sm:text-sm">
                   {activeTab === 'all' 
                     ? '¡Sé el primero en compartir algo!'
                     : activeTab === 'friends'
@@ -434,7 +437,7 @@ export default function SocialFeed() {
                     }} 
                     disabled={loading}
                     variant="outline"
-                    className="bg-card/50 hover:bg-card border-border/50"
+                    className="bg-card/50 hover:bg-card border-border/50 min-h-[44px] w-full sm:w-auto touch-manipulation"
                   >
                     {loading ? (
                       <>
@@ -452,7 +455,7 @@ export default function SocialFeed() {
         </div>
         </div>
 
-        {/* Trending Panel - Right Side */}
+        {/* Trending Panel - Desktop Right Side */}
         <div className="hidden xl:block w-80 px-4 py-6 space-y-4">
           <TrendingPanel onHashtagClick={handleHashtagClick} />
         </div>

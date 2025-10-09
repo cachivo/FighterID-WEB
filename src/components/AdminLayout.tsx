@@ -9,7 +9,19 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      {/* Desktop-only warning for small screens */}
+      <div className="lg:hidden min-h-screen flex items-center justify-center p-6 bg-background">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold text-destructive">Acceso Restringido</h1>
+          <p className="text-muted-foreground max-w-md">
+            El panel de administración solo está disponible en computadores de escritorio. 
+            Por favor accede desde un dispositivo con pantalla más grande.
+          </p>
+        </div>
+      </div>
+
+      {/* Desktop layout */}
+      <div className="hidden lg:flex min-h-screen w-full">
         <AdminSidebar />
         <div className="flex-1 flex flex-col">
           <header className="h-14 border-b bg-background flex items-center px-6">

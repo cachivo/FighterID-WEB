@@ -111,21 +111,21 @@ export default function CreatePostForm({
   const isSubmitDisabled = (!content.trim() && mediaUrls.length === 0 && mediaFiles.length === 0) || content.length > 2000 || loading || isSubmitting;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Author info with toggle - ENHANCED */}
-      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border/30">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+      <div className="flex items-center justify-between p-2 sm:p-3 bg-muted/30 rounded-lg border border-border/30">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <Avatar className="h-9 w-9 sm:h-10 sm:w-10 ring-2 ring-primary/20 flex-shrink-0">
             <AvatarImage src={authorAvatar || ''} alt={authorName} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs sm:text-sm font-medium">
               {getAuthorInitials()}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-foreground">{authorName}</span>
+              <span className="font-medium text-sm sm:text-base text-foreground truncate">{authorName}</span>
               {authorNickname && (
-                <span className="text-sm text-muted-foreground">"{authorNickname}"</span>
+                <span className="text-xs sm:text-sm text-muted-foreground truncate">"{authorNickname}"</span>
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -148,13 +148,13 @@ export default function CreatePostForm({
         
         {/* Toggle for admins with fighter profile */}
         {canToggleAuthor && onToggleAuthor && (
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-1 sm:gap-2 text-sm flex-shrink-0">
             <Button
               type="button"
               variant={postAsAdmin ? "default" : "outline"}
               size="sm"
               onClick={() => onToggleAuthor(true)}
-              className="h-7 text-xs"
+              className="h-7 text-xs px-2 sm:px-3"
             >
               News
             </Button>
@@ -163,7 +163,7 @@ export default function CreatePostForm({
               variant={!postAsAdmin ? "default" : "outline"}
               size="sm"
               onClick={() => onToggleAuthor(false)}
-              className="h-7 text-xs"
+              className="h-7 text-xs px-2 sm:px-3"
             >
               Mi Perfil
             </Button>
@@ -171,14 +171,14 @@ export default function CreatePostForm({
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         {/* Content textarea */}
         <div className="space-y-2">
           <Textarea
             placeholder="¿Qué está pasando en tu entrenamiento?"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[100px] resize-none border-0 bg-transparent text-base placeholder:text-muted-foreground focus-visible:ring-0 p-0"
+            className="min-h-[80px] sm:min-h-[100px] resize-none border-0 bg-transparent text-base placeholder:text-muted-foreground focus-visible:ring-0 p-0"
             maxLength={2000}
           />
           {content.length > 0 && (
@@ -209,9 +209,9 @@ export default function CreatePostForm({
                   variant="ghost"
                   size="sm"
                   onClick={() => removeFile(index)}
-                  className="absolute top-2 right-2 h-7 w-7 p-0 bg-black/50 hover:bg-black/70 text-white"
+                  className="absolute top-1 right-1 h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white min-h-[32px] touch-manipulation"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
@@ -236,7 +236,7 @@ export default function CreatePostForm({
                   variant="ghost"
                   size="sm"
                   onClick={() => removeImageUrl(index)}
-                  className="absolute top-2 right-2 h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white"
+                  className="absolute top-1 right-1 h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white min-h-[32px] touch-manipulation"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -247,7 +247,7 @@ export default function CreatePostForm({
 
         {/* Media upload section - optional */}
         {showMediaUpload && (
-          <div className="space-y-3 p-4 border border-border/50 rounded-lg">
+          <div className="space-y-3 p-3 sm:p-4 border border-border/50 rounded-lg">
             {/* File upload */}
             {mediaFiles.length < 4 && (
               <div>
@@ -277,13 +277,14 @@ export default function CreatePostForm({
                     addImageUrl();
                   }
                 }}
-                className="flex-1"
+                className="flex-1 text-sm sm:text-base"
               />
               <Button
                 type="button"
                 onClick={addImageUrl}
                 size="sm"
                 disabled={!newImageUrl.trim()}
+                className="min-h-[44px] touch-manipulation"
               >
                 Agregar
               </Button>
@@ -294,7 +295,7 @@ export default function CreatePostForm({
               variant="ghost"
               size="sm"
               onClick={() => setShowMediaUpload(false)}
-              className="w-full"
+              className="w-full min-h-[44px] touch-manipulation"
             >
               Cancelar
             </Button>
@@ -302,16 +303,16 @@ export default function CreatePostForm({
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-border/30">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-border/30">
           {!showMediaUpload && (
             <Button
               type="button"
               variant="ghost"
               onClick={() => setShowMediaUpload(true)}
               size="sm"
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground justify-start sm:justify-center min-h-[44px] touch-manipulation"
             >
-              <ImagePlus className="h-4 w-4 mr-2" />
+              <ImagePlus className="h-5 w-5 mr-2" />
               Agregar Foto/Video
             </Button>
           )}
@@ -320,7 +321,7 @@ export default function CreatePostForm({
             type="submit"
             disabled={isSubmitDisabled}
             size="sm"
-            className="px-6"
+            className="px-6 w-full sm:w-auto min-h-[44px] touch-manipulation"
           >
             {loading || isSubmitting ? (
               <>
@@ -333,6 +334,6 @@ export default function CreatePostForm({
           </Button>
         </div>
       </form>
-    </div>
+     </div>
   );
 }
