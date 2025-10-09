@@ -323,7 +323,7 @@ export default function SocialFeed() {
         </div>
         
         {/* Main Content */}
-        <div className="flex-1 max-w-2xl px-2 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div className="flex-1 max-w-2xl px-2 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-8 space-y-4 sm:space-y-6">
         {/* Create Post Section */}
         {canCreatePost && (
           <Card className="border-border/50">

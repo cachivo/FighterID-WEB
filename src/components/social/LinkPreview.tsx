@@ -34,10 +34,10 @@ export default function LinkPreview({ preview, onClick }: LinkPreviewProps) {
       className="overflow-hidden border-border/50 bg-card/50 cursor-pointer hover:bg-card/70 transition-colors"
       onClick={handleClick}
     >
-      <div className="flex">
+      <div className="flex flex-col sm:flex-row">
         {/* Image */}
         {preview.image_url && (
-          <div className="w-32 h-32 shrink-0 relative bg-muted">
+          <div className="w-full sm:w-32 h-48 sm:h-32 shrink-0 relative bg-muted">
             <img
               src={preview.image_url}
               alt={preview.title || 'Link preview'}
@@ -50,8 +50,8 @@ export default function LinkPreview({ preview, onClick }: LinkPreviewProps) {
         )}
 
         {/* Content */}
-        <div className="flex-1 p-3 min-w-0">
-          <div className="space-y-1">
+        <div className="flex-1 p-3 sm:p-4 min-w-0">
+          <div className="space-y-1 sm:space-y-1.5">
             {preview.site_name && (
               <p className="text-xs text-muted-foreground truncate">
                 {preview.site_name}

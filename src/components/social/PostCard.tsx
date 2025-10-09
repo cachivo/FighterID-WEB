@@ -155,11 +155,11 @@ export default function PostCard({ post, onLike, onDelete, isOwner, showFriendBa
 
   return (
     <Card className="border-border/50 bg-card">
-      <CardContent className="p-6">
+      <CardContent className="p-3 sm:p-4 md:p-6">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3 flex-1">
-            <Avatar className="h-10 w-10">
+        <div className="flex items-start justify-between mb-3 sm:mb-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-1">
+            <Avatar className="h-9 w-9 sm:h-10 sm:w-10">
               <AvatarImage 
                 src={post.author_avatar || ''} 
                 alt={post.author_name}
@@ -170,12 +170,12 @@ export default function PostCard({ post, onLike, onDelete, isOwner, showFriendBa
             </Avatar>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-foreground truncate">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h3 className="font-semibold text-sm sm:text-base text-foreground truncate">
                   {post.author_name}
                 </h3>
                 {post.author_nickname && (
-                  <span className="text-muted-foreground text-sm truncate">
+                  <span className="text-muted-foreground text-xs sm:text-sm truncate">
                     @{post.author_nickname}
                   </span>
                 )}
@@ -196,7 +196,7 @@ export default function PostCard({ post, onLike, onDelete, isOwner, showFriendBa
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {formatDistanceToNow(new Date(post.created_at), { 
                   addSuffix: true,
                   locale: es 
@@ -232,8 +232,8 @@ export default function PostCard({ post, onLike, onDelete, isOwner, showFriendBa
         </div>
 
         {/* Content with mentions, hashtags, and links */}
-        <div className="space-y-3">
-          <div className="text-foreground leading-relaxed whitespace-pre-wrap">
+        <div className="space-y-2 sm:space-y-3">
+          <div className="text-sm sm:text-base text-foreground leading-relaxed whitespace-pre-wrap break-words">
             {parseContentWithFormatting(post.content)}
           </div>
 
@@ -248,7 +248,7 @@ export default function PostCard({ post, onLike, onDelete, isOwner, showFriendBa
 
           {/* Media from uploaded files */}
           {mediaFiles.length > 0 && (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {mediaFiles.map((media, index) => (
                 <div key={index} className="relative rounded-lg overflow-hidden border border-border/30">
                   {media.type === 'video' ? (
@@ -291,7 +291,7 @@ export default function PostCard({ post, onLike, onDelete, isOwner, showFriendBa
         </div>
 
         {/* Actions */}
-        <div className="mt-4 pt-3 border-t border-border/30 space-y-3">
+        <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-border/30 space-y-2 sm:space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <Button
