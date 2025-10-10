@@ -46,10 +46,11 @@ const Header = () => {
   }, [user, getUserFighterProfile]);
 
   const navigationItems = [
-    { name: "Comunidad", href: "/", icon: Home },
+    { name: "Inicio", href: "/", icon: Home },
+    { name: "Social", href: "/social/feed", icon: Users },
     { name: "Eventos", href: "/eventos", icon: Calendar },
-    { name: "Peleadores", href: "/fighters", icon: Users },
-    { name: "Predicciones", href: "/predicciones", icon: Trophy },
+    { name: "Peleadores", href: "/fighters", icon: Trophy },
+    { name: "Predicciones", href: "/predicciones", icon: BarChart3 },
     { name: "Mi Perfil", href: "/profile", icon: User },
   ];
 
@@ -126,7 +127,10 @@ const Header = () => {
           )}
           
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/">Comunidad</Link>
+            <Link to="/">Inicio</Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/social/feed">Social</Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/eventos">Eventos</Link>
@@ -142,7 +146,10 @@ const Header = () => {
         {/* Simplified Navigation for Medium Screens */}
         <div className="hidden md:flex lg:hidden items-center gap-1">
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/">Comunidad</Link>
+            <Link to="/">Inicio</Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/social/feed">Social</Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/eventos">Eventos</Link>
