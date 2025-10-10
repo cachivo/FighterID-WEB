@@ -389,7 +389,7 @@ export default function LiveEventsControl() {
               <p className="text-muted-foreground mb-4">
                 No hay eventos en vivo o programados en este momento
               </p>
-              <Button onClick={() => window.location.href = '/admin/eventos-deportivos'}>
+              <Button onClick={() => window.location.href = '/admin/eventos-pelea'}>
                 Crear Nuevo Evento
               </Button>
             </div>
