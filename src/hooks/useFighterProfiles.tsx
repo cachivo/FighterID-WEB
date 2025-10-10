@@ -388,8 +388,8 @@ export function useFighterProfiles() {
 
       console.log('Usuario verificado como admin:', adminCheck);
       
-      // Usar la función administrativa de base de datos v9 con valores en español
-      const { error } = await supabase.rpc('admin_update_fighter_profile_v9', {
+      // Usar la función administrativa de base de datos con valores en español
+      const { error } = await supabase.rpc('admin_update_fighter_profile', {
         p_fighter_id: fighterId,
         p_profile_data: profileData as any
       });
