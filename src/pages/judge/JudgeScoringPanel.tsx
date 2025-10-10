@@ -33,11 +33,11 @@ export default function JudgeScoringPanel() {
           return;
         }
 
-        // Obtener judge_id del usuario actual  
+        // Obtener judge_id del usuario actual usando email
         const judgeQuery = await supabase
           .from('judges')
           .select('id')
-          .eq('user_id', user.id)
+          .eq('email', user.email)
           .limit(1);
 
         if (!judgeQuery.data || judgeQuery.data.length === 0) {
@@ -50,10 +50,10 @@ export default function JudgeScoringPanel() {
 
         // Verificar asignación a esta pelea
         const assignmentQuery = await supabase
-          .from('fight_judges')
+          .from('fight_officials')
           .select('id')
           .eq('fight_id', fightId)
-          .eq('judge_id', currentJudgeId)
+          .eq('official_id', currentJudgeId)
           .limit(1);
 
         if (!assignmentQuery.data || assignmentQuery.data.length === 0) {
@@ -76,9 +76,9 @@ export default function JudgeScoringPanel() {
 
         if (fight) setFightData(fight);
 
-        // Obtener round activo - NOTE: evitando conflicto de tipos con cast
-        const roundQuery = await (supabase as any)
-          .from('rounds')
+        // Obtener round activo
+        const roundQuery = await supabase
+          .from('fight_rounds')
           .select('id, fight_id, number, starts_at, status, duration_seconds')
           .eq('fight_id', fightId)
           .eq('status', 'live')
@@ -88,8 +88,8 @@ export default function JudgeScoringPanel() {
           setRound(roundQuery.data[0] as ScoringRound);
         } else {
           // Buscar round 1 como fallback
-          const round1Query = await (supabase as any)
-            .from('rounds')
+          const round1Query = await supabase
+            .from('fight_rounds')
             .select('id, fight_id, number, starts_at, status, duration_seconds')
             .eq('fight_id', fightId)
             .eq('number', 1)

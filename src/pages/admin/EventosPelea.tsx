@@ -166,7 +166,7 @@ export default function EventosPelea() {
   };
 
   const handleCreateFight = async () => {
-    // Verificar autenticación
+    // 1. VALIDACIÓN COMPLETA
     if (!user) {
       toast({
         title: 'Error de autenticación',
@@ -179,14 +179,40 @@ export default function EventosPelea() {
     if (!selectedEvent || !fightData.fighter_a_id || !fightData.fighter_b_id || !fightData.weight_class) {
       toast({
         title: 'Error',
-        description: 'Todos los campos son obligatorios para crear una pelea',
+        description: 'Todos los campos son obligatorios',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // 2. VALIDAR QUE NO SEAN EL MISMO PELEADOR
+    if (fightData.fighter_a_id === fightData.fighter_b_id) {
+      toast({
+        title: 'Error',
+        description: 'No puedes asignar el mismo peleador dos veces',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // 3. VERIFICAR QUE AMBOS PELEADORES EXISTEN
+    const { data: fightersExist, error: checkError } = await supabase
+      .from('fighter_profiles')
+      .select('id')
+      .in('id', [fightData.fighter_a_id, fightData.fighter_b_id])
+      .eq('active', true);
+
+    if (checkError || fightersExist?.length !== 2) {
+      toast({
+        title: 'Error',
+        description: 'Uno o ambos peleadores no son válidos o están inactivos',
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      // Convertir scheduled_time a timestamp completo si se proporciona
+      // 4. CREAR PELEA CON TIMESTAMP CORRECTO
       let scheduledDateTime = null;
       if (fightData.scheduled_time && selectedEvent.start_time) {
         const eventDate = new Date(selectedEvent.start_time);
@@ -206,13 +232,34 @@ export default function EventosPelea() {
           weight_class: fightData.weight_class,
           scheduled_time: scheduledDateTime,
           status: 'scheduled'
-        });
+        })
+        .select()
+        .single();
 
-      if (error) {
-        console.error('Error creating fight:', error);
-        throw error;
+      if (error) throw error;
+
+      // 5. VERIFICAR QUE SE CREARON LOS ROUNDS
+      const { data: rounds, error: roundsError } = await supabase
+        .from('fight_rounds')
+        .select('id, number, status')
+        .eq('fight_id', data.id)
+        .order('number');
+
+      if (roundsError || !rounds || rounds.length !== 3) {
+        console.error('Warning: Fight created but rounds not auto-created', { fightId: data.id, rounds });
+        toast({
+          title: 'Advertencia',
+          description: `Pelea creada pero solo se generaron ${rounds?.length || 0}/3 rounds`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: '✅ Éxito',
+          description: `Pelea #${data.fight_number} creada con 3 rounds automáticos`,
+        });
       }
 
+      // 6. RESET FORM Y CERRAR DIALOG
       setFightData({
         fight_number: fightData.fight_number + 1,
         fight_type: 'AMATEUR',
@@ -222,28 +269,13 @@ export default function EventosPelea() {
         scheduled_time: ''
       });
 
-      toast({
-        title: 'Éxito',
-        description: 'Pelea creada correctamente',
-      });
+      setShowFightsDialog(false);
 
     } catch (error: any) {
       console.error('Fight creation error:', error);
-      let errorMessage = 'No se pudo crear la pelea';
-      
-      if (error?.message) {
-        if (error.message.includes('permission denied') || error.message.includes('RLS')) {
-          errorMessage = 'No tienes permisos para crear peleas. Verifica tu autenticación.';
-        } else if (error.message.includes('violates foreign key')) {
-          errorMessage = 'Los peleadores seleccionados no son válidos.';
-        } else {
-          errorMessage = `Error: ${error.message}`;
-        }
-      }
-      
       toast({
         title: 'Error',
-        description: errorMessage,
+        description: error.message || 'No se pudo crear la pelea',
         variant: 'destructive',
       });
     }
@@ -699,6 +731,9 @@ export default function EventosPelea() {
                 />
               </div>
             </div>
+
+            {/* Peleas Existentes */}
+            {selectedEvent && <FightsListPreview eventId={selectedEvent.id} />}
           </div>
           
           <DialogFooter>
@@ -714,3 +749,67 @@ export default function EventosPelea() {
     </div>
   );
 }
+
+// Componente para mostrar peleas existentes con indicador de rounds
+const FightsListPreview = ({ eventId }: { eventId: string }) => {
+  const { fights, loading } = useFights(eventId);
+  const [roundsData, setRoundsData] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchRoundsCount = async () => {
+      if (fights.length === 0) return;
+      
+      const counts: Record<string, number> = {};
+      for (const fight of fights) {
+        const { count } = await supabase
+          .from('fight_rounds')
+          .select('*', { count: 'exact', head: true })
+          .eq('fight_id', fight.id);
+        counts[fight.id] = count || 0;
+      }
+      setRoundsData(counts);
+    };
+    
+    fetchRoundsCount();
+  }, [fights]);
+
+  if (loading) {
+    return (
+      <div className="mt-4 border-t pt-4">
+        <h4 className="font-semibold mb-2">Peleas del Evento</h4>
+        <div className="text-sm text-muted-foreground">Cargando peleas...</div>
+      </div>
+    );
+  }
+
+  if (fights.length === 0) {
+    return (
+      <div className="mt-4 border-t pt-4">
+        <h4 className="font-semibold mb-2">Peleas del Evento</h4>
+        <div className="text-sm text-muted-foreground">No hay peleas creadas aún</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 border-t pt-4">
+      <h4 className="font-semibold mb-2">Peleas del Evento ({fights.length})</h4>
+      <div className="space-y-2 max-h-48 overflow-y-auto">
+        {fights.map(fight => (
+          <div key={fight.id} className="flex items-center justify-between text-sm p-2 bg-muted rounded">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">Pelea #{fight.fight_number}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">{fight.weight_class}</Badge>
+              <Badge variant={roundsData[fight.id] === 3 ? 'default' : 'destructive'}>
+                {roundsData[fight.id] || 0}/3 rounds
+              </Badge>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

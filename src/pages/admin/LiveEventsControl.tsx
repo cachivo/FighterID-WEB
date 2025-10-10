@@ -13,6 +13,7 @@ import { useJudges } from '@/hooks/useJudges';
 import { useToast } from '@/hooks/use-toast';
 import { RoundControlPanel } from '@/components/admin/RoundControlPanel';
 import { PrepareFightDialog } from '@/components/admin/PrepareFightDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function LiveEventsControl() {
   const { events, loading: eventsLoading } = useEvents();
@@ -268,9 +269,12 @@ export default function LiveEventsControl() {
       {/* Event Selection */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Activity className="mr-2 h-5 w-5" />
-            Seleccionar Evento
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Activity className="mr-2 h-5 w-5" />
+              Seleccionar Evento
+            </div>
+            {selectedEvent && <DebugEventButton eventId={selectedEvent} />}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -395,3 +399,89 @@ export default function LiveEventsControl() {
     </div>
   );
 }
+
+// Componente de debugging para diagnosticar eventos
+const DebugEventButton = ({ eventId }: { eventId: string }) => {
+  const { toast } = useToast();
+  
+  const diagnose = async () => {
+    try {
+      const { data: fights, error } = await supabase
+        .from('fights')
+        .select(`
+          id,
+          fight_number,
+          status,
+          fighter_a_id,
+          fighter_b_id,
+          weight_class,
+          fight_rounds (
+            id,
+            number,
+            status,
+            duration_seconds
+          ),
+          fight_officials (
+            id,
+            role,
+            confirmed,
+            judges (
+              first_name,
+              last_name
+            )
+          )
+        `)
+        .eq('event_id', eventId);
+
+      if (error) throw error;
+
+      console.group('🔍 Event Diagnostic Report');
+      console.log('Event ID:', eventId);
+      console.log('Total Fights:', fights?.length || 0);
+      console.table(
+        fights?.map(f => ({
+          'Fight #': f.fight_number,
+          'Status': f.status,
+          'Weight': f.weight_class,
+          'Rounds': f.fight_rounds?.length || 0,
+          'Officials': f.fight_officials?.length || 0
+        }))
+      );
+      
+      // Detalles de rounds
+      fights?.forEach(f => {
+        if (f.fight_rounds && f.fight_rounds.length > 0) {
+          console.log(`\nRounds for Fight #${f.fight_number}:`, f.fight_rounds);
+        }
+      });
+
+      // Detalles de officials
+      fights?.forEach(f => {
+        if (f.fight_officials && f.fight_officials.length > 0) {
+          console.log(`\nOfficials for Fight #${f.fight_number}:`, f.fight_officials);
+        }
+      });
+      
+      console.groupEnd();
+
+      toast({
+        title: '✅ Diagnóstico completado',
+        description: `${fights?.length || 0} peleas analizadas. Ver consola para detalles.`
+      });
+    } catch (error: any) {
+      console.error('Diagnostic error:', error);
+      toast({
+        title: 'Error en diagnóstico',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={diagnose}>
+      <Settings className="mr-2 h-3 w-3" />
+      Diagnosticar
+    </Button>
+  );
+};
