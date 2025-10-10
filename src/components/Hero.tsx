@@ -16,8 +16,8 @@ const Hero = () => {
       <div className="relative z-10 text-center text-white px-4 sm:px-6 max-w-4xl mx-auto">
         <div className="mb-8 sm:mb-6 animate-slide-up">
           <img 
-            src="/lovable-uploads/07f90240-de72-4763-ba2b-eb451fe8473c.png" 
-            alt="Logo" 
+            src="/lovable-uploads/fighter-id-logo.png" 
+            alt="Fighter ID Logo" 
             className="h-16 sm:h-20 md:h-24 lg:h-32 w-auto mx-auto animate-glow-neon"
           />
         </div>
