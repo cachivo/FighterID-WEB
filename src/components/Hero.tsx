@@ -91,11 +91,11 @@ const Hero = () => {
       <div className="relative z-10 text-center text-white px-4 sm:px-6 max-w-4xl mx-auto">
         <div className="mb-2 sm:mb-4 animate-slide-up">
           <img 
-            src="/lovable-uploads/fighter-id-logo-user.png" 
+            src="/lovable-uploads/fighter-id-logo-transparent.png" 
             alt="Fighter ID Logo" 
             className="h-72 sm:h-[400px] md:h-[480px] lg:h-[560px] w-auto mx-auto"
             style={{ 
-              filter: 'sepia(100%) saturate(600%) hue-rotate(-50deg) brightness(1.3) drop-shadow(0 0 15px rgba(239, 68, 68, 0.6)) drop-shadow(0 0 30px rgba(220, 38, 38, 0.4)) drop-shadow(0 0 45px rgba(220, 38, 38, 0.2))'
+              filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 40px rgba(37, 99, 235, 0.6)) drop-shadow(0 0 60px rgba(29, 78, 216, 0.4))'
             }}
           />
         </div>
