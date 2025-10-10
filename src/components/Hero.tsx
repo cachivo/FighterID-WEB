@@ -103,9 +103,9 @@ const Hero = () => {
           <img 
             src="/lovable-uploads/fighter-id-logo-user.png" 
             alt="Fighter ID Logo" 
-            className="h-48 sm:h-64 md:h-72 lg:h-80 w-auto mx-auto"
+            className="h-72 sm:h-[400px] md:h-[480px] lg:h-[560px] w-auto mx-auto"
             style={{ 
-              filter: 'sepia(100%) saturate(600%) hue-rotate(180deg) brightness(1.3) drop-shadow(0 0 30px rgba(59, 130, 246, 1)) drop-shadow(0 0 60px rgba(37, 99, 235, 0.8)) drop-shadow(0 0 90px rgba(29, 78, 216, 0.5))'
+              filter: 'sepia(100%) saturate(600%) hue-rotate(180deg) brightness(1.3) drop-shadow(0 0 15px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 30px rgba(37, 99, 235, 0.4)) drop-shadow(0 0 45px rgba(29, 78, 216, 0.2))'
             }}
           />
         </div>
