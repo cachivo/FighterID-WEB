@@ -26,7 +26,7 @@ const Hero = () => {
         {/* Content */}
         <div className="relative z-10 text-center text-white px-4 sm:px-6 max-w-4xl mx-auto">
           {/* LOGO GRANDE */}
-          <div className="mb-6 sm:mb-8 md:mb-10 animate-slide-up bg-black rounded-lg p-4">
+          <div className="mb-6 sm:mb-8 md:mb-10 animate-slide-up">
             <img 
               src="/lovable-uploads/fighter-id-logo-modern.png" 
               alt="Fighter ID" 
@@ -89,7 +89,7 @@ const Hero = () => {
       
       {/* Content */}
       <div className="relative z-10 text-center text-white px-4 sm:px-6 max-w-4xl mx-auto">
-        <div className="mb-2 sm:mb-4 animate-slide-up bg-black rounded-lg p-4">
+        <div className="mb-2 sm:mb-4 animate-slide-up">
           <img 
             src="/lovable-uploads/fighter-id-logo-modern.png" 
             alt="Fighter ID Logo" 
