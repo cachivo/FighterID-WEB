@@ -12,6 +12,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   updatePassword: (newPassword: string) => Promise<{ error: any }>;
+  resendConfirmation: (email: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -122,6 +123,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
+  const resendConfirmation = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`
+        }
+      });
+      
+      if (error) {
+        // Handle rate limiting
+        if (error.message?.includes('For security purposes') || error.message?.includes('email_send_rate_limit')) {
+          return { 
+            error: { 
+              message: 'Has intentado reenviar el correo varias veces. Por favor espera 60 segundos antes de intentar nuevamente.' 
+            } 
+          };
+        }
+        return { error };
+      }
+      
+      return { error: null };
+    } catch (error: any) {
+      return { error };
+    }
+  };
+
   const value = {
     user,
     session,
@@ -131,6 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     resetPassword,
     updatePassword,
+    resendConfirmation,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

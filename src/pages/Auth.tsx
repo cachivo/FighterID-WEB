@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserCheck } from 'lucide-react';
+import { Loader2, UserCheck, Mail } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFighterInvitations } from '@/hooks/useFighterInvitations';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,7 +30,7 @@ type AuthFormData = z.infer<typeof authSchema>;
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function Auth() {
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, resendConfirmation } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -42,6 +42,8 @@ export default function Auth() {
   const [validatingToken, setValidatingToken] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isResending, setIsResending] = useState(false);
 
   const form = useForm<AuthFormData>({
     resolver: zodResolver(authSchema),
@@ -120,6 +122,36 @@ export default function Auth() {
     setLoading(false);
   };
 
+  const handleResendEmail = async () => {
+    if (resendCooldown > 0 || !registeredEmail) return;
+    
+    setIsResending(true);
+    const { error } = await resendConfirmation(registeredEmail);
+    
+    if (error) {
+      toast({
+        title: 'Error al reenviar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Correo reenviado',
+        description: 'Revisa tu bandeja de entrada',
+      });
+      setResendCooldown(60);
+    }
+    setIsResending(false);
+  };
+
+  // Cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
   const handleSignUp = async (data: SignUpFormData) => {
     setLoading(true);
     setRegistrationSuccess(false);
@@ -129,9 +161,12 @@ export default function Auth() {
       const { error: signUpError } = await signUp(data.email, data.password);
       
       if (signUpError) {
-        // Check for rate limiting
+        // Check for rate limiting or already registered
         if (signUpError.message?.includes('For security purposes') || signUpError.message?.includes('email_send_rate_limit')) {
           throw new Error('Has intentado registrarte varias veces. Por favor espera 60 segundos antes de intentar nuevamente.');
+        }
+        if (signUpError.message?.includes('already registered')) {
+          throw new Error('Este correo ya está registrado. Intenta iniciar sesión o recupera tu contraseña.');
         }
         throw signUpError;
       }
@@ -287,9 +322,34 @@ export default function Auth() {
                       {registeredEmail}
                     </p>
                     <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                      <p>⚠️ <strong>Importante:</strong> Revisa tu carpeta de spam si no lo encuentras</p>
+                      <p>⚠️ <strong>Importante:</strong> Revisa tu carpeta de spam/promociones</p>
                       <p>🕒 El enlace es válido por <strong>24 horas</strong></p>
                     </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={handleResendEmail}
+                      disabled={resendCooldown > 0 || isResending}
+                    >
+                      {isResending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Reenviando...
+                        </>
+                      ) : resendCooldown > 0 ? (
+                        <>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Reenviar en {resendCooldown}s
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Reenviar correo
+                        </>
+                      )}
+                    </Button>
                   </AlertDescription>
                 </Alert>
               )}

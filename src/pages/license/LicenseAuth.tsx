@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Shield, Eye, EyeOff, Loader2, Mail } from 'lucide-react';
 import { useLicenseAuth } from '@/hooks/useLicenseAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LicenseAuth() {
-  const { user, signIn, signUp, loading } = useLicenseAuth();
+  const { user, signIn, signUp, loading, resendConfirmation } = useLicenseAuth();
+  const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,11 +23,43 @@ export default function LicenseAuth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isResending, setIsResending] = useState(false);
 
   // Redirect if already authenticated
   if (user && !loading) {
     return <Navigate to="/license/dashboard" replace />;
   }
+
+  const handleResendEmail = async () => {
+    if (resendCooldown > 0 || !registeredEmail) return;
+    
+    setIsResending(true);
+    const { error } = await resendConfirmation(registeredEmail);
+    
+    if (error) {
+      toast({
+        title: 'Error al reenviar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Correo reenviado',
+        description: 'Revisa tu bandeja de entrada',
+      });
+      setResendCooldown(60);
+    }
+    setIsResending(false);
+  };
+
+  // Cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,9 +73,11 @@ export default function LicenseAuth() {
         : await signUp(formData.email, formData.password);
 
       if (error) {
-        // Check for rate limiting error
+        // Check for rate limiting or already registered
         if (error.message?.includes('For security purposes') || error.message?.includes('email_send_rate_limit')) {
           setError('Has intentado registrarte varias veces. Por favor espera 60 segundos antes de intentar nuevamente.');
+        } else if (error.message?.includes('already registered')) {
+          setError('Este correo ya está registrado. Intenta iniciar sesión o recupera tu contraseña.');
         } else {
           setError(error.message);
         }
@@ -49,6 +85,7 @@ export default function LicenseAuth() {
         // Registration successful
         setRegistrationSuccess(true);
         setRegisteredEmail(formData.email);
+        setResendCooldown(60); // Start cooldown
       }
     } catch (err) {
       setError('Ha ocurrido un error inesperado');
@@ -104,9 +141,34 @@ export default function LicenseAuth() {
                     {registeredEmail}
                   </p>
                   <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                    <p>⚠️ <strong>Importante:</strong> Revisa tu carpeta de spam si no lo encuentras en tu bandeja principal</p>
-                    <p>🕒 El enlace de confirmación es válido por <strong>24 horas</strong></p>
+                    <p>⚠️ <strong>Importante:</strong> Revisa tu carpeta de spam/promociones</p>
+                    <p>🕒 El enlace es válido por <strong>24 horas</strong></p>
                   </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={handleResendEmail}
+                    disabled={resendCooldown > 0 || isResending}
+                  >
+                    {isResending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Reenviando...
+                      </>
+                    ) : resendCooldown > 0 ? (
+                      <>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Reenviar en {resendCooldown}s
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Reenviar correo
+                      </>
+                    )}
+                  </Button>
                 </AlertDescription>
               </Alert>
             )}

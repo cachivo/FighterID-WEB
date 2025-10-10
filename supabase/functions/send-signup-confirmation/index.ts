@@ -137,12 +137,33 @@ serve(async (req) => {
       );
     }
 
-    // Build confirmation link - always force production domain
+    // Validate required environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    
+    if (!supabaseUrl) {
+      console.error("[SIGNUP] Missing SUPABASE_URL environment variable");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: Missing SUPABASE_URL" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    if (!resendApiKey) {
+      console.error("[SIGNUP] Missing RESEND_API_KEY environment variable");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: Missing RESEND_API_KEY" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Build confirmation link - use redirect_to from emailData if provided
     const tokenHash = emailData.token_hash;
     const emailActionType = emailData.email_action_type;
     const siteBase = (Deno.env.get("SITE_URL") || "https://fighter-id.org").replace(/\/$/, "");
-    const redirectTo = `${siteBase}/auth`;
+    
+    // Respect redirect_to from emailData, fallback to /auth
+    const redirectTo = emailData.redirect_to || `${siteBase}/auth`;
 
     const confirmationLink = `${supabaseUrl}/auth/v1/verify?token=${tokenHash}&type=${emailActionType}&redirect_to=${encodeURIComponent(redirectTo)}`;
 
