@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Shield, ArrowRight, CheckCircle, Home } from 'lucide-react';
+import { Shield, ArrowRight, CheckCircle, Home, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -81,7 +81,7 @@ export default function LicenseWelcome() {
             <Card className="relative overflow-hidden border-2 hover:border-muted-foreground/30 transition-all duration-300 hover:shadow-lg group">
               <CardHeader className="text-center pb-3 sm:pb-4 px-4 sm:px-6 pt-4 sm:pt-6">
                 <div className="mx-auto mb-3 sm:mb-4 p-3 sm:p-4 rounded-full bg-muted/10 group-hover:bg-muted/20 transition-colors">
-                  <Home className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
+                  <Compass className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
                 </div>
                 <CardTitle className="text-lg sm:text-xl lg:text-2xl text-muted-foreground">Solo quiero explorar</CardTitle>
                 <CardDescription className="text-sm sm:text-base px-2">
@@ -108,11 +108,20 @@ export default function LicenseWelcome() {
                   </div>
                 </div>
                 
-                <Button variant="outline" asChild className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold">
-                  <Link to="/" className="flex items-center justify-center gap-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold"
+                  onClick={() => {
+                    // Save user preference to avoid showing this page again
+                    localStorage.setItem("user_preference_explorer", "true");
+                    // Navigate to social feed
+                    window.location.href = "/social/feed";
+                  }}
+                >
+                  <span className="flex items-center justify-center gap-2">
                     Continuar explorando
-                    <Home className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </Link>
+                    <Compass className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </span>
                 </Button>
               </CardContent>
             </Card>

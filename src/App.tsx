@@ -40,6 +40,8 @@ import LicensePending from './pages/license/LicensePending';
 import LicenseSuspended from './pages/license/LicenseSuspended';
 import LicenseOnboarding from './pages/license/LicenseOnboarding';
 import Index from "./pages/Index";
+import SmartHomepage from "./pages/SmartHomepage";
+import SocialFeed from "./pages/SocialFeed";
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
@@ -48,7 +50,6 @@ import EventoBetting from "./pages/EventoBetting";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
 import Fighters from "./pages/Fighters";
-import SocialFeed from "./pages/SocialFeed";
 import SocialProfile from "./pages/social/SocialProfile";
 import Friends from "./pages/social/Friends";
 import Discover from "./pages/social/Discover";
@@ -98,7 +99,8 @@ const App = () => (
             <Sonner />
             <Routes>
               {/* Public Platform Routes */}
-              <Route path="/" element={<SocialFeed />} />
+              <Route path="/" element={<SmartHomepage />} />
+              <Route path="/social/feed" element={<SocialFeed />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/auth/forgot-password" element={<ForgotPassword />} />
               <Route path="/auth/reset-password" element={<ResetPassword />} />
