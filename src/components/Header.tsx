@@ -46,7 +46,6 @@ const Header = () => {
   }, [user, getUserFighterProfile]);
 
   const navigationItems = [
-    { name: "Inicio", href: "/", icon: Home },
     { name: "Social", href: "/social/feed", icon: Users },
     { name: "Eventos", href: "/eventos", icon: Calendar },
     { name: "Peleadores", href: "/fighters", icon: Trophy },
@@ -127,9 +126,6 @@ const Header = () => {
           )}
           
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/">Inicio</Link>
-          </Button>
-          <Button variant="ghost" size="sm" asChild>
             <Link to="/social/feed">Social</Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
@@ -145,9 +141,6 @@ const Header = () => {
 
         {/* Simplified Navigation for Medium Screens */}
         <div className="hidden md:flex lg:hidden items-center gap-1">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/">Inicio</Link>
-          </Button>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/social/feed">Social</Link>
           </Button>
