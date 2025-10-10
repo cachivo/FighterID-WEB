@@ -38,7 +38,6 @@ const adminItems = [
   { title: 'Aliados Estratégicos', url: '/admin/aliados-estrategicos', icon: HandHeart },
   { title: 'Perfiles de Peleadores', url: '/admin/fighters-profiles', icon: Users },
   { title: 'Licencias Fighter ID', url: '/admin/licencias', icon: Shield },
-  { title: 'Ranking', url: '/admin/ranking', icon: TrendingUp },
   { title: 'Votaciones', url: '/admin/votaciones', icon: Vote },
   { title: 'Betting & Markets', url: '/admin/betting', icon: DollarSign },
   { title: 'Solicitudes de Cambio', url: '/admin/profile-requests', icon: Settings },

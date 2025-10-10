@@ -121,22 +121,62 @@ export const useUserProfile = () => {
     if (!user) return null;
 
     try {
-      const fileExt = file.name.split('.').pop();
+      // 1. Validar tamaño máximo ANTES de procesar
+      if (file.size > 10 * 1024 * 1024) { // 10MB
+        toast({
+          title: 'Error',
+          description: 'La imagen es demasiado grande (máximo 10MB)',
+          variant: 'destructive'
+        });
+        return null;
+      }
+
+      // 2. Optimizar imagen automáticamente
+      toast({
+        title: 'Procesando imagen...',
+        description: 'Optimizando tu foto de perfil'
+      });
+
+      const { optimizeAvatar } = await import('@/lib/avatarOptimizer');
+      const optimizedFile = await optimizeAvatar(file, {
+        maxSize: 512,        // 512x512 perfecto para avatares
+        quality: 0.9,        // Alta calidad
+        format: 'webp'       // Mejor compresión
+      });
+
+      console.log('Optimización completada:', {
+        originalSize: file.size,
+        optimizedSize: optimizedFile.size,
+        reduction: Math.round((1 - optimizedFile.size / file.size) * 100) + '%'
+      });
+
+      // 3. Subir imagen optimizada
+      const fileExt = 'webp'; // Siempre WebP
       const fileName = `${user.id}_${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('user-photos')
-        .upload(filePath, file);
+        .upload(filePath, optimizedFile, {
+          contentType: 'image/webp',
+          upsert: true  // Reemplazar si existe
+        });
 
       if (uploadError) throw uploadError;
 
+      // 4. Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('user-photos')
         .getPublicUrl(filePath);
 
+      toast({
+        title: 'Éxito',
+        description: 'Foto de perfil actualizada correctamente'
+      });
+
       return publicUrl;
     } catch (err: any) {
+      console.error('Error uploading avatar:', err);
       toast({
         title: 'Error',
         description: 'No se pudo subir la imagen: ' + err.message,

@@ -63,7 +63,6 @@ import LicenseForgotPassword from "./pages/license/ForgotPassword";
 import LicenseResetPassword from "./pages/license/ResetPassword";
 
 import AliadosEstrategicos from "./pages/admin/AliadosEstrategicos";
-import Ranking from "./pages/admin/Ranking";
 import Comunidad from "./pages/admin/Comunidad";
 import Configuracion from "./pages/admin/Configuracion";
 import Votaciones from "./pages/admin/Votaciones";
@@ -206,7 +205,6 @@ const App = () => (
                           <FightResults />
                         </Suspense>
                       } />
-                      <Route path="/ranking" element={<Ranking />} />
                       <Route path="/votaciones" element={<Votaciones />} />
                       <Route path="/betting" element={<Betting />} />
                       <Route path="/comunidad" element={<Comunidad />} />

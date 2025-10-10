@@ -61,12 +61,25 @@ export async function uploadFighterAvatar(
         const processedBlob = await removeBackground(imageElement);
         
         // Convert blob to file
-        processedFile = new File([processedBlob], file.name, {
+        const tempFile = new File([processedBlob], file.name, {
           type: 'image/png',
           lastModified: Date.now()
         });
+
+        // Optimize size after background removal
+        toast.info('Optimizando imagen...');
+        const { resizeImage } = await import('./imageUtils');
+        const optimized = await resizeImage(tempFile, {
+          maxWidth: 1024,      // 1024x1024 para peleadores (más grande que avatares normales)
+          maxHeight: 1024,
+          quality: 0.95,       // Muy alta calidad para profesionales
+          format: 'png',       // PNG para mantener transparencia
+          maintainAspectRatio: true
+        });
+
+        processedFile = optimized.file;
         
-        toast.success('Fondo removido exitosamente');
+        toast.success('Imagen procesada y optimizada');
       } catch (bgError) {
         console.warn('Background removal failed, using original image:', bgError);
         toast.warning('No se pudo remover el fondo, usando imagen original');

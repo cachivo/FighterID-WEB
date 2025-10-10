@@ -29,6 +29,7 @@ interface UserProfileFormProps {
 export const UserProfileForm = ({ onSuccess }: UserProfileFormProps) => {
   const { profile, updateProfile, uploadAvatar } = useUserProfile();
   const [uploading, setUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [privacySettings, setPrivacySettings] = useState(
     profile?.profile_visibility || {
       first_name: true,
@@ -67,9 +68,25 @@ export const UserProfileForm = ({ onSuccess }: UserProfileFormProps) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert('La imagen debe ser menor a 5MB');
+    // Validación de tamaño ANTES de procesar
+    if (file.size > 10 * 1024 * 1024) {
+      alert('La imagen debe ser menor a 10MB');
       return;
+    }
+
+    // Validación de tipo
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor selecciona una imagen válida');
+      return;
+    }
+
+    // Mostrar preview mientras se procesa
+    try {
+      const { getAvatarPreview } = await import('@/lib/avatarOptimizer');
+      const preview = await getAvatarPreview(file);
+      setAvatarPreview(preview);
+    } catch (err) {
+      console.error('Error generating preview:', err);
     }
 
     setUploading(true);
@@ -77,6 +94,7 @@ export const UserProfileForm = ({ onSuccess }: UserProfileFormProps) => {
     
     if (avatarUrl) {
       await updateProfile({ avatar_url: avatarUrl });
+      setAvatarPreview(null); // Limpiar preview
     }
     
     setUploading(false);
@@ -119,7 +137,7 @@ export const UserProfileForm = ({ onSuccess }: UserProfileFormProps) => {
         </CardHeader>
         <CardContent className="flex items-center gap-6">
           <Avatar className="h-20 w-20">
-            <AvatarImage src={profile?.avatar_url || ''} alt="Avatar" />
+            <AvatarImage src={avatarPreview || profile?.avatar_url || ''} alt="Avatar" />
             <AvatarFallback className="text-lg font-bold">
               {profile?.first_name?.charAt(0) || profile?.email?.charAt(0) || 'U'}
             </AvatarFallback>
@@ -144,8 +162,13 @@ export const UserProfileForm = ({ onSuccess }: UserProfileFormProps) => {
               className="hidden"
             />
             <p className="text-xs text-muted-foreground">
-              Máximo 5MB, formatos: JPG, PNG, WEBP
+              Máximo 10MB, formatos: JPG, PNG, WEBP
             </p>
+            {avatarPreview && (
+              <p className="text-xs text-primary font-medium">
+                ✓ Vista previa cargada
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
