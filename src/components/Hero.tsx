@@ -32,7 +32,8 @@ const Hero = () => {
             <img 
               src="/lovable-uploads/fighter-id-logo-clean.png" 
               alt="Fighter ID" 
-              className="h-32 sm:h-40 md:h-56 lg:h-64 w-auto mx-auto"
+              className="h-48 sm:h-56 md:h-72 lg:h-96 w-auto mx-auto drop-shadow-2xl"
+              style={{ filter: 'drop-shadow(0 0 40px rgba(139, 92, 246, 0.5))' }}
             />
           </div>
           
