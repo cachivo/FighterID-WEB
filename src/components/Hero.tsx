@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import batallaPoster from "@/assets/batalla-poster.jpg";
 import blueArena from "@/assets/blue-arena.jpg";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 const Hero = () => {
   const { stats } = useRealTimeStats();
@@ -106,8 +108,10 @@ const Hero = () => {
             <div className="w-3 h-3 bg-purple-neon-primary rounded-full animate-pulse-purple-neon shadow-lg shadow-purple-neon-primary/50"></div>
             <span className="text-xs sm:text-sm md:text-base tracking-wider text-center">
               {stats?.liveEvents && stats.liveEvents.length > 0 
-                ? `${stats.liveEvents.length} EVENTO${stats.liveEvents.length > 1 ? 'S' : ''} EN VIVO` 
-                : 'PRÓXIMO EVENTO: 25 ENE 2025'
+                ? `${stats.liveEvents.length} EVENTO${stats.liveEvents.length > 1 ? 'S' : ''} EN VIVO`
+                : stats?.nextEvent
+                  ? `PRÓXIMO EVENTO: ${format(new Date(stats.nextEvent.start_time), 'dd MMM yyyy', { locale: es }).toUpperCase()}`
+                  : 'PRÓXIMOS EVENTOS PRONTO'
               }
             </span>
           </div>
