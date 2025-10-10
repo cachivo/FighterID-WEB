@@ -105,7 +105,7 @@ const Hero = () => {
             alt="Fighter ID Logo" 
             className="h-72 sm:h-[400px] md:h-[480px] lg:h-[560px] w-auto mx-auto"
             style={{ 
-              filter: 'brightness(0) invert(1) drop-shadow(0 0 20px rgba(139, 92, 246, 0.8)) drop-shadow(0 0 40px rgba(139, 92, 246, 0.6)) drop-shadow(0 0 60px rgba(139, 92, 246, 0.4))'
+              filter: 'sepia(100%) saturate(500%) hue-rotate(-50deg) brightness(1.2) drop-shadow(0 0 20px rgba(220, 38, 38, 0.8)) drop-shadow(0 0 40px rgba(220, 38, 38, 0.6)) drop-shadow(0 0 60px rgba(220, 38, 38, 0.4))'
             }}
           />
         </div>
