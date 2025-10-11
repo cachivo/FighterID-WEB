@@ -139,11 +139,20 @@ export function StationPinLogin() {
         description: `Bienvenido, ${judgeName || 'Juez'}`,
       });
 
-      // Redirigir al panel de scoring
+      // Redirigir según número de estación
       if (validation.current_fight_id) {
-        navigate(`/judge/fight/${validation.current_fight_id}`);
+        const station = parseInt(stationNumber!);
+        if (station === 1) {
+          navigate(`/estacion/1/scoring/${validation.current_fight_id}`);
+        } else if (station === 2) {
+          navigate(`/estacion/2/scoring/${validation.current_fight_id}`);
+        } else if (station === 3) {
+          navigate(`/estacion/3/control/${validation.current_fight_id}`);
+        } else {
+          navigate(`/estacion/${stationNumber}/waiting`);
+        }
       } else {
-        navigate(`/estacion${stationNumber}/waiting`);
+        navigate(`/estacion/${stationNumber}/waiting`);
       }
 
     } catch (err) {

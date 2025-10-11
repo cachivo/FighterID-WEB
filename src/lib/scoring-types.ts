@@ -1,7 +1,19 @@
 // Tipos para Sistema de Scoring en Vivo
-export type StrikeType = 'punch' | 'kick' | 'elbow' | 'knee' | 'takedown' | 'knockdown' | 'defense' | 'foul';
+export type StrikeType = 'strike' | 'punch' | 'kick' | 'elbow' | 'knee' | 'takedown' | 'knockdown' | 'defense' | 'foul';
 export type Corner = 'red' | 'blue';
 export type StrikeTarget = 'head' | 'body' | 'leg' | null;
+
+export interface StationSession {
+  stationNumber: number;
+  judgeId: string;
+  judgeName: string;
+  fightId: string;
+  fighterId: string;
+  fighterName: string;
+  corner: Corner;
+  stationIp?: string;
+  loginAt: string;
+}
 
 export interface ScoringEvent {
   id?: number;

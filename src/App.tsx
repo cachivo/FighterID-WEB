@@ -33,6 +33,9 @@ import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { StationPinLogin } from '@/components/station/StationPinLogin';
 import StationWaiting from '@/pages/station/StationWaiting';
+import Station1Scoring from '@/pages/station/Station1Scoring';
+import Station2Scoring from '@/pages/station/Station2Scoring';
+import Station3RoundControl from '@/pages/station/Station3RoundControl';
 
 // Lazy loaded components
 const FightResults = lazy(() => import('./pages/admin/FightResults'));
@@ -131,6 +134,9 @@ const App = () => (
               {/* Rutas de Estaciones con PIN (sin autenticación) */}
               <Route path="/estacion/:stationNumber" element={<StationPinLogin />} />
               <Route path="/estacion/:stationNumber/waiting" element={<StationWaiting />} />
+              <Route path="/estacion/1/scoring/:fightId" element={<Station1Scoring />} />
+              <Route path="/estacion/2/scoring/:fightId" element={<Station2Scoring />} />
+              <Route path="/estacion/3/control/:fightId" element={<Station3RoundControl />} />
 
               {/* Fighter License Portal Routes */}
               <Route path="/license/welcome" element={<LicenseWelcome />} />

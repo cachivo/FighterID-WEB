@@ -24,6 +24,23 @@ export function scoreEvent(event: ScoringEvent, weights: ScoringWeights): number
 }
 
 /**
+ * Calcula agresividad simplificada (solo cuenta strikes) en ventana temporal
+ */
+export function calculateSimpleAggression(
+  events: ScoringEvent[],
+  nowMs: number,
+  windowMs: number = 10000,
+  corner: 'red' | 'blue'
+): number {
+  const fromMs = nowMs - windowMs;
+  return events.filter(
+    e => e.corner === corner && 
+         e.timestamp_ms >= fromMs && 
+         e.timestamp_ms <= nowMs
+  ).length;
+}
+
+/**
  * Calcula el Índice de Agresividad (IAg) en una ventana temporal
  * @param events - Todos los eventos del round
  * @param nowMs - Timestamp actual en milisegundos
