@@ -64,6 +64,7 @@ export default function EventosPelea() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { events, loading, createEvent, updateEventState, deleteEvent, refreshEvents } = useEvents();
+  console.log('[EventosPelea] loading:', loading, 'events:', events?.length);
   
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showFightersDialog, setShowFightersDialog] = useState(false);
