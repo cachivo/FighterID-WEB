@@ -22,7 +22,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
 export default function LicenseDashboard() {
-  const { user, licenseData, refreshLicense } = useLicenseAuth();
+  const { user, licenseData, refreshLicense, forceLicenseUpdate } = useLicenseAuth();
   const { license, fightBookings, medicalCerts } = useLicenseData(licenseData?.id);
   const { fetchFighters } = useFighterProfiles();
   const { tests, eligibility, loading: dopingLoading, uploading, uploadReport } = useDopingTests(
@@ -30,6 +30,7 @@ export default function LicenseDashboard() {
   );
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   console.log('Dashboard - licenseData:', licenseData);
   console.log('Dashboard - license:', license);
@@ -86,9 +87,19 @@ export default function LicenseDashboard() {
     setIsEditing(true);
   };
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = async () => {
     setIsEditing(false);
-    refreshData();
+    setIsUpdating(true);
+    
+    try {
+      console.log('[Dashboard] Edit success - forcing license update...');
+      // Force update context first
+      await forceLicenseUpdate();
+      // Then refresh local data
+      await refreshData();
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleEditCancel = () => {

@@ -14,6 +14,7 @@ interface LicenseAuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshLicense: () => Promise<void>;
+  forceLicenseUpdate: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   updatePassword: (newPassword: string) => Promise<{ error: any }>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
@@ -148,6 +149,13 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       queryClient.invalidateQueries({ queryKey: ['license'] });
       queryClient.invalidateQueries({ queryKey: ['admin_licenses'] });
       queryClient.invalidateQueries({ queryKey: ['pending-licenses'] });
+    }
+  };
+
+  const forceLicenseUpdate = async () => {
+    if (user) {
+      console.log('[FORCE UPDATE] Forcing license data refresh...');
+      await checkLicenseStatus(user.id);
     }
   };
 
@@ -344,6 +352,7 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     signUp,
     signOut,
     refreshLicense,
+    forceLicenseUpdate,
     resetPassword,
     updatePassword,
     resendConfirmation
