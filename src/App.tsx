@@ -31,6 +31,8 @@ import PendingChangesHub from './pages/admin/PendingChangesHub';
 import ProfileChangeRequest from './pages/ProfileChangeRequest';
 import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { StationPinLogin } from '@/components/station/StationPinLogin';
+import StationWaiting from '@/pages/station/StationWaiting';
 
 // Lazy loaded components
 const FightResults = lazy(() => import('./pages/admin/FightResults'));
@@ -125,6 +127,12 @@ const App = () => (
               
               {/* HUD Público de Scoring en Vivo */}
               <Route path="/hud/fight/:fightId" element={<HudPublicDisplay />} />
+
+              {/* Rutas de Estaciones con PIN (sin autenticación) */}
+              <Route path="/estacion1" element={<StationPinLogin />} />
+              <Route path="/estacion2" element={<StationPinLogin />} />
+              <Route path="/estacion3" element={<StationPinLogin />} />
+              <Route path="/estacion:stationNumber/waiting" element={<StationWaiting />} />
 
               {/* Fighter License Portal Routes */}
               <Route path="/license/welcome" element={<LicenseWelcome />} />
@@ -246,17 +254,13 @@ const App = () => (
                 </Suspense>
               } />
               
-              {/* NEW: Desktop Scoring Panel for Judges */}
+              {/* Desktop Scoring Panel - Ahora usa validación de sesión interna */}
               <Route path="/judge/fight/:fightId" element={
-                <ProtectedRoute>
-                  <JudgeProtectedRoute>
-                    <DesktopOnlyRoute>
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <JudgeScoringPanel />
-                      </Suspense>
-                    </DesktopOnlyRoute>
-                  </JudgeProtectedRoute>
-                </ProtectedRoute>
+                <DesktopOnlyRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <JudgeScoringPanel />
+                  </Suspense>
+                </DesktopOnlyRoute>
               } />
               
               <Route path="/referee/control/:fightId" element={

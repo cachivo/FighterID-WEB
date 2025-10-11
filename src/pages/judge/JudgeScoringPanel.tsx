@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DesktopJudgePanel } from '@/components/judge/DesktopJudgePanel';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { toast } from 'sonner';
+
+interface StationSession {
+  session_id: string;
+  station_number: number;
+  event_id: string;
+  event_name: string;
+  current_fight_id: string | null;
+  judge_name: string;
+  logged_in_at: string;
+}
 
 interface ScoringRound {
   id: string;
@@ -16,49 +26,55 @@ interface ScoringRound {
 
 export default function JudgeScoringPanel() {
   const { fightId } = useParams<{ fightId: string }>();
+  const navigate = useNavigate();
   const [round, setRound] = useState<ScoringRound | null>(null);
   const [judgeId, setJudgeId] = useState<string | null>(null);
   const [fightData, setFightData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [stationNumber, setStationNumber] = useState<number | null>(null);
+  const [sessionData, setSessionData] = useState<StationSession | null>(null);
+
+  // VALIDACIÓN DE SESIÓN DE ESTACIÓN
+  useEffect(() => {
+    const sessionStr = localStorage.getItem('station_session');
+    
+    if (!sessionStr) {
+      toast.error('Sesión no válida. Por favor ingresa el PIN nuevamente.');
+      navigate('/access-denied');
+      return;
+    }
+
+    try {
+      const session: StationSession = JSON.parse(sessionStr);
+      
+      // Validar que la sesión no sea muy antigua (>24 horas)
+      const sessionAge = Date.now() - new Date(session.logged_in_at).getTime();
+      if (sessionAge > 24 * 60 * 60 * 1000) {
+        toast.error('Sesión expirada');
+        localStorage.removeItem('station_session');
+        navigate(`/estacion${session.station_number}`);
+        return;
+      }
+
+      setSessionData(session);
+      setStationNumber(session.station_number);
+      
+      // Generar un ID temporal para este juez (basado en sesión)
+      setJudgeId(`station-${session.session_id}`);
+      
+    } catch (err) {
+      console.error('Error parseando sesión:', err);
+      navigate('/access-denied');
+    }
+  }, [navigate]);
 
   useEffect(() => {
-    if (!fightId) return;
+    if (!fightId || !sessionData) return;
 
     const loadData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          toast.error('No autenticado');
-          return;
-        }
 
-        const judgeQuery = await supabase
-          .from('judges')
-          .select('id')
-          .eq('email', user.email)
-          .limit(1);
-
-        if (!judgeQuery.data || judgeQuery.data.length === 0) {
-          toast.error('No tienes perfil de juez');
-          return;
-        }
-
-        const currentJudgeId = judgeQuery.data[0].id;
-        setJudgeId(currentJudgeId);
-
-        const assignmentQuery = await supabase
-          .from('fight_officials')
-          .select('id')
-          .eq('fight_id', fightId)
-          .eq('official_id', currentJudgeId)
-          .limit(1);
-
-        if (!assignmentQuery.data || assignmentQuery.data.length === 0) {
-          toast.error('No estás asignado a esta pelea');
-          return;
-        }
-
+        // Cargar datos de la pelea
         const { data: fight } = await supabase
           .from('fights')
           .select(`
@@ -105,64 +121,52 @@ export default function JudgeScoringPanel() {
     };
 
     loadData();
-  }, [fightId]);
+  }, [fightId, sessionData]);
 
-  // TRACKING DE PRESENCIA EN TIEMPO REAL
+  // TRACKING DE PRESENCIA EN TIEMPO REAL - BASADO EN SESIÓN DE ESTACIÓN
   useEffect(() => {
-    if (!fightId || !judgeId) return;
+    if (!fightId || !sessionData) return;
 
     const setupPresence = async () => {
       try {
-        const { data: assignment } = await supabase
-          .from('fight_officials')
-          .select('role, station_metadata')
-          .eq('fight_id', fightId)
-          .eq('official_id', judgeId)
-          .maybeSingle();
-        
-        if (!assignment) {
-          console.warn('[PRESENCE] No se encontró asignación');
-          return;
-        }
+        console.log('[PRESENCE] Configurando presencia para estación:', sessionData.station_number);
 
-        let stationNum: number | null = null;
-        
-        if (assignment.role === 'JUDGE_1') stationNum = 1;
-        else if (assignment.role === 'JUDGE_2') stationNum = 2;
-        else if (assignment.role === 'JUDGE_3') stationNum = 3;
-        else if (assignment.station_metadata) {
-          stationNum = (assignment.station_metadata as any).station_number || null;
-        }
-
-        if (!stationNum) {
-          console.warn('[PRESENCE] No se pudo determinar station_number');
-          return;
-        }
-
-        setStationNumber(stationNum);
-        console.log('[PRESENCE] Station number:', stationNum);
-
-        const presenceChannel = supabase.channel(`judge_presence:${fightId}`, {
-          config: { presence: { key: judgeId } }
+        const presenceChannel = supabase.channel(`station_presence:${sessionData.event_id}`, {
+          config: { presence: { key: sessionData.session_id } }
         });
 
-        await presenceChannel.subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('[PRESENCE] Suscrito, anunciando presencia...');
-            
-            await presenceChannel.track({
-              judge_id: judgeId,
-              station_number: stationNum,
-              connected_at: new Date().toISOString(),
-              user_agent: navigator.userAgent,
-            });
+        presenceChannel
+          .on('presence', { event: 'sync' }, () => {
+            console.log('[PRESENCE] Estado sincronizado');
+          })
+          .on('presence', { event: 'join' }, ({ key }) => {
+            console.log('[PRESENCE] Usuario se unió:', key);
+          })
+          .on('presence', { event: 'leave' }, ({ key }) => {
+            console.log('[PRESENCE] Usuario salió:', key);
+          })
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              console.log('[PRESENCE] Suscrito, anunciando presencia...');
+              
+              await presenceChannel.track({
+                session_id: sessionData.session_id,
+                station_number: sessionData.station_number,
+                judge_name: sessionData.judge_name,
+                connected_at: new Date().toISOString(),
+                fight_id: fightId,
+              });
 
-            console.log('[PRESENCE] Presencia anunciada');
-          }
-        });
+              console.log('[PRESENCE] Presencia anunciada');
+            }
+          });
 
         return () => {
-          console.log('[PRESENCE] Limpiando presencia');
+          console.log('[PRESENCE] Limpiando presencia y registrando desconexión');
+          
+          // Registrar desconexión en el log
+          updateDisconnectTime(sessionData.session_id);
+          
           presenceChannel.untrack();
           supabase.removeChannel(presenceChannel);
         };
@@ -175,7 +179,33 @@ export default function JudgeScoringPanel() {
     return () => {
       cleanup.then(fn => fn?.());
     };
-  }, [fightId, judgeId]);
+  }, [fightId, sessionData]);
+
+  const updateDisconnectTime = async (sessionId: string) => {
+    try {
+      // Buscar último acceso exitoso sin desconexión registrada
+      const { data: lastAccess } = await supabase
+        .from('station_access_log')
+        .select('id')
+        .eq('session_id', sessionId)
+        .eq('success', true)
+        .is('disconnected_at', null)
+        .order('accessed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lastAccess) {
+        await supabase
+          .from('station_access_log')
+          .update({ disconnected_at: new Date().toISOString() })
+          .eq('id', lastAccess.id);
+        
+        console.log('[PRESENCE] Desconexión registrada');
+      }
+    } catch (error) {
+      console.error('[PRESENCE] Error registrando desconexión:', error);
+    }
+  };
 
   if (isLoading) {
     return (

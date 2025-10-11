@@ -2897,6 +2897,137 @@ export type Database = {
         }
         Relationships: []
       }
+      station_access_log: {
+        Row: {
+          accessed_at: string | null
+          disconnected_at: string | null
+          failure_reason: string | null
+          id: string
+          ip_address: unknown | null
+          judge_name_provided: string | null
+          pin_attempted: string
+          session_duration: unknown | null
+          session_id: string | null
+          station_number: number
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          accessed_at?: string | null
+          disconnected_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          judge_name_provided?: string | null
+          pin_attempted: string
+          session_duration?: unknown | null
+          session_id?: string | null
+          station_number: number
+          success: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          accessed_at?: string | null
+          disconnected_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          judge_name_provided?: string | null
+          pin_attempted?: string
+          session_duration?: unknown | null
+          session_id?: string | null
+          station_number?: number
+          success?: boolean
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "station_access_log_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "station_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      station_rate_limits: {
+        Row: {
+          failed_attempts: number | null
+          first_attempt_at: string | null
+          id: string
+          ip_address: unknown
+          locked_until: string | null
+          station_number: number
+        }
+        Insert: {
+          failed_attempts?: number | null
+          first_attempt_at?: string | null
+          id?: string
+          ip_address: unknown
+          locked_until?: string | null
+          station_number: number
+        }
+        Update: {
+          failed_attempts?: number | null
+          first_attempt_at?: string | null
+          id?: string
+          ip_address?: unknown
+          locked_until?: string | null
+          station_number?: number
+        }
+        Relationships: []
+      }
+      station_sessions: {
+        Row: {
+          assigned_judge_id: string | null
+          created_at: string | null
+          created_by: string | null
+          event_id: string
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          pin_code: string
+          station_number: number
+        }
+        Insert: {
+          assigned_judge_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          event_id: string
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          pin_code: string
+          station_number: number
+        }
+        Update: {
+          assigned_judge_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          event_id?: string
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          pin_code?: string
+          station_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "station_sessions_assigned_judge_id_fkey"
+            columns: ["assigned_judge_id"]
+            isOneToOne: false
+            referencedRelation: "judges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "station_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "bdg_event"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       testimonios: {
         Row: {
           activo: boolean | null
@@ -3420,6 +3551,19 @@ export type Database = {
         Args: { p_license_id: string }
         Returns: string
       }
+      generate_station_pin: {
+        Args: {
+          p_assigned_judge_id?: string
+          p_created_by?: string
+          p_event_id: string
+          p_station_number: number
+        }
+        Returns: {
+          expires_at: string
+          pin_code: string
+          session_id: string
+        }[]
+      }
       get_current_user_judge_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -3474,6 +3618,19 @@ export type Database = {
       get_station_number: {
         Args: { p_role: string }
         Returns: number
+      }
+      get_station_status: {
+        Args: { p_event_id: string }
+        Returns: {
+          assigned_judge_name: string
+          connected_judge_name: string
+          expires_at: string
+          is_active: boolean
+          is_connected: boolean
+          last_access: string
+          pin_code: string
+          station_number: number
+        }[]
       }
       has_any_role: {
         Args: {
@@ -3593,6 +3750,23 @@ export type Database = {
       validate_profile_change_request: {
         Args: { p_fighter_id: string; p_requested_changes: Json }
         Returns: Json
+      }
+      validate_station_pin: {
+        Args: {
+          p_ip_address?: unknown
+          p_judge_name?: string
+          p_pin_code: string
+          p_station_number: number
+          p_user_agent?: string
+        }
+        Returns: {
+          current_fight_id: string
+          event_id: string
+          event_name: string
+          failure_reason: string
+          session_id: string
+          valid: boolean
+        }[]
       }
     }
     Enums: {
