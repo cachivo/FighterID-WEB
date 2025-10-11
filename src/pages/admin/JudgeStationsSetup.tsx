@@ -42,6 +42,23 @@ export default function JudgeStationsSetup() {
     loadEvents();
   }, []);
 
+  // Restore selected event from localStorage after events are loaded
+  useEffect(() => {
+    if (events.length > 0 && !selectedEvent) {
+      const savedEventId = localStorage.getItem('admin_station_selected_event');
+      if (savedEventId) {
+        // Validate that the saved event still exists and is active
+        const eventExists = events.find(e => e.id === savedEventId);
+        if (eventExists) {
+          setSelectedEvent(savedEventId);
+        } else {
+          // Clear localStorage if event no longer exists
+          localStorage.removeItem('admin_station_selected_event');
+        }
+      }
+    }
+  }, [events]);
+
   useEffect(() => {
     if (selectedEvent) {
       loadStationStatus();
@@ -202,7 +219,13 @@ export default function JudgeStationsSetup() {
             <CardDescription>Elige el evento para generar PINs de estaciones</CardDescription>
           </CardHeader>
           <CardContent>
-            <Select value={selectedEvent} onValueChange={setSelectedEvent}>
+            <Select 
+              value={selectedEvent} 
+              onValueChange={(value) => {
+                setSelectedEvent(value);
+                localStorage.setItem('admin_station_selected_event', value);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un evento..." />
               </SelectTrigger>
