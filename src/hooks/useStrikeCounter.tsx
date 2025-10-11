@@ -143,7 +143,7 @@ export function useStrikeCounter(
       timestamp_ms: Date.now(),
       judge_id: judgeId,
       corner,
-      type: 'punch',
+      type: 'strike',
     };
 
     // Agregar localmente de inmediato
