@@ -129,10 +129,8 @@ const App = () => (
               <Route path="/hud/fight/:fightId" element={<HudPublicDisplay />} />
 
               {/* Rutas de Estaciones con PIN (sin autenticación) */}
-              <Route path="/estacion1" element={<StationPinLogin />} />
-              <Route path="/estacion2" element={<StationPinLogin />} />
-              <Route path="/estacion3" element={<StationPinLogin />} />
-              <Route path="/estacion:stationNumber/waiting" element={<StationWaiting />} />
+              <Route path="/estacion/:stationNumber" element={<StationPinLogin />} />
+              <Route path="/estacion/:stationNumber/waiting" element={<StationWaiting />} />
 
               {/* Fighter License Portal Routes */}
               <Route path="/license/welcome" element={<LicenseWelcome />} />

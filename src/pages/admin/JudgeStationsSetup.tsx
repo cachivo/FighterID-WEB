@@ -152,7 +152,7 @@ export default function JudgeStationsSetup() {
   };
 
   const copyUrl = (stationNumber: number) => {
-    const url = `${window.location.origin}/estacion${stationNumber}`;
+    const url = `${window.location.origin}/estacion/${stationNumber}`;
     navigator.clipboard.writeText(url);
     toast.success('🔗 URL copiada al portapapeles');
   };
