@@ -32,7 +32,7 @@ const Hero = () => {
           {/* LOGO OPTIMIZADO PARA MÓVIL */}
           <div className="mb-4 sm:mb-6 md:mb-8 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
             <img 
-              src="/lovable-uploads/fighter-id-logo-neon.png" 
+              src="/lovable-uploads/fighter-id-logo-ea-sports.png" 
               alt="Fighter ID" 
               className="h-28 sm:h-40 md:h-48 lg:h-56 w-auto mx-auto transition-all duration-500 animate-pulse-slow"
             />
@@ -100,7 +100,7 @@ const Hero = () => {
       <div className="relative z-10 text-center text-white px-4 sm:px-6 max-w-4xl mx-auto">
         <div className="mb-3 sm:mb-4 md:mb-6 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
           <img 
-            src="/lovable-uploads/fighter-id-logo-neon.png" 
+            src="/lovable-uploads/fighter-id-logo-ea-sports.png" 
             alt="Fighter ID Logo" 
             className="h-24 sm:h-32 md:h-40 lg:h-48 w-auto mx-auto animate-pulse-slow"
           />
