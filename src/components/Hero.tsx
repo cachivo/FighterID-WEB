@@ -46,7 +46,7 @@ const Hero = () => {
           {/* BOTONES */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center max-w-md mx-auto animate-fade-in-up" style={{ animationDelay: '300ms' }}>
             <Button 
-              onClick={() => navigate('/license/welcome')}
+              onClick={() => navigate('/auth?mode=signin')}
               variant="hero"
               size="default"
               className="w-full sm:w-auto px-6 py-2.5 sm:px-8 sm:py-3 text-sm sm:text-base min-h-[44px] touch-manipulation"
