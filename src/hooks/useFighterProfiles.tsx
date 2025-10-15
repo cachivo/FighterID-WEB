@@ -407,6 +407,9 @@ export function useFighterProfiles() {
 
       // Refrescar la lista para mostrar los cambios
       await fetchFighters();
+
+      // Notificar a otras vistas para refrescar
+      window.dispatchEvent(new CustomEvent('admin-fighter-updated'));
       return true;
     } catch (err) {
       console.error('Error completo:', err);

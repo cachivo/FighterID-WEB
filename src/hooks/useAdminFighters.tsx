@@ -152,6 +152,15 @@ export function useAdminFighters() {
     fetchFighters();
   }, []);
 
+  useEffect(() => {
+    const onAdminUpdated = () => {
+      console.log('🔧 Admin update event received, refreshing fighters...');
+      fetchFighters();
+    };
+    window.addEventListener('admin-fighter-updated', onAdminUpdated);
+    return () => window.removeEventListener('admin-fighter-updated', onAdminUpdated);
+  }, []);
+
   return {
     fighters,
     loading,

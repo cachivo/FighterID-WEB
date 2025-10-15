@@ -88,7 +88,7 @@ export const OptimizedImage = ({
           onError={handleError}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
-          fetchPriority={priority ? "high" : undefined}
+          {...((priority ? { fetchpriority: "high" } : {}) as any)}
         />
       )}
     </div>
