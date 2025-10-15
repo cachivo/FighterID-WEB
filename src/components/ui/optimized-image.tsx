@@ -23,7 +23,7 @@ export const OptimizedImage = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isInView, setIsInView] = useState(priority);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const imgRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -65,12 +65,12 @@ export const OptimizedImage = ({
     <div ref={imgRef} className={cn("relative overflow-hidden", className)}>
       {/* Skeleton placeholder */}
       {!isLoaded && !isError && (
-        <div className="absolute inset-0 bg-muted animate-pulse rounded-lg" />
+        <div className="absolute inset-0 bg-muted animate-pulse" style={{ borderRadius: 'inherit' }} />
       )}
       
       {/* Fallback icon */}
       {isError && fallbackIcon && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center" style={{ borderRadius: 'inherit' }}>
           {fallbackIcon}
         </div>
       )}
@@ -81,13 +81,14 @@ export const OptimizedImage = ({
           src={src}
           alt={alt}
           className={cn(
-            "transition-opacity duration-300",
-            isLoaded ? "opacity-100" : "opacity-0",
-            className
+            "absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-300",
+            isLoaded ? "opacity-100" : "opacity-0"
           )}
           onLoad={handleLoad}
           onError={handleError}
           loading={priority ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={priority ? "high" : undefined}
         />
       )}
     </div>
