@@ -114,14 +114,39 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
 
       if (license) {
-        console.log('[SUCCESS] [LICENSE AUTH] ACTIVE license found!');
+        console.log('[SUCCESS] [LICENSE AUTH] License found:', license.status);
         const combinedLicenseData = { ...license, fighter_profiles: profile };
         setLicenseData(combinedLicenseData);
-        setHasActiveLicense(true);
+        
+        // Redirección inteligente basada en estado
+        if (license.status === 'ACTIVE') {
+          setHasActiveLicense(true);
+          if (window.location.pathname === '/license/pending') {
+            window.location.href = '/license/dashboard';
+          }
+        } else if (['PENDING_REVIEW', 'APPLIED'].includes(license.status)) {
+          setHasActiveLicense(false);
+          if (window.location.pathname === '/license/dashboard') {
+            window.location.href = '/license/pending';
+          }
+        }
       } else {
-        console.log('[WARNING] [LICENSE AUTH] No ACTIVE license found');
-        setLicenseData({ fighter_profiles: profile });
-        setHasActiveLicense(false);
+        // Check for PENDING_REVIEW license
+        const { data: pendingLicense } = await supabase
+          .from('fighter_licenses')
+          .select('*')
+          .eq('fighter_id', profile.id)
+          .eq('status', 'PENDING_REVIEW')
+          .maybeSingle();
+        
+        if (pendingLicense) {
+          const combinedData = { ...pendingLicense, fighter_profiles: profile };
+          setLicenseData(combinedData);
+          setHasActiveLicense(false);
+        } else {
+          setLicenseData({ fighter_profiles: profile });
+          setHasActiveLicense(false);
+        }
       }
 
     } catch (error) {

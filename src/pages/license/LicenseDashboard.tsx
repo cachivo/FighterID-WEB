@@ -35,6 +35,13 @@ export default function LicenseDashboard() {
   console.log('Dashboard - licenseData:', licenseData);
   console.log('Dashboard - license:', license);
 
+  // Redirigir a /license/pending si la licencia está PENDING_REVIEW
+  useEffect(() => {
+    if (licenseData && ['PENDING_REVIEW', 'APPLIED'].includes(licenseData.status)) {
+      navigate('/license/pending', { replace: true });
+    }
+  }, [licenseData, navigate]);
+
   const refreshData = async () => {
     setIsRefreshing(true);
     try {
