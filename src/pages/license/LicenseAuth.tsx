@@ -256,12 +256,18 @@ export default function LicenseAuth() {
     }
     
     try {
-      // Verificar si el email ya existe
-      const { data: existingUser } = await supabase
+      // Verificar si el email ya existe en app_user
+      const { data: existingUser, error: checkError } = await supabase
         .from('app_user')
         .select('email')
         .eq('email', email)
-        .single();
+        .maybeSingle();
+      
+      // Ignorar error de no encontrado, otros errores sí importan
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing user:', checkError);
+        throw new Error('Error verificando email. Intenta de nuevo.');
+      }
         
       if (existingUser) {
         toast({
@@ -1032,7 +1038,6 @@ export default function LicenseAuth() {
                               ref={fileInputRef}
                               type="file"
                               accept="image/*"
-                              capture="environment"
                               onChange={handlePhotoUpload}
                               className="hidden"
                             />
@@ -1064,9 +1069,12 @@ export default function LicenseAuth() {
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={uploadingPhoto}
                               >
-                                <Camera className="h-8 w-8" />
+                                <Upload className="h-8 w-8" />
                                 <span className="text-sm">
-                                  {uploadingPhoto ? 'Procesando...' : 'Tomar/Subir Foto'}
+                                  {uploadingPhoto ? 'Procesando...' : 'Seleccionar Foto'}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  Desde cámara o galería
                                 </span>
                               </Button>
                             )}
