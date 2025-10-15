@@ -249,15 +249,27 @@ export default function LicenseAuth() {
                     <p className="text-sm text-gray-400 max-w-md">
                       Haz clic en el enlace del email para activar tu cuenta. Si no lo ves, revisa tu carpeta de spam.
                     </p>
-                    <Button
-                      variant="outline"
-                      onClick={handleResendEmail}
-                      disabled={resendCooldown > 0}
-                      className="mt-4"
-                    >
-                      <Mail className="w-4 h-4 mr-2" />
-                      {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : 'Reenviar email'}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full px-4">
+                      <Button
+                        variant="outline"
+                        onClick={handleResendEmail}
+                        disabled={resendCooldown > 0}
+                        className="flex-1"
+                      >
+                        <Mail className="w-4 h-4 mr-2" />
+                        {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : 'Reenviar email'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setEmailSuccess(false);
+                          setEmail('');
+                        }}
+                        className="flex-1 border border-gold-500/30 hover:bg-gold-500/10"
+                      >
+                        Cambiar correo
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
