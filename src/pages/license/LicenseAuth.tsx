@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
@@ -98,6 +98,7 @@ export default function LicenseAuth() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -747,27 +748,37 @@ export default function LicenseAuth() {
                         </div>
                         <div>
                           <Label className="text-sm">Fecha de Nacimiento</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" className="w-full justify-start text-left font-normal min-h-[48px] text-sm">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {fighterData.birthdate ? format(fighterData.birthdate, 'dd/MM/yyyy') : 'Selecciona fecha'}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={fighterData.birthdate || undefined}
-                                onSelect={(date) => handleFighterDataChange('birthdate', date)}
-                                disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                                initialFocus
-                                captionLayout="dropdown-buttons"
-                                fromYear={1900}
-                                toYear={new Date().getFullYear()}
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start text-left font-normal min-h-[48px] text-sm"
+                            onClick={() => setDatePickerOpen(true)}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {fighterData.birthdate ? format(fighterData.birthdate, 'dd/MM/yyyy') : 'Selecciona fecha'}
+                          </Button>
+                          <Dialog open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                            <DialogContent className="sm:max-w-[425px]">
+                              <DialogHeader>
+                                <DialogTitle>Selecciona tu fecha de nacimiento</DialogTitle>
+                              </DialogHeader>
+                              <div className="flex justify-center">
+                                <Calendar
+                                  mode="single"
+                                  selected={fighterData.birthdate || undefined}
+                                  onSelect={(date) => {
+                                    handleFighterDataChange('birthdate', date);
+                                    setDatePickerOpen(false);
+                                  }}
+                                  disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                                  initialFocus
+                                  captionLayout="dropdown-buttons"
+                                  fromYear={1900}
+                                  toYear={new Date().getFullYear()}
+                                  className="p-3 pointer-events-auto"
+                                />
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         </div>
                         <div>
                           <Label className="text-sm">Lugar de Nacimiento</Label>
