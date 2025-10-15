@@ -686,6 +686,45 @@ export type Database = {
           },
         ]
       }
+      email_campaign_log: {
+        Row: {
+          created_at: string | null
+          html_content: string
+          id: string
+          metadata: Json | null
+          recipient_filter: string
+          sent_by: string | null
+          subject: string
+          test_mode: boolean
+          total_failed: number
+          total_sent: number
+        }
+        Insert: {
+          created_at?: string | null
+          html_content: string
+          id?: string
+          metadata?: Json | null
+          recipient_filter?: string
+          sent_by?: string | null
+          subject: string
+          test_mode?: boolean
+          total_failed?: number
+          total_sent?: number
+        }
+        Update: {
+          created_at?: string | null
+          html_content?: string
+          id?: string
+          metadata?: Json | null
+          recipient_filter?: string
+          sent_by?: string | null
+          subject?: string
+          test_mode?: boolean
+          total_failed?: number
+          total_sent?: number
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           active: boolean

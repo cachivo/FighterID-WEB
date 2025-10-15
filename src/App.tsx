@@ -83,6 +83,8 @@ import Configuracion from "./pages/admin/Configuracion";
 import Votaciones from "./pages/admin/Votaciones";
 import Betting from "./pages/admin/Betting";
 import EmailMonitoring from "./pages/admin/EmailMonitoring";
+import EmailCampaigns from "./pages/admin/EmailCampaigns";
+import EmailCampaignEditor from "./pages/admin/EmailCampaignEditor";
 import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 
@@ -246,6 +248,8 @@ const App = () => (
                       <Route path="/votaciones" element={<Votaciones />} />
                       <Route path="/betting" element={<Betting />} />
                       <Route path="/email-monitoring" element={<EmailMonitoring />} />
+                      <Route path="/email-campaigns" element={<EmailCampaigns />} />
+                      <Route path="/email-campaigns/editor" element={<EmailCampaignEditor />} />
                       <Route path="/comunidad" element={<Comunidad />} />
                       <Route path="/configuracion" element={<Configuracion />} />
                       <Route path="/licencias" element={<ValidacionLicencias />} />

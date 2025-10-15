@@ -6,6 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Mail, CheckCircle2, XCircle, TestTube2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 interface EmailCampaign {
   id: string;
@@ -28,10 +29,18 @@ export default function EmailCampaigns() {
 
   const fetchCampaigns = async () => {
     try {
-      // TODO: Requires migration approval for email_campaign_log table
-      setCampaigns([]);
+      const { data, error } = await supabase
+        .from('email_campaign_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      
+      setCampaigns(data || []);
     } catch (error) {
       console.error('Error fetching campaigns:', error);
+      toast.error('Error al cargar campañas');
     } finally {
       setLoading(false);
     }
