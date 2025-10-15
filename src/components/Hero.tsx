@@ -54,7 +54,7 @@ const Hero = () => {
               Iniciar Sesión
             </Button>
             <Button 
-              onClick={() => navigate('/license/welcome')}
+              onClick={() => navigate('/license/auth?mode=signup')}
               variant="urban"
               size="default"
               className="w-full sm:w-auto px-6 py-2.5 sm:px-8 sm:py-3 text-sm sm:text-base min-h-[44px] touch-manipulation"

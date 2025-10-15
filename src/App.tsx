@@ -149,7 +149,7 @@ const App = () => (
               <Route path="/estacion/3/control/:fightId" element={<Station3RoundControl />} />
 
               {/* Fighter License Portal Routes */}
-              <Route path="/license/welcome" element={<LicenseWelcome />} />
+              <Route path="/license/welcome" element={<Navigate to="/license/auth?mode=signup" replace />} />
               <Route path="/license/auth" element={<LicenseAuth />} />
               <Route path="/license/forgot-password" element={<LicenseForgotPassword />} />
               <Route path="/license/reset-password" element={<LicenseResetPassword />} />

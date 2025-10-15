@@ -111,7 +111,7 @@ const Header = () => {
                 ) : (
                   <>
                     <DropdownMenuItem asChild>
-                      <Link to="/license/welcome" className="cursor-pointer">
+                      <Link to="/license/auth?mode=signup" className="cursor-pointer">
                         <CreditCard className="mr-2 h-4 w-4" />
                         Obtén tu licencia
                       </Link>
@@ -195,7 +195,7 @@ const Header = () => {
                         className="w-full justify-start gap-3 bg-gradient-to-r from-primary to-accent hover:opacity-90 font-semibold shadow-lg text-base h-12"
                         size="lg"
                       >
-                        <Link to={hasFighterProfile ? "/license/dashboard" : "/license/welcome"} onClick={() => setMobileMenuOpen(false)}>
+                        <Link to={hasFighterProfile ? "/license/dashboard" : "/license/auth?mode=signup"} onClick={() => setMobileMenuOpen(false)}>
                           <Shield className="h-6 w-6" />
                           {hasFighterProfile ? "Mi Fighter ID" : "Obtén tu Fighter ID"}
                         </Link>
@@ -244,7 +244,7 @@ const Header = () => {
                         <span>Mi Perfil</span>
                       </Link>
                       <Link 
-                        to={hasFighterProfile ? "/license/dashboard" : "/license/welcome"}
+                        to={hasFighterProfile ? "/license/dashboard" : "/license/auth?mode=signup"}
                         className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/50 transition-colors min-h-[44px] touch-manipulation"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -327,7 +327,7 @@ const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to={hasFighterProfile ? "/license/dashboard" : "/license/welcome"} className="cursor-pointer min-h-[44px] touch-manipulation">
+                    <Link to={hasFighterProfile ? "/license/dashboard" : "/license/auth?mode=signup"} className="cursor-pointer min-h-[44px] touch-manipulation">
                       <Shield className="mr-2 h-4 w-4" />
                       {hasFighterProfile ? "Fighter ID" : "Obtén tu Fighter ID"}
                     </Link>
