@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 import UrbanDecorations from "@/components/UrbanDecorations";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import { FighterIDCallToAction } from "@/components/FighterIDCallToAction";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -61,6 +62,7 @@ const Index = () => {
       <Hero />
       {user && (
         <>
+          <FighterIDCallToAction />
           <QuickStats />
           <Ranking />
           <StrategicAllies />
