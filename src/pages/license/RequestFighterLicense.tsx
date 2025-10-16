@@ -167,24 +167,8 @@ export default function RequestFighterLicense() {
         return;
       }
 
-      // 3. Actualizar app_user con nombre y apellido
-      const { error: updateUserError } = await supabase
-        .from('app_user')
-        .update({
-          first_name: formData.first_name.trim(),
-          last_name: formData.last_name.trim(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('auth_user_id', user.id);
-
-      if (updateUserError) {
-        console.error('Error actualizando usuario:', updateUserError);
-        toast.error('Error actualizando tu perfil');
-        setLoading(false);
-        return;
-      }
-
-      // 4. Sanitizar payload: convertir strings vacíos a null
+      // 3. Sanitizar payload: convertir strings vacíos a null
+      // Nota: El RPC ahora actualiza app_user automáticamente con first_name y last_name
       const sanitizeOptionalNumber = (value: string): string | null => {
         const cleaned = value.replace(/[^0-9]/g, '');
         return cleaned || null;
