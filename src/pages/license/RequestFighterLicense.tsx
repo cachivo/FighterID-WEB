@@ -283,11 +283,17 @@ export default function RequestFighterLicense() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950/30 to-slate-900 py-12 px-4 relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 bg-[url('/lovable-uploads/octagon-background.png')] opacity-5 bg-cover bg-center" />
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-black py-12 px-4 relative overflow-hidden">
+      {/* Fondo espacial con nebulosas */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-slate-950 to-black" />
+      <div className="absolute inset-0 bg-[url('/lovable-uploads/octagon-background.png')] opacity-[0.02] bg-cover bg-center" />
+      
+      {/* Nebulosas animadas - efecto espacial suave */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-600/15 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s', animationDuration: '10s' }} />
+      <div className="absolute bottom-0 left-1/4 w-[450px] h-[450px] bg-indigo-600/12 rounded-full blur-[110px] animate-pulse" style={{ animationDelay: '4s', animationDuration: '12s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-600/8 rounded-full blur-[130px] animate-pulse" style={{ animationDelay: '6s', animationDuration: '14s' }} />
+      <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-cyan-600/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s', animationDuration: '9s' }} />
       
       <div className="max-w-4xl mx-auto relative z-10">
         <Button
