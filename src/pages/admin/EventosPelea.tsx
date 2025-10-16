@@ -1045,11 +1045,11 @@ export default function EventosPelea() {
                         accept="image/*"
                         onFileSelect={setEventImageFileA}
                         onRemoveFile={() => setEventImageFileA(undefined)}
-                        maxSize={5}
+                        maxSize={50}
                         showResizeInfo={false}
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Si no subes foto, se usará la del perfil del peleador
+                        Si no subes foto, se usará la del perfil del peleador (máx. 50MB)
                       </p>
                     </div>
                   </>
@@ -1104,11 +1104,11 @@ export default function EventosPelea() {
                         accept="image/*"
                         onFileSelect={setEventImageFileB}
                         onRemoveFile={() => setEventImageFileB(undefined)}
-                        maxSize={5}
+                        maxSize={50}
                         showResizeInfo={false}
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Si no subes foto, se usará la del perfil del peleador
+                        Si no subes foto, se usará la del perfil del peleador (máx. 50MB)
                       </p>
                     </div>
                   </>
