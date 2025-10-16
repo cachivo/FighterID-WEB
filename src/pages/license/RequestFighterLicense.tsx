@@ -69,6 +69,11 @@ export default function RequestFighterLicense() {
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validar tamaño (máximo 15MB)
+      if (file.size > 15728640) {
+        toast.error('La foto es muy grande. Máximo 15MB.');
+        return;
+      }
       setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -81,9 +86,9 @@ export default function RequestFighterLicense() {
   const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validar tamaño (máximo 5MB)
-      if (file.size > 5242880) {
-        toast.error('El archivo es muy grande. Máximo 5MB.');
+      // Validar tamaño (máximo 15MB)
+      if (file.size > 15728640) {
+        toast.error('El documento es muy grande. Máximo 15MB.');
         return;
       }
       setDocumentFile(file);
