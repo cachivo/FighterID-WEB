@@ -254,7 +254,7 @@ const EventDetail = () => {
                                   <img 
                                     src={fight.fighter_a_event_image_url || fight.fighter_a?.avatar_url || fight.fighter_a_external?.image_url} 
                                     alt={fight.fighter_a ? `${fight.fighter_a.first_name} ${fight.fighter_a.last_name}` : fight.fighter_a_external?.name}
-                                    className="h-56 md:h-72 w-auto object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-300"
+                                    className="max-h-52 md:max-h-64 w-auto max-w-[180px] md:max-w-[260px] object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-300"
                                     style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.4))' }}
                                   />
                                 ) : (
@@ -347,7 +347,7 @@ const EventDetail = () => {
                                   <img 
                                     src={fight.fighter_b_event_image_url || fight.fighter_b?.avatar_url || fight.fighter_b_external?.image_url} 
                                     alt={fight.fighter_b ? `${fight.fighter_b.first_name} ${fight.fighter_b.last_name}` : fight.fighter_b_external?.name}
-                                    className="h-56 md:h-72 w-auto object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-300"
+                                    className="max-h-52 md:max-h-64 w-auto max-w-[180px] md:max-w-[260px] object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-300"
                                     style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.4))' }}
                                   />
                                 ) : (
