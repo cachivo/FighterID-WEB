@@ -122,7 +122,6 @@ export default function EventosPelea() {
     fighter_a_id: '',
     fighter_b_id: '',
     weight_class: '',
-    scheduled_time: '',
     card_position: 'regular' as 'main_event' | 'co_main_event' | 'regular'
   });
 
@@ -337,15 +336,7 @@ export default function EventosPelea() {
         fighterBEventImageUrl = publicUrlB;
       }
 
-      // 5. CREAR PELEA CON TIMESTAMP CORRECTO
-      let scheduledDateTime = null;
-      if (fightData.scheduled_time && selectedEvent.start_time) {
-        const eventDate = new Date(selectedEvent.start_time);
-        const [hours, minutes] = fightData.scheduled_time.split(':');
-        eventDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-        scheduledDateTime = eventDate.toISOString();
-      }
-
+      // 5. CREAR PELEA
       const { data, error } = await supabase
         .from('fights')
         .insert({
@@ -359,7 +350,6 @@ export default function EventosPelea() {
           fighter_a_event_image_url: fighterAEventImageUrl,
           fighter_b_event_image_url: fighterBEventImageUrl,
           weight_class: fightData.weight_class,
-          scheduled_time: scheduledDateTime,
           status: 'scheduled',
           card_position: fightData.card_position
         })
@@ -396,7 +386,6 @@ export default function EventosPelea() {
         fighter_a_id: '',
         fighter_b_id: '',
         weight_class: '',
-        scheduled_time: '',
         card_position: 'regular'
       });
       setFighterAIsRegistered(true);
@@ -1136,7 +1125,7 @@ export default function EventosPelea() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Categoría de Peso</Label>
                 <Select value={fightData.weight_class} onValueChange={(value) => setFightData(prev => ({...prev, weight_class: value}))}>
@@ -1167,14 +1156,6 @@ export default function EventosPelea() {
                     <SelectItem value="main_event">Estelar ⭐</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label>Hora Programada</Label>
-                <Input
-                  type="time"
-                  value={fightData.scheduled_time}
-                  onChange={(e) => setFightData(prev => ({...prev, scheduled_time: e.target.value}))}
-                />
               </div>
             </div>
 
