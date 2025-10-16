@@ -14,6 +14,7 @@ import { ExternalFighterForm } from '@/components/admin/ExternalFighterForm';
 import { FileUpload } from '@/components/ui/file-upload';
 import { Switch } from '@/components/ui/switch';
 import { trimTransparentBorders } from '@/lib/imageUtils';
+import { QuickUpdateRandyImage } from '@/components/admin/QuickUpdateRandyImage';
 import {
   Table,
   TableBody,
@@ -765,6 +766,9 @@ export default function EventosPelea() {
 
   return (
     <div className="space-y-6">
+      {/* Botón rápido para actualizar imagen de Randy */}
+      <QuickUpdateRandyImage />
+      
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Eventos de Pelea</h2>
