@@ -107,113 +107,69 @@ export default function RequestFighterLicense() {
       return;
     }
 
-    // Normalización y limpieza de campos numéricos
-    const normalizeWeight = (value: string): string => {
-      return value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
-    };
-
-    const normalizeInteger = (value: string): string => {
-      const cleaned = value.replace(/[^0-9]/g, '');
-      return cleaned || '0'; // Si queda vacío, devolver '0'
-    };
-
-    // Limpiar valores antes de validar
-    const cleanedData = {
-      ...formData,
-      record_wins: normalizeInteger(formData.record_wins) || '0',
-      record_losses: normalizeInteger(formData.record_losses) || '0',
-      record_draws: normalizeInteger(formData.record_draws) || '0',
-      height_cm: normalizeInteger(formData.height_cm),
-      weight_kg: normalizeWeight(formData.weight_kg),
-      reach_cm: normalizeInteger(formData.reach_cm),
-    };
-
-    // Schema de validación con Zod (solo para campos que el usuario escribe)
-    const validationSchema = z.object({
-      height_cm: z.string().optional().refine(
-        (val) => !val || /^\d+$/.test(val),
-        'Altura debe ser solo números (ejemplo: 175)'
-      ),
-      weight_kg: z.string().optional().refine(
-        (val) => !val || /^\d+(\.\d{1,2})?$/.test(val),
-        'Peso debe ser un número decimal válido (ejemplo: 70.5)'
-      ),
-      reach_cm: z.string().optional().refine(
-        (val) => !val || /^\d+$/.test(val),
-        'Alcance debe ser solo números (ejemplo: 180)'
-      ),
-    });
-
-    // Debug: Log valores antes de validar
-    console.log('[DEBUG] Valores antes de validación:', {
-      record_wins: cleanedData.record_wins,
-      record_losses: cleanedData.record_losses,
-      record_draws: cleanedData.record_draws,
-      types: {
-        wins: typeof cleanedData.record_wins,
-        losses: typeof cleanedData.record_losses,
-        draws: typeof cleanedData.record_draws,
-      }
-    });
-
-    // Validar solo campos físicos (récord ya está validado por botones +/-)
-    try {
-      validationSchema.parse(cleanedData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const firstError = error.issues[0];
-        toast.error(firstError.message);
-        setCurrentTab('physical'); // Ir a la pestaña de datos físicos
-        return;
-      }
-    }
-
-    // Actualizar formData con valores limpios
-    setFormData(cleanedData);
-
-    console.log('[VALIDATION] Valores validados y limpios:', {
-      record_wins: cleanedData.record_wins,
-      record_losses: cleanedData.record_losses,
-      record_draws: cleanedData.record_draws,
-      height_cm: cleanedData.height_cm,
-      weight_kg: cleanedData.weight_kg,
-      reach_cm: cleanedData.reach_cm,
-    });
-
-    // Validaciones básicas
-    if (!documentFile) {
-      toast.error('Debes subir una imagen de tu documento de identidad');
-      setCurrentTab('personal');
-      return;
-    }
-
-    if (!cleanedData.weight_class) {
-      toast.error('Debes seleccionar una categoría de peso');
-      setCurrentTab('combat');
-      return;
-    }
-
-    if (!cleanedData.emergency_contact_name || !cleanedData.emergency_contact_phone) {
-      toast.error('Debes proporcionar información de contacto de emergencia');
-      setCurrentTab('medical');
-      return;
-    }
-
     setLoading(true);
 
     try {
-      // 1. Obtener app_user_id
-      const { data: appUser, error: appUserError } = await supabase
+      // 1. Pre-check: verificar si ya tiene una licencia activa
+      const { data: appUserData } = await supabase
         .from('app_user')
         .select('id, first_name, last_name, country, birthdate')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (appUserError || !appUser) {
+      if (!appUserData) {
         throw new Error('No se pudo obtener tu información de usuario');
       }
 
-      // 2. Subir documento de identidad si existe (PRIVADO)
+      const { data: existingProfile } = await supabase
+        .from('fighter_profiles')
+        .select('id, license_number')
+        .eq('user_id', appUserData.id)
+        .eq('active', true)
+        .maybeSingle();
+
+      if (existingProfile) {
+        toast.error(
+          `Ya tienes una Fighter ID activa${existingProfile.license_number ? ` (${existingProfile.license_number})` : ''}. No puedes solicitar otra.`
+        );
+        setLoading(false);
+        return;
+      }
+
+      // 2. Validaciones básicas
+      if (!documentFile) {
+        toast.error('Debes subir una imagen de tu documento de identidad');
+        setCurrentTab('personal');
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.weight_class) {
+        toast.error('Debes seleccionar una categoría de peso');
+        setCurrentTab('combat');
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.emergency_contact_name || !formData.emergency_contact_phone) {
+        toast.error('Debes proporcionar información de contacto de emergencia');
+        setCurrentTab('medical');
+        setLoading(false);
+        return;
+      }
+
+      // 3. Sanitizar payload: convertir strings vacíos a null
+      const sanitizeOptionalNumber = (value: string): string | null => {
+        const cleaned = value.replace(/[^0-9]/g, '');
+        return cleaned || null;
+      };
+
+      const sanitizeWeight = (value: string): string | null => {
+        const cleaned = value.replace(',', '.').replace(/[^0-9.]/g, '');
+        return cleaned || null;
+      };
+
+      // 4. Subir documentos
       let documentUrl = '';
       if (documentFile) {
         const fileExt = documentFile.name.split('.').pop();
@@ -227,14 +183,12 @@ export default function RequestFighterLicense() {
           throw new Error('Error al subir documento de identidad: ' + uploadError.message);
         }
 
-        // Obtener URL privada (solo accesible por el usuario y admins)
         const { data: urlData } = supabase.storage
           .from('identity_documents')
           .getPublicUrl(fileName);
         documentUrl = urlData.publicUrl;
       }
 
-      // 3. Subir avatar si existe
       let avatarUrl = '';
       if (photoFile) {
         const fileExt = photoFile.name.split('.').pop();
@@ -252,101 +206,117 @@ export default function RequestFighterLicense() {
         }
       }
 
-      // 4. Preparar datos del perfil de peleador - con validación estricta
-      // Validar y limpiar valores de récord
-      const parseRecordValue = (value: string): number => {
-        if (!value || value.trim() === '') return 0;
-        const parsed = parseInt(value, 10);
-        return isNaN(parsed) ? 0 : Math.max(0, parsed); // Asegurar que sea >= 0
-      };
-
+      // 5. Preparar payload sanitizado
       const fighterProfileData = {
-        first_name: appUser.first_name,
-        last_name: appUser.last_name,
-        nickname: cleanedData.nickname || null,
-        country: appUser.country,
-        birthdate: appUser.birthdate,
-        birthplace: cleanedData.birthplace || null,
-        document_type: cleanedData.document_type || null,
+        first_name: appUserData.first_name,
+        last_name: appUserData.last_name,
+        nickname: formData.nickname || null,
+        country: appUserData.country,
+        birthdate: appUserData.birthdate || null,
+        birthplace: formData.birthplace || null,
+        document_type: formData.document_type || null,
         document_image_url: documentUrl || null,
         
-        // Físico - usar cleanedData
-        height_cm: cleanedData.height_cm ? (parseInt(cleanedData.height_cm, 10) || null) : null,
-        weight_kg: cleanedData.weight_kg ? (parseFloat(cleanedData.weight_kg) || null) : null,
-        reach_cm: cleanedData.reach_cm ? (parseInt(cleanedData.reach_cm, 10) || null) : null,
-        blood_type: cleanedData.blood_type || null,
+        // Físico - enviar null si vacío
+        height_cm: sanitizeOptionalNumber(formData.height_cm),
+        weight_kg: sanitizeWeight(formData.weight_kg),
+        reach_cm: sanitizeOptionalNumber(formData.reach_cm),
+        blood_type: formData.blood_type || null,
         
-        // Combate - usar cleanedData
-        weight_class: cleanedData.weight_class,
-        discipline: cleanedData.discipline,
-        fighting_style: cleanedData.fighting_style || null,
-        stance: cleanedData.stance || null,
-        level: cleanedData.level || null,
-        gym_name: cleanedData.gym_name || null,
-        martial_arts: cleanedData.martial_arts.length > 0 ? cleanedData.martial_arts : [],
-        // Validación robusta de récord con función auxiliar - usar cleanedData
-        record_wins: parseRecordValue(cleanedData.record_wins),
-        record_losses: parseRecordValue(cleanedData.record_losses),
-        record_draws: parseRecordValue(cleanedData.record_draws),
-        record_type: cleanedData.record_type || null,
+        // Combate
+        weight_class: formData.weight_class,
+        discipline: formData.discipline || null,
+        fighting_style: formData.fighting_style || null,
+        stance: formData.stance || null,
+        level: formData.level || null,
+        gym_name: formData.gym_name || null,
+        martial_arts: formData.martial_arts.length > 0 ? formData.martial_arts : null,
+        
+        // Récord (siempre números)
+        record_wins: formData.record_wins,
+        record_losses: formData.record_losses,
+        record_draws: formData.record_draws,
+        record_type: formData.record_type || null,
         
         // Médico
-        medical_conditions: cleanedData.medical_conditions || null,
-        medical_allergies: cleanedData.medical_allergies || null,
-        insurance_company: cleanedData.insurance_company || null,
-        insurance_policy: cleanedData.insurance_policy || null,
+        medical_conditions: formData.medical_conditions || null,
+        medical_allergies: formData.medical_allergies || null,
+        insurance_company: formData.insurance_company || null,
+        insurance_policy: formData.insurance_policy || null,
         
         // Emergencia
-        emergency_contact_name: cleanedData.emergency_contact_name,
-        emergency_contact_phone: cleanedData.emergency_contact_phone,
-        emergency_contact_relation: cleanedData.emergency_contact_relation || null,
+        emergency_contact_name: formData.emergency_contact_name,
+        emergency_contact_phone: formData.emergency_contact_phone,
+        emergency_contact_relation: formData.emergency_contact_relation || null,
         
         // Adicional
-        bio: cleanedData.bio || null,
+        bio: formData.bio || null,
         avatar_url: avatarUrl || null,
       };
 
-      // 5. Preparar datos de la licencia
       const licenseData = {
-        license_number: `FGT-${new Date().getFullYear()}-PENDING`,
-        license_level: cleanedData.level === 'Professional' ? 'PROFESSIONAL' : 'AMATEUR',
-        discipline: cleanedData.discipline,
+        license_level: formData.level === 'Professional' ? 'PROFESSIONAL' : 'AMATEUR',
+        discipline: formData.discipline || null,
       };
 
-      // 6. Debug: Log datos antes de enviar
-      console.log('[LICENSE REQUEST] Validando datos antes de enviar:', {
-        record_wins: fighterProfileData.record_wins,
-        record_losses: fighterProfileData.record_losses,
-        record_draws: fighterProfileData.record_draws,
-        record_types: {
-          wins: typeof fighterProfileData.record_wins,
-          losses: typeof fighterProfileData.record_losses,
-          draws: typeof fighterProfileData.record_draws
+      // 6. Debug logging
+      console.log('[DEBUG] Payload completo a enviar:', {
+        ...fighterProfileData,
+        types: {
+          height_cm: typeof fighterProfileData.height_cm,
+          weight_kg: typeof fighterProfileData.weight_kg,
+          reach_cm: typeof fighterProfileData.reach_cm,
+          record_wins: typeof fighterProfileData.record_wins,
+          record_losses: typeof fighterProfileData.record_losses,
+          record_draws: typeof fighterProfileData.record_draws,
         }
       });
 
-      console.log('[LICENSE REQUEST] Enviando datos de perfil');
-      console.log('[LICENSE REQUEST] Enviando datos de licencia:', licenseData);
-
-      // 7. Llamar a la función de base de datos que maneja la creación segura
-      const { data: result, error: createError } = await supabase.rpc('request_fighter_license', {
+      // 7. Llamar RPC
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('request_fighter_license', {
         p_fighter_profile_data: fighterProfileData,
         p_license_data: licenseData,
       });
 
-      if (createError) {
-        throw new Error(createError.message || 'Error al crear la solicitud');
+      if (rpcError) {
+        console.error('[ERROR] Error en RPC:', rpcError);
+        
+        // Mensajes de error mejorados según tipo
+        if (rpcError.message.includes('invalid input syntax for type integer')) {
+          toast.error('Error: Revisa los campos numéricos (récord, altura, alcance). Usa solo números enteros (ej: 5, 2, 0).');
+          setCurrentTab('combat');
+        } else if (rpcError.message.includes('invalid input syntax for type numeric')) {
+          toast.error('Error: Revisa el peso. Usa decimales con punto (ej: 70.5).');
+          setCurrentTab('physical');
+        } else {
+          toast.error(`Error: ${rpcError.message}`);
+        }
+        
+        setLoading(false);
+        return;
       }
 
-      // Verificar que result sea un objeto con la estructura esperada
-      const resultData = result as { success: boolean; fighter_profile_id?: string; license_id?: string } | null;
-      
-      if (!resultData || !resultData.success) {
-        throw new Error('No se pudo completar la solicitud');
+      // 8. Manejar respuesta del RPC
+      console.log('[DEBUG] Respuesta RPC:', rpcResult);
+
+      // Type cast para la respuesta
+      const resultData = rpcResult as { success?: boolean; message?: string } | null;
+
+      if (resultData && resultData.success === false) {
+        toast.error(resultData.message || 'Error al procesar la solicitud');
+        setLoading(false);
+        return;
       }
 
-      toast.success('¡Solicitud enviada! Tu Fighter ID será revisada en 24-48 horas');
-      navigate('/');
+      if (resultData && resultData.success === true) {
+        toast.success(resultData.message || '¡Solicitud enviada exitosamente!');
+        navigate('/license/pending');
+        return;
+      }
+
+      // Fallback
+      toast.success('¡Solicitud enviada exitosamente! Te contactaremos pronto.');
+      navigate('/license/pending');
       
     } catch (error: any) {
       console.error('[LICENSE REQUEST] Error completo:', {
@@ -357,36 +327,7 @@ export default function RequestFighterLicense() {
         stack: error.stack
       });
       
-      // Mensajes de error específicos y claros por campo
-      let errorMessage = 'Error al enviar la solicitud';
-      
-      if (error.message) {
-        if (error.message.includes('invalid input syntax for type integer')) {
-          errorMessage = '❌ Récord inválido: Victorias, derrotas y empates deben ser números enteros (ejemplo: 5, 2, 0)';
-          setCurrentTab('combat');
-        } else if (error.message.includes('invalid input syntax for type numeric')) {
-          errorMessage = '❌ Datos físicos inválidos: Revisa altura, peso y alcance. El peso puede tener decimales (ejemplo: 70.5)';
-          setCurrentTab('physical');
-        } else if (error.message.includes('document')) {
-          errorMessage = '❌ Error al subir documento. Intenta con una imagen más pequeña (máximo 15MB)';
-          setCurrentTab('personal');
-        } else if (error.message.includes('storage')) {
-          errorMessage = '❌ Error al subir archivos. Verifica tu conexión a internet';
-        } else if (error.message.includes('PGRST')) {
-          errorMessage = '❌ Error de conexión. Por favor intenta nuevamente';
-        } else if (error.message.includes('No se pudo obtener')) {
-          errorMessage = '❌ ' + error.message;
-        } else if (error.message.includes('request_fighter_license')) {
-          errorMessage = '❌ Verifica que todos los campos requeridos estén completos';
-          setCurrentTab('personal');
-        } else {
-          errorMessage = '❌ ' + error.message;
-        }
-      } else {
-        errorMessage = '❌ Error inesperado. Verifica tu conexión e intenta nuevamente';
-      }
-      
-      toast.error(errorMessage);
+      toast.error(error.message || 'Error inesperado. Verifica tu conexión e intenta nuevamente');
     } finally {
       setLoading(false);
     }

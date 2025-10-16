@@ -1,5 +1,5 @@
 // Fighter ID Service Worker
-const CACHE_VERSION = 'fighter-id-v7';
+const CACHE_VERSION = 'fighter-id-v8';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
