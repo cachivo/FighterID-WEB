@@ -113,7 +113,8 @@ export default function RequestFighterLicense() {
     };
 
     const normalizeInteger = (value: string): string => {
-      return value.replace(/[^0-9]/g, '');
+      const cleaned = value.replace(/[^0-9]/g, '');
+      return cleaned || '0'; // Si queda vacío, devolver '0'
     };
 
     // Limpiar valores antes de validar
@@ -127,11 +128,8 @@ export default function RequestFighterLicense() {
       reach_cm: normalizeInteger(formData.reach_cm),
     };
 
-    // Schema de validación con Zod
+    // Schema de validación con Zod (solo para campos que el usuario escribe)
     const validationSchema = z.object({
-      record_wins: z.string().regex(/^\d+$/, 'Victorias debe ser un número entero').transform(Number),
-      record_losses: z.string().regex(/^\d+$/, 'Derrotas debe ser un número entero').transform(Number),
-      record_draws: z.string().regex(/^\d+$/, 'Empates debe ser un número entero').transform(Number),
       height_cm: z.string().optional().refine(
         (val) => !val || /^\d+$/.test(val),
         'Altura debe ser solo números (ejemplo: 175)'
@@ -146,14 +144,26 @@ export default function RequestFighterLicense() {
       ),
     });
 
-    // Validar datos
+    // Debug: Log valores antes de validar
+    console.log('[DEBUG] Valores antes de validación:', {
+      record_wins: cleanedData.record_wins,
+      record_losses: cleanedData.record_losses,
+      record_draws: cleanedData.record_draws,
+      types: {
+        wins: typeof cleanedData.record_wins,
+        losses: typeof cleanedData.record_losses,
+        draws: typeof cleanedData.record_draws,
+      }
+    });
+
+    // Validar solo campos físicos (récord ya está validado por botones +/-)
     try {
       validationSchema.parse(cleanedData);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.issues[0];
         toast.error(firstError.message);
-        setCurrentTab('combat'); // Ir a la pestaña de combate donde están la mayoría de estos campos
+        setCurrentTab('physical'); // Ir a la pestaña de datos físicos
         return;
       }
     }
