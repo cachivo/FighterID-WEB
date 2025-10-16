@@ -195,6 +195,26 @@ export default function RequestFighterLicense() {
         return cleaned || null;
       };
 
+      // Helpers para convertir a número real para el RPC (evitar "invalid input syntax")
+      const toIntOrNull = (value: string | null): number | null => {
+        if (value == null || value === '') return null;
+        const parsed = parseInt(value, 10);
+        return Number.isNaN(parsed) ? null : parsed;
+      };
+
+      const toFloatOrNull = (value: string | null): number | null => {
+        if (value == null || value === '') return null;
+        const parsed = parseFloat(value);
+        return Number.isNaN(parsed) ? null : parsed;
+      };
+
+      const sanitizeIntegerWithDefault = (value: string, defaultValue = 0): number => {
+        const cleaned = value.replace(/[^0-9]/g, '');
+        if (!cleaned) return defaultValue;
+        const parsed = parseInt(cleaned, 10);
+        return Number.isNaN(parsed) ? defaultValue : parsed;
+      };
+
       // 5. Subir documentos
       let documentUrl = '';
       if (documentFile) {
@@ -244,9 +264,9 @@ export default function RequestFighterLicense() {
         document_image_url: documentUrl || null,
         
         // Físico - enviar null si vacío
-        height_cm: sanitizeOptionalNumber(formData.height_cm),
-        weight_kg: sanitizeWeight(formData.weight_kg),
-        reach_cm: sanitizeOptionalNumber(formData.reach_cm),
+        height_cm: toIntOrNull(sanitizeOptionalNumber(formData.height_cm)),
+        weight_kg: toFloatOrNull(sanitizeWeight(formData.weight_kg)),
+        reach_cm: toIntOrNull(sanitizeOptionalNumber(formData.reach_cm)),
         blood_type: formData.blood_type || null,
         
         // Combate
@@ -259,9 +279,9 @@ export default function RequestFighterLicense() {
         martial_arts: formData.martial_arts.length > 0 ? formData.martial_arts : null,
         
         // Récord (siempre números)
-        record_wins: formData.record_wins,
-        record_losses: formData.record_losses,
-        record_draws: formData.record_draws,
+        record_wins: sanitizeIntegerWithDefault(formData.record_wins, 0),
+        record_losses: sanitizeIntegerWithDefault(formData.record_losses, 0),
+        record_draws: sanitizeIntegerWithDefault(formData.record_draws, 0),
         record_type: formData.record_type || null,
         
         // Médico
