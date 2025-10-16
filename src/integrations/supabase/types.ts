@@ -4153,13 +4153,11 @@ export type Database = {
         Returns: undefined
       }
       request_fighter_license: {
-        Args:
-          | {
-              p_document_urls?: Json
-              p_fighter_profile_data: Json
-              p_license_data?: Json
-            }
-          | { p_fighter_profile_data: Json; p_license_data: Json }
+        Args: {
+          p_document_urls?: Json
+          p_fighter_profile_data: Json
+          p_license_data?: Json
+        }
         Returns: Json
       }
       settle_market_payouts: {
