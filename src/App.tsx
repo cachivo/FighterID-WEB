@@ -84,6 +84,7 @@ import Configuracion from "./pages/admin/Configuracion";
 import Votaciones from "./pages/admin/Votaciones";
 import Betting from "./pages/admin/Betting";
 import EmailMonitoring from "./pages/admin/EmailMonitoring";
+import EmailValidation from "./pages/admin/EmailValidation";
 import EmailCampaigns from "./pages/admin/EmailCampaigns";
 import EmailCampaignEditor from "./pages/admin/EmailCampaignEditor";
 import NotFound from "./pages/NotFound";
@@ -251,6 +252,7 @@ const App = () => (
                       <Route path="/votaciones" element={<Votaciones />} />
                       <Route path="/betting" element={<Betting />} />
                       <Route path="/email-monitoring" element={<EmailMonitoring />} />
+                      <Route path="/email-validation" element={<EmailValidation />} />
                       <Route path="/email-campaigns" element={<EmailCampaigns />} />
                       <Route path="/email-campaigns/editor" element={<EmailCampaignEditor />} />
                       <Route path="/comunidad" element={<Comunidad />} />
