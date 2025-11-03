@@ -38,7 +38,7 @@ CAPACIDADES PRINCIPALES:
 - Administración Fighter ID: Búsqueda, validación, actualización de peleadores
 - Gestión de Licencias: Revisar, aprobar, suspender licencias
 - Reportes y Estadísticas: Generar análisis y métricas del sistema
-- Soporte Técnico: Resolver problemas administrativos
+- **NUEVO: Análisis Demográfico y de Rendimiento Avanzado**
 
 FUNCIONES DISPONIBLES:
 - search_fighters: Buscar peleadores por criterios específicos
@@ -47,14 +47,36 @@ FUNCIONES DISPONIBLES:
 - validate_license: Validar estado de licencias
 - create_tournament: Crear nuevo torneo
 - get_system_stats: Obtener estadísticas del sistema
-- generate_report: Generar reportes personalizados
+- **get_demographic_analysis**: Análisis demográfico completo (género, edades, distribución)
+- **get_performance_analysis**: Análisis de récords (top ganadores, invictos, más derrotas)
+- **get_geographic_analysis**: Análisis geográfico (distribución por país)
+- **get_weight_class_analysis**: Análisis por categorías de peso
+- **generate_comprehensive_report**: Reporte completo del sistema
+
+CAPACIDADES ESPECIALES DE ANÁLISIS:
+📊 **Demográfico**: género, edades (más joven/viejo/promedio), distribución por rangos de edad
+🏆 **Rendimiento**: top 10 ganadores, peleadores invictos, récords, win rates promedio
+🌍 **Geográfico**: distribución por país, top 5 nacionalidades
+⚖️ **Categorías**: análisis por peso, categoría más popular
+
+EJEMPLOS DE CONSULTAS QUE PUEDES RESPONDER:
+- "¿Cuál es el peleador más joven del sistema?"
+- "Muéstrame los 10 peleadores con más victorias"
+- "¿Cuántos peleadores tenemos por país?"
+- "¿Cuál es la categoría de peso más popular?"
+- "Dame un reporte completo del sistema"
+- "¿Cuántas mujeres vs hombres peleadores tenemos?"
+- "Edad promedio de los peleadores"
+- "¿Quiénes están invictos?"
 
 INSTRUCCIONES:
 1. Siempre responde en español cuando detectes que el usuario escribe en español
 2. Usa terminología específica del combate (MMA, Boxeo, etc.)
 3. Sé preciso y profesional en las respuestas administrativas
-4. Ofrece opciones claras cuando sea posible
-5. Solicita confirmación para acciones importantes
+4. Para análisis demográficos y de rendimiento, usa las funciones especializadas
+5. Presenta datos de forma clara con números y estadísticas específicas
+6. Ofrece opciones claras cuando sea posible
+7. Solicita confirmación para acciones importantes
 
 Responde de manera profesional y útil, enfocándote en las necesidades administrativas del usuario.`;
   } else {
@@ -314,6 +336,232 @@ async function getSystemStats() {
   }
 }
 
+// NEW: Demographic Analysis
+async function getDemographicAnalysis() {
+  try {
+    console.log('[AI] Getting demographic analysis');
+    
+    // Gender distribution
+    const { data: allFighters, error: fightersError } = await supabase
+      .from('fighter_profiles')
+      .select('gender, birthdate');
+    
+    if (fightersError) throw fightersError;
+    
+    const genderCounts: Record<string, number> = {};
+    const ages: number[] = [];
+    
+    allFighters.forEach(fighter => {
+      // Gender counts
+      if (fighter.gender) {
+        genderCounts[fighter.gender] = (genderCounts[fighter.gender] || 0) + 1;
+      }
+      
+      // Age calculation
+      if (fighter.birthdate) {
+        const age = new Date().getFullYear() - new Date(fighter.birthdate).getFullYear();
+        if (age > 0 && age < 100) ages.push(age);
+      }
+    });
+    
+    const youngest = ages.length > 0 ? Math.min(...ages) : 0;
+    const oldest = ages.length > 0 ? Math.max(...ages) : 0;
+    const avgAge = ages.length > 0 ? ages.reduce((a, b) => a + b, 0) / ages.length : 0;
+    
+    // Age distribution
+    const ageGroups = {
+      '18-24': ages.filter(a => a >= 18 && a <= 24).length,
+      '25-29': ages.filter(a => a >= 25 && a <= 29).length,
+      '30-34': ages.filter(a => a >= 30 && a <= 34).length,
+      '35+': ages.filter(a => a >= 35).length
+    };
+    
+    return {
+      success: true,
+      data: {
+        porGenero: genderCounts,
+        edades: {
+          masJoven: youngest,
+          masViejo: oldest,
+          promedio: Math.round(avgAge * 10) / 10,
+          distribucion: ageGroups
+        }
+      }
+    };
+  } catch (error) {
+    console.error('[AI] getDemographicAnalysis error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Error', data: null };
+  }
+}
+
+// NEW: Performance Analysis
+async function getPerformanceAnalysis() {
+  try {
+    console.log('[AI] Getting performance analysis');
+    
+    // Top winners
+    const { data: topWinners, error: winnersError } = await supabase
+      .from('fighter_profiles')
+      .select('first_name, last_name, record_wins, record_losses, record_draws')
+      .order('record_wins', { ascending: false })
+      .limit(10);
+    
+    if (winnersError) throw winnersError;
+    
+    // Undefeated fighters
+    const { data: undefeated, error: undefeatedError } = await supabase
+      .from('fighter_profiles')
+      .select('first_name, last_name, record_wins')
+      .eq('record_losses', 0)
+      .gt('record_wins', 0)
+      .order('record_wins', { ascending: false });
+    
+    if (undefeatedError) throw undefeatedError;
+    
+    // Most losses
+    const { data: mostLosses, error: lossesError } = await supabase
+      .from('fighter_profiles')
+      .select('first_name, last_name, record_wins, record_losses')
+      .order('record_losses', { ascending: false })
+      .limit(10);
+    
+    if (lossesError) throw lossesError;
+    
+    // Average win rate
+    const { data: allRecords, error: recordsError } = await supabase
+      .from('fighter_profiles')
+      .select('record_wins, record_losses, record_draws');
+    
+    if (recordsError) throw recordsError;
+    
+    const fightersWithFights = allRecords.filter(r => (r.record_wins + r.record_losses + r.record_draws) > 0);
+    const avgWinRate = fightersWithFights.length > 0 
+      ? fightersWithFights.reduce((acc, curr) => {
+          const total = curr.record_wins + curr.record_losses + curr.record_draws;
+          return acc + (curr.record_wins / total);
+        }, 0) / fightersWithFights.length * 100
+      : 0;
+    
+    return {
+      success: true,
+      data: {
+        topGanadores: topWinners,
+        invictos: undefeated,
+        masPerdidasTop10: mostLosses,
+        tasaVictoriaPromedio: Math.round(avgWinRate * 10) / 10
+      }
+    };
+  } catch (error) {
+    console.error('[AI] getPerformanceAnalysis error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Error', data: null };
+  }
+}
+
+// NEW: Geographic Analysis
+async function getGeographicAnalysis() {
+  try {
+    console.log('[AI] Getting geographic analysis');
+    
+    const { data: fighters, error } = await supabase
+      .from('fighter_profiles')
+      .select('country');
+    
+    if (error) throw error;
+    
+    const countryGroups: Record<string, number> = {};
+    
+    fighters.forEach(f => {
+      if (f.country) {
+        countryGroups[f.country] = (countryGroups[f.country] || 0) + 1;
+      }
+    });
+    
+    const sortedCountries = Object.entries(countryGroups)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    
+    return {
+      success: true,
+      data: {
+        distribucionPorPais: countryGroups,
+        top5Paises: sortedCountries,
+        totalPaises: Object.keys(countryGroups).length
+      }
+    };
+  } catch (error) {
+    console.error('[AI] getGeographicAnalysis error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Error', data: null };
+  }
+}
+
+// NEW: Weight Class Analysis
+async function getWeightClassAnalysis() {
+  try {
+    console.log('[AI] Getting weight class analysis');
+    
+    const { data: fighters, error } = await supabase
+      .from('fighter_profiles')
+      .select('weight_class');
+    
+    if (error) throw error;
+    
+    const weightGroups: Record<string, number> = {};
+    
+    fighters.forEach(f => {
+      if (f.weight_class) {
+        weightGroups[f.weight_class] = (weightGroups[f.weight_class] || 0) + 1;
+      }
+    });
+    
+    const mostPopular = Object.entries(weightGroups)
+      .sort((a, b) => b[1] - a[1])[0];
+    
+    return {
+      success: true,
+      data: {
+        distribucionPorPeso: weightGroups,
+        categoriaMasPopular: mostPopular ? {
+          categoria: mostPopular[0],
+          cantidad: mostPopular[1]
+        } : null,
+        totalCategorias: Object.keys(weightGroups).length
+      }
+    };
+  } catch (error) {
+    console.error('[AI] getWeightClassAnalysis error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Error', data: null };
+  }
+}
+
+// NEW: Comprehensive Report
+async function generateComprehensiveReport(filters?: any) {
+  try {
+    console.log('[AI] Generating comprehensive report');
+    
+    const [demographics, performance, geographic, weightClass] = await Promise.all([
+      getDemographicAnalysis(),
+      getPerformanceAnalysis(),
+      getGeographicAnalysis(),
+      getWeightClassAnalysis()
+    ]);
+    
+    return {
+      success: true,
+      data: {
+        demografico: demographics.data,
+        rendimiento: performance.data,
+        geografico: geographic.data,
+        categoriasPeso: weightClass.data,
+        generadoEn: new Date().toISOString()
+      },
+      message: 'Reporte completo generado exitosamente'
+    };
+  } catch (error) {
+    console.error('[AI] generateComprehensiveReport error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Error', data: null };
+  }
+}
+
 // Function calling handler
 async function handleFunctionCall(functionName: string, args: any) {
   console.log(`Calling function: ${functionName}`, args);
@@ -332,6 +580,16 @@ async function handleFunctionCall(functionName: string, args: any) {
         return await createTournament(args.tournament_data);
       case 'get_system_stats':
         return await getSystemStats();
+      case 'get_demographic_analysis':
+        return await getDemographicAnalysis();
+      case 'get_performance_analysis':
+        return await getPerformanceAnalysis();
+      case 'get_geographic_analysis':
+        return await getGeographicAnalysis();
+      case 'get_weight_class_analysis':
+        return await getWeightClassAnalysis();
+      case 'generate_comprehensive_report':
+        return await generateComprehensiveReport(args.filters);
       default:
         return {
           success: false,
@@ -439,6 +697,66 @@ serve(async (req) => {
             }
           },
           required: ['license_id']
+        }
+      },
+      {
+        name: 'get_demographic_analysis',
+        description: language === 'es' 
+          ? 'Obtener análisis demográfico completo: género, edades (más joven, más viejo, promedio), distribución por rangos de edad'
+          : 'Get comprehensive demographic analysis: gender, ages (youngest, oldest, average), age distribution',
+        parameters: {
+          type: 'object',
+          properties: {}
+        }
+      },
+      {
+        name: 'get_performance_analysis',
+        description: language === 'es'
+          ? 'Análisis de récords de combate: peleadores con más victorias, invictos, más derrotas, win rate promedio del sistema'
+          : 'Combat record analysis: top winners, undefeated fighters, most losses, average win rate',
+        parameters: {
+          type: 'object',
+          properties: {}
+        }
+      },
+      {
+        name: 'get_geographic_analysis',
+        description: language === 'es'
+          ? 'Análisis geográfico: distribución de peleadores por país, top 5 países con más peleadores'
+          : 'Geographic analysis: fighter distribution by country, top 5 countries',
+        parameters: {
+          type: 'object',
+          properties: {}
+        }
+      },
+      {
+        name: 'get_weight_class_analysis',
+        description: language === 'es'
+          ? 'Análisis por categorías de peso: distribución, categoría más popular, total de categorías'
+          : 'Weight class analysis: distribution, most popular category, total categories',
+        parameters: {
+          type: 'object',
+          properties: {}
+        }
+      },
+      {
+        name: 'generate_comprehensive_report',
+        description: language === 'es'
+          ? 'Generar reporte completo del sistema con todas las estadísticas: demográficas, rendimiento, geográficas y categorías de peso'
+          : 'Generate comprehensive system report with all statistics: demographics, performance, geographic and weight classes',
+        parameters: {
+          type: 'object',
+          properties: {
+            filters: {
+              type: 'object',
+              description: language === 'es' ? 'Filtros opcionales para el reporte' : 'Optional filters for the report',
+              properties: {
+                country: { type: 'string', description: language === 'es' ? 'Filtrar por país' : 'Filter by country' },
+                weight_class: { type: 'string', description: language === 'es' ? 'Filtrar por categoría de peso' : 'Filter by weight class' },
+                gender: { type: 'string', description: language === 'es' ? 'Filtrar por género' : 'Filter by gender' }
+              }
+            }
+          }
         }
       }
     ];

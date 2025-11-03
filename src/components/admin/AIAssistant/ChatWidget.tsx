@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, X, Send, Bot, User, Minimize2, Maximize2, Trophy, Shield, FileText, BarChart3, Search, Trash2, WifiOff, AlertTriangle } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { MessageSquare, X, Send, Bot, User, Trash2, Users, Trophy, Globe, FileBarChart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatMessage {
   id: string;
@@ -21,6 +23,134 @@ interface ChatWidgetProps {
   isMinimized?: boolean;
   onToggleMinimize?: () => void;
 }
+
+interface StatisticsDisplayProps {
+  data: any;
+  type: 'demographic' | 'performance' | 'geographic' | 'weight' | 'comprehensive';
+}
+
+const StatisticsDisplay: React.FC<StatisticsDisplayProps> = ({ data, type }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="space-y-3 my-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+      {/* Demographic Stats */}
+      {type === 'demographic' && data.edades && (
+        <div className="grid grid-cols-3 gap-2">
+          <Card className="p-3 bg-background">
+            <div className="text-xs text-muted-foreground mb-1">Más Joven</div>
+            <div className="text-xl font-bold text-primary">{data.edades.masJoven} años</div>
+          </Card>
+          <Card className="p-3 bg-background">
+            <div className="text-xs text-muted-foreground mb-1">Más Viejo</div>
+            <div className="text-xl font-bold text-primary">{data.edades.masViejo} años</div>
+          </Card>
+          <Card className="p-3 bg-background">
+            <div className="text-xs text-muted-foreground mb-1">Promedio</div>
+            <div className="text-xl font-bold text-primary">{data.edades.promedio} años</div>
+          </Card>
+        </div>
+      )}
+
+      {/* Age Distribution Chart */}
+      {data.edades?.distribucion && (
+        <div className="space-y-2 mt-3">
+          <div className="text-xs font-medium mb-2 text-muted-foreground">Distribución por Edad</div>
+          {Object.entries(data.edades.distribucion).map(([key, value]: [string, any]) => {
+            const maxValue = Math.max(...Object.values(data.edades.distribucion).map(v => Number(v)));
+            const percentage = (Number(value) / maxValue) * 100;
+            return (
+              <div key={key} className="flex items-center gap-2">
+                <div className="text-xs w-12 font-medium">{key}</div>
+                <div className="flex-1 bg-muted rounded-full h-7 overflow-hidden border border-border/50">
+                  <div 
+                    className="bg-primary h-full flex items-center justify-end pr-2 text-xs text-primary-foreground font-medium transition-all duration-500"
+                    style={{ width: `${percentage}%` }}
+                  >
+                    {value}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Performance Stats */}
+      {type === 'performance' && data.topGanadores && (
+        <div>
+          <div className="text-xs font-medium mb-2 text-muted-foreground">Top 5 Ganadores</div>
+          <div className="space-y-1">
+            {data.topGanadores.slice(0, 5).map((fighter: any, idx: number) => (
+              <div key={idx} className="flex items-center justify-between p-2 bg-background rounded border border-border/50">
+                <span className="text-sm font-medium">
+                  {idx + 1}. {fighter.first_name} {fighter.last_name}
+                </span>
+                <Badge variant="outline" className="font-mono">
+                  {fighter.record_wins}-{fighter.record_losses}-{fighter.record_draws}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Geographic Stats */}
+      {type === 'geographic' && data.top5Paises && (
+        <div className="space-y-2">
+          <div className="text-xs font-medium mb-2 text-muted-foreground">Top 5 Países</div>
+          {data.top5Paises.map(([country, count]: [string, number], idx: number) => {
+            const maxValue = Number(data.top5Paises[0][1]);
+            const percentage = (Number(count) / maxValue) * 100;
+            return (
+              <div key={idx} className="flex items-center gap-2">
+                <div className="text-xs w-20 font-medium truncate">{country}</div>
+                <div className="flex-1 bg-muted rounded-full h-7 overflow-hidden border border-border/50">
+                  <div 
+                    className="bg-primary h-full flex items-center justify-end pr-2 text-xs text-primary-foreground font-medium transition-all duration-500"
+                    style={{ width: `${percentage}%` }}
+                  >
+                    {count}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Comprehensive Report Summary */}
+      {type === 'comprehensive' && (
+        <div className="grid grid-cols-2 gap-2">
+          {data.demografico?.edades && (
+            <Card className="p-3 bg-background">
+              <div className="text-xs text-muted-foreground mb-1">Edad Promedio</div>
+              <div className="text-xl font-bold text-primary">{data.demografico.edades.promedio} años</div>
+            </Card>
+          )}
+          {data.rendimiento?.tasaVictoriaPromedio && (
+            <Card className="p-3 bg-background">
+              <div className="text-xs text-muted-foreground mb-1">Win Rate</div>
+              <div className="text-xl font-bold text-primary">{data.rendimiento.tasaVictoriaPromedio}%</div>
+            </Card>
+          )}
+          {data.geografico?.totalPaises && (
+            <Card className="p-3 bg-background">
+              <div className="text-xs text-muted-foreground mb-1">Países</div>
+              <div className="text-xl font-bold text-primary">{data.geografico.totalPaises}</div>
+            </Card>
+          )}
+          {data.categoriasPeso?.totalCategorias && (
+            <Card className="p-3 bg-background">
+              <div className="text-xs text-muted-foreground mb-1">Categorías</div>
+              <div className="text-xl font-bold text-primary">{data.categoriasPeso.totalCategorias}</div>
+            </Card>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({ 
   isMinimized = false, 
@@ -112,7 +242,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
       // Add indicator for offline mode
       if (data.isOfflineMode) {
-        assistantMessage.content = `[MODO OFFLINE] ${assistantMessage.content}`;
+        assistantMessage.content = `🔴 MODO OFFLINE\n\n${assistantMessage.content}`;
       }
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -174,204 +304,207 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   // Widget toggle button (when closed)
   if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-8 right-8 z-50">
         <Button
           onClick={() => setIsOpen(true)}
-          className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+          className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90 shadow-xl hover:scale-110 transition-transform"
           size="lg"
         >
-          <MessageSquare className="h-6 w-6" />
+          <MessageSquare className="h-7 w-7" />
         </Button>
       </div>
     );
   }
 
-  // Minimized state
-  if (isMinimized) {
-    return (
-      <div className="fixed bottom-6 right-6 z-50">
-        <Card className="w-80 shadow-xl">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Bot className="h-5 w-5 text-primary" />
-                <CardTitle className="text-sm">AI Assistant</CardTitle>
-                <Badge variant="secondary" className="text-xs">
-                  {messages.filter(m => m.role === 'user').length} msgs
-                </Badge>
-              </div>
-              <div className="flex space-x-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onToggleMinimize}
-                  className="h-6 w-6 p-0"
-                >
-                  <Maximize2 className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsOpen(false)}
-                  className="h-6 w-6 p-0"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
-  // Full chat interface
+  // Full chat interface - Optimized for Desktop
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
-      <Card className="w-[600px] h-[700px] flex flex-col shadow-xl">
-        <CardHeader className="pb-3 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Bot className="h-6 w-6 text-primary" />
-              <CardTitle className="text-lg">Asistente AI Admin</CardTitle>
-              {isLoading && (
-                <Badge variant="secondary" className="text-xs animate-pulse">
-                  Escribiendo...
-                </Badge>
-              )}
-            </div>
-            <div className="flex space-x-1">
-              {onToggleMinimize && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onToggleMinimize}
-                  className="h-6 w-6 p-0"
-                >
-                  <Minimize2 className="h-3 w-3" />
-                </Button>
-              )}
+    <>
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent side="right" className="w-[480px] h-screen p-0 flex flex-col">
+          {/* Fixed Header */}
+          <SheetHeader className="border-b p-4 bg-background/95 backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Bot className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <SheetTitle className="text-lg">Asistente AI Admin</SheetTitle>
+                  {isLoading && (
+                    <Badge variant="secondary" className="text-xs animate-pulse mt-1">
+                      ✍️ Analizando...
+                    </Badge>
+                  )}
+                </div>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearConversation}
-                className="h-6 w-6 p-0"
+                className="h-8 w-8 p-0"
+                title="Limpiar conversación"
               >
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </SheetHeader>
+
+          {/* Scrollable Messages Area */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1 px-4 py-4">
+              <div className="space-y-4">
+                {messages.map((message) => {
+                  // Try to detect if content has structured data
+                  let parsedData = null;
+                  let dataType = null;
+                  
+                  try {
+                    // Look for JSON-like patterns in content
+                    const jsonMatch = message.content.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                      parsedData = JSON.parse(jsonMatch[0]);
+                      
+                      // Determine data type
+                      if (parsedData.demografico || parsedData.edades) dataType = 'demographic';
+                      else if (parsedData.topGanadores || parsedData.rendimiento) dataType = 'performance';
+                      else if (parsedData.top5Paises || parsedData.geografico) dataType = 'geographic';
+                      else if (parsedData.demografico && parsedData.rendimiento) dataType = 'comprehensive';
+                    }
+                  } catch (e) {
+                    // Not JSON, render normally
+                  }
+
+                  return (
+                    <div
+                      key={message.id}
+                      className={`flex gap-3 items-start ${message.role === 'assistant' ? 'flex-row' : 'flex-row-reverse'}`}
+                    >
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        message.role === 'user' 
+                          ? 'bg-primary shadow-sm' 
+                          : 'bg-muted border border-border'
+                      }`}>
+                        {message.role === 'assistant' ? (
+                          <Bot className="h-5 w-5 text-primary" />
+                        ) : (
+                          <User className="h-5 w-5 text-primary-foreground" />
+                        )}
+                      </div>
+                      <div
+                        className={`rounded-xl px-4 py-3 text-sm max-w-[85%] ${
+                          message.role === 'user'
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'bg-muted/70 border border-border/50'
+                        }`}
+                      >
+                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        </div>
+                        
+                        {/* Render statistics if detected */}
+                        {message.role === 'assistant' && parsedData && dataType && (
+                          <StatisticsDisplay data={parsedData} type={dataType as any} />
+                        )}
+
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+                          <span className="text-xs opacity-60">
+                            {formatTimestamp(message.timestamp)}
+                          </span>
+                          {message.function_called && (
+                            <Badge variant="outline" className="text-xs">
+                              🔧 {message.function_called}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {isLoading && (
+                  <div className="flex gap-3 items-start">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-muted border border-border">
+                      <Bot className="h-5 w-5 text-primary animate-pulse" />
+                    </div>
+                    <div className="rounded-xl px-4 py-3 bg-muted/70 border border-border/50">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Fixed Input Area */}
+          <div className="border-t bg-background/95 backdrop-blur p-4 space-y-3">
+            {/* Quick Actions - Analysis Focused */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setInput('Análisis demográfico completo')}
+                className="text-xs h-9 justify-start"
+              >
+                <Users className="mr-2 h-3.5 w-3.5" />
+                Demografía
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={() => setIsOpen(false)}
-                className="h-6 w-6 p-0"
+                onClick={() => setInput('Top 10 peleadores con más victorias')}
+                className="text-xs h-9 justify-start"
               >
-                <X className="h-3 w-3" />
+                <Trophy className="mr-2 h-3.5 w-3.5" />
+                Top Ganadores
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setInput('Distribución por países')}
+                className="text-xs h-9 justify-start"
+              >
+                <Globe className="mr-2 h-3.5 w-3.5" />
+                Por País
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setInput('Reporte completo del sistema')}
+                className="text-xs h-9 justify-start"
+              >
+                <FileBarChart className="mr-2 h-3.5 w-3.5" />
+                Reporte Completo
               </Button>
             </div>
-          </div>
-        </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col p-4 space-y-3">
-          {/* Messages Area */}
-          <ScrollArea className="flex-1 pr-3">
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 items-start ${message.role === 'assistant' ? 'flex-row' : 'flex-row-reverse'}`}
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    message.role === 'user' ? 'bg-primary' : 'bg-muted'
-                  }`}>
-                    {message.role === 'assistant' ? (
-                      <Bot className="h-4 w-4" />
-                    ) : (
-                      <User className="h-4 w-4" />
-                    )}
-                  </div>
-                  <div
-                    className={`rounded-lg px-4 py-2.5 text-sm max-w-[95%] ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
-                  >
-                    <div className="whitespace-pre-wrap break-words">
-                      {message.content}
-                    </div>
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                      <span className="text-xs opacity-70">
-                        {formatTimestamp(message.timestamp)}
-                      </span>
-                      {message.function_called && (
-                        <Badge variant="outline" className="text-xs ml-2">
-                          {message.function_called}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-
-          {/* Input Area */}
-          <div className="space-y-3 pt-3 border-t bg-muted/20 p-3 rounded-lg">
+            {/* Input Box */}
             <div className="flex space-x-2">
               <Input
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Escribe tu consulta administrativa..."
+                placeholder="Pregunta sobre estadísticas, análisis demográfico..."
                 disabled={isLoading}
-                className="flex-1"
+                className="flex-1 h-11"
               />
               <Button
                 onClick={sendMessage}
                 disabled={!input.trim() || isLoading}
-                size="sm"
-                className="px-4"
+                size="lg"
+                className="px-5 h-11"
               >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-
-            {/* Quick Actions */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setInput('Buscar peleadores activos')}
-                className="text-xs h-8"
-              >
-                <Search className="mr-1 h-3 w-3" />
-                Buscar peleadores
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setInput('Estadísticas del sistema')}
-                className="text-xs h-8"
-              >
-                <BarChart3 className="mr-1 h-3 w-3" />
-                Estadísticas
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setInput('Licencias pendientes')}
-                className="text-xs h-8"
-              >
-                <FileText className="mr-1 h-3 w-3" />
-                Licencias
-              </Button>
-            </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 
