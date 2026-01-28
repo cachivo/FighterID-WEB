@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGyms, useCreateGym } from '@/hooks/useGyms';
-import { GymCard } from '@/components/gym/GymCard';
+import { AdminGymCard } from '@/components/admin/AdminGymCard';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -142,7 +142,7 @@ export default function GimnasiosAdmin() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {gyms?.map(gym => (
-            <GymCard key={gym.id} gym={gym} />
+            <AdminGymCard key={gym.id} gym={gym} />
           ))}
         </div>
       )}

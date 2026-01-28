@@ -65,3 +65,51 @@ export function useCreateCoach() {
     },
   });
 }
+
+export function useUpdateCoach(coachId: string) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (updates: Partial<Coach>) => {
+      const { data, error } = await supabase
+        .from('coaches')
+        .update(updates)
+        .eq('id', coachId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Coach;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['coaches'] });
+      queryClient.invalidateQueries({ queryKey: ['coach'] });
+      toast.success('Entrenador actualizado');
+    },
+    onError: (error: any) => {
+      toast.error('Error al actualizar: ' + error.message);
+    },
+  });
+}
+
+export function useDeleteCoach() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (coachId: string) => {
+      const { error } = await supabase
+        .from('coaches')
+        .update({ activo: false })
+        .eq('id', coachId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['coaches'] });
+      toast.success('Entrenador eliminado');
+    },
+    onError: (error: any) => {
+      toast.error('Error al eliminar: ' + error.message);
+    },
+  });
+}

@@ -89,10 +89,33 @@ export function useUpdateGym(gymId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gyms'] });
+      queryClient.invalidateQueries({ queryKey: ['gym'] });
       toast.success('Gimnasio actualizado');
     },
     onError: (error: any) => {
       toast.error('Error al actualizar: ' + error.message);
+    },
+  });
+}
+
+export function useDeleteGym() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (gymId: string) => {
+      const { error } = await supabase
+        .from('gyms')
+        .update({ activo: false })
+        .eq('id', gymId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gyms'] });
+      toast.success('Gimnasio eliminado');
+    },
+    onError: (error: any) => {
+      toast.error('Error al eliminar: ' + error.message);
     },
   });
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useCoaches, useCreateCoach } from '@/hooks/useCoaches';
 import { useGyms } from '@/hooks/useGyms';
-import { CoachCard } from '@/components/coach/CoachCard';
+import { AdminCoachCard } from '@/components/admin/AdminCoachCard';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -175,7 +175,7 @@ export default function EntrenadoresAdmin() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {coaches?.map(coach => (
-            <CoachCard key={coach.id} coach={coach} />
+            <AdminCoachCard key={coach.id} coach={coach} />
           ))}
         </div>
       )}
