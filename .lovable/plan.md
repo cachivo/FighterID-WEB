@@ -1,82 +1,44 @@
 
-# Plan: Actualizar Logo Principal del Hero
 
-## Análisis
+# Plan: Actualizar Logo a Versión Transparente
 
-El Hero actualmente usa `/lovable-uploads/fighter-id-logo-neon-outline.png` en dos lugares:
-1. **Hero para usuarios no autenticados** (línea 35)
-2. **Hero para usuarios autenticados** (línea 103)
+## Problema
+El logo actual (`fighter-id-logo-official.png`) tiene fondo oscuro sólido que se contrasta visualmente con el fondo de la página.
 
-### Nuevo Logo
-El logo que subiste es un diseño limpio con "FID" en grande y "FIGHTER ID" debajo, fondo oscuro con texto blanco. Tiene proporciones más horizontales que el logo actual (que es más vertical/cuadrado).
+## Solución
+Reemplazar con el nuevo logo que tiene fondo transparente (`FID_logo_white_transparent.png`).
 
-## Cambios Necesarios
+## Cambio
 
-### 1. Copiar el nuevo logo
-Guardar el archivo como `/public/lovable-uploads/fighter-id-logo-official.png`
+| Acción | Detalle |
+|--------|---------|
+| Copiar archivo | `user-uploads://FID_logo_white_transparent.png` → `public/lovable-uploads/fighter-id-logo-official.png` |
 
-### 2. Actualizar Hero.tsx
-Cambiar ambas referencias del logo y ajustar las dimensiones para las nuevas proporciones:
+## Archivos que usan este logo
 
-| Ubicación | Clase Actual | Nueva Clase |
-|-----------|--------------|-------------|
-| No autenticado | `h-64 sm:h-[22rem] md:h-[28rem] lg:h-[32rem]` | `h-32 sm:h-40 md:h-48 lg:h-56` |
-| Autenticado | `h-56 sm:h-72 md:h-96 lg:h-[28rem]` | `h-28 sm:h-36 md:h-44 lg:h-52` |
-
-Las dimensiones se reducen porque el nuevo logo es más ancho y menos alto, así que necesita menos altura para verse proporcionado.
-
-### 3. Remover animación neon (opcional)
-El nuevo logo es blanco sólido sin efecto neón, así que `animate-pulse-neon-intense` podría no ser apropiado. Sugiero mantener una sutil animación o removerla.
-
-## Archivos a Modificar
-
-| Archivo | Cambio |
-|---------|--------|
-| `public/lovable-uploads/fighter-id-logo-official.png` | Nuevo archivo (copiar) |
-| `src/components/Hero.tsx` | Actualizar src y clases de dimensión |
+Ya configurados para usar `/lovable-uploads/fighter-id-logo-official.png`:
+- `src/components/Hero.tsx` (usuarios autenticados y no autenticados)
 
 ## Resultado Visual
 
-```
-ANTES (logo vertical con neón):
+```text
+ANTES:
 ┌─────────────────────────────────┐
-│                                 │
-│         [LOGO NEÓN]             │  ← Muy alto
-│         (vertical)              │
-│                                 │
-│    Plataforma profesional...    │
+│ ████████████████████████████████│ ← Fondo oscuro del logo
+│ ████  FID  FIGHTER ID  █████████│    visible contra la página
+│ ████████████████████████████████│
 └─────────────────────────────────┘
 
-DESPUÉS (logo horizontal limpio):
+DESPUÉS:
 ┌─────────────────────────────────┐
+│        FID                      │ ← Fondo transparente
+│    FIGHTER ID                   │   se integra con la página
 │                                 │
-│      [  FID  ]                  │  ← Proporcional
-│    [ FIGHTER ID ]               │
-│                                 │
-│    Plataforma profesional...    │
 └─────────────────────────────────┘
 ```
 
-## Detalles Técnicos
+## Beneficio
+- Logo se integra naturalmente con cualquier fondo
+- Apariencia más profesional y limpia
+- Sin cambios de código necesarios
 
-```typescript
-// Hero.tsx - Usuario no autenticado (línea 35)
-<img 
-  src="/lovable-uploads/fighter-id-logo-official.png" 
-  alt="Fighter ID"
-  className="h-32 sm:h-40 md:h-48 lg:h-56 w-auto mx-auto transition-all duration-500"
-/>
-
-// Hero.tsx - Usuario autenticado (línea 103)
-<img 
-  src="/lovable-uploads/fighter-id-logo-official.png" 
-  alt="Fighter ID Logo"
-  className="h-28 sm:h-36 md:h-44 lg:h-52 w-auto mx-auto"
-/>
-```
-
-## Beneficios
-- Logo oficial actualizado en toda la app
-- Dimensiones optimizadas para las nuevas proporciones
-- Sin distorsión visual
-- Consistencia de marca
