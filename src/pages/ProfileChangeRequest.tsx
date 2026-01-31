@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFighterProfiles } from '@/hooks/useFighterProfiles';
@@ -11,9 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, AlertTriangle, Send, User, FileText } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Send, User, FileText, CheckCircle, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
+import { classifyChanges, getFieldLabel } from '@/lib/constants/fieldApprovalRules';
 const WEIGHT_CLASSES = [
   { value: 'Peso Paja', label: 'Peso Paja (115 lbs)' },
   { value: 'Peso Mosca', label: 'Peso Mosca (125 lbs)' },
@@ -193,6 +193,11 @@ export default function ProfileChangeRequest() {
   }
 
   const changedFields = getChangedFields();
+  
+  // Classify changes for display
+  const classifiedChanges = useMemo(() => {
+    return classifyChanges(changedFields);
+  }, [changedFields]);
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
@@ -207,7 +212,8 @@ export default function ProfileChangeRequest() {
       <Alert className="mb-6">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          <strong>Importante:</strong> Todos los cambios solicitados requerirán aprobación administrativa antes de ser aplicados a tu perfil.
+          <strong>Información:</strong> Algunos cambios se aplicarán inmediatamente (apodo, bio, gimnasio, etc.), 
+          mientras que cambios sensibles (nombre, récord, categoría de peso) requerirán aprobación administrativa.
         </AlertDescription>
       </Alert>
 
@@ -532,26 +538,59 @@ export default function ProfileChangeRequest() {
           </CardContent>
         </Card>
 
-        {/* Changes Summary */}
+        {/* Changes Summary - Classified */}
         {Object.keys(changedFields).length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Resumen de Cambios</CardTitle>
               <CardDescription>
-                Los siguientes campos serán actualizados después de la aprobación administrativa:
+                Vista previa de los cambios según tipo de aprobación
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {Object.entries(changedFields).map(([field, value]) => (
-                  <div key={field} className="flex justify-between items-center p-2 bg-muted rounded">
-                    <span className="font-medium">{field}:</span>
-                    <span className="text-sm">
-                      {Array.isArray(value) ? value.join(', ') : String(value)}
+            <CardContent className="space-y-4">
+              {/* Immediate Application */}
+              {classifiedChanges.hasAutoApprove && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="font-medium text-green-700 dark:text-green-400">
+                      Aplicación Inmediata (sin aprobación)
                     </span>
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-1 ml-6">
+                    {Object.entries(classifiedChanges.autoApprove).map(([field, value]) => (
+                      <div key={field} className="flex justify-between items-center p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+                        <span className="font-medium text-sm">{getFieldLabel(field)}:</span>
+                        <span className="text-sm text-muted-foreground">
+                          {Array.isArray(value) ? value.join(', ') : String(value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Requires Approval */}
+              {classifiedChanges.hasRequiresApproval && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    <span className="font-medium text-amber-700 dark:text-amber-400">
+                      Requiere Aprobación Administrativa
+                    </span>
+                  </div>
+                  <div className="space-y-1 ml-6">
+                    {Object.entries(classifiedChanges.requiresApproval).map(([field, value]) => (
+                      <div key={field} className="flex justify-between items-center p-2 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800">
+                        <span className="font-medium text-sm">{getFieldLabel(field)}:</span>
+                        <span className="text-sm text-muted-foreground">
+                          {Array.isArray(value) ? value.join(', ') : String(value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -561,11 +600,11 @@ export default function ProfileChangeRequest() {
         <div className="flex gap-4">
           <Button type="submit" disabled={isSubmitting || Object.keys(changedFields).length === 0}>
             {isSubmitting ? (
-              'Enviando...'
+              'Procesando...'
             ) : (
               <>
                 <Send className="h-4 w-4 mr-2" />
-                Enviar Solicitud
+                {classifiedChanges.hasRequiresApproval ? 'Enviar Cambios' : 'Aplicar Cambios'}
               </>
             )}
           </Button>

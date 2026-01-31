@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { classifyChanges } from '@/lib/constants/fieldApprovalRules';
 
 export interface ProfileChangeRequest {
   id: string;
@@ -33,6 +34,13 @@ export interface ChangeRequestAudit {
   notes?: string;
   performed_by?: string;
   performed_at: string;
+}
+
+export interface ChangeRequestResult {
+  autoApplied: Record<string, any>;
+  pendingApproval: Record<string, any>;
+  hasAutoApplied: boolean;
+  hasPendingApproval: boolean;
 }
 
 export function useProfileChangeRequests() {
@@ -79,7 +87,15 @@ export function useProfileChangeRequests() {
     }
   };
 
-  const createChangeRequest = async (fighterProfileId: string, requestedChanges: any) => {
+  /**
+   * Creates a change request with selective auto-approval
+   * - Safe fields (bio, nickname, etc.) are applied immediately
+   * - Sensitive fields (record, identity, etc.) require admin approval
+   */
+  const createChangeRequest = async (
+    fighterProfileId: string, 
+    requestedChanges: any
+  ): Promise<ChangeRequestResult> => {
     if (!user) {
       throw new Error('Usuario no autenticado');
     }
@@ -96,29 +112,71 @@ export function useProfileChangeRequests() {
         throw new Error('Usuario no encontrado');
       }
 
-      const { data, error } = await supabase
-        .from('profile_change_requests')
-        .insert({
-          user_id: appUser.id, // app_user.id, NO auth.uid()
-          fighter_profile_id: fighterProfileId,
-          requested_changes: requestedChanges,
-          status: 'PENDING'
-        })
-        .select()
-        .single();
+      // Classify changes into auto-approve vs requires-approval
+      const { autoApprove, requiresApproval, hasAutoApprove, hasRequiresApproval } = 
+        classifyChanges(requestedChanges);
 
-      if (error) {
-        console.error('Error creating change request:', error);
-        throw new Error('Error al crear la solicitud de cambio');
+      // 1. Auto-apply safe fields immediately using the admin RPC
+      if (hasAutoApprove) {
+        const { error: autoApplyError } = await supabase.rpc('admin_update_fighter_profile', {
+          p_fighter_id: fighterProfileId,
+          p_profile_data: autoApprove
+        });
+
+        if (autoApplyError) {
+          console.error('Error auto-applying safe fields:', autoApplyError);
+          // Don't throw - continue to create pending request for sensitive fields
+          toast({
+            title: "Advertencia",
+            description: "Algunos cambios no pudieron aplicarse automáticamente.",
+            variant: "destructive",
+          });
+        }
       }
 
-      toast({
-        title: "Solicitud enviada",
-        description: "Tu solicitud de cambio ha sido enviada para revisión administrativa.",
-      });
+      // 2. Create pending request ONLY if there are sensitive fields
+      if (hasRequiresApproval) {
+        const { error: insertError } = await supabase
+          .from('profile_change_requests')
+          .insert({
+            user_id: appUser.id,
+            fighter_profile_id: fighterProfileId,
+            requested_changes: requiresApproval,
+            status: 'PENDING'
+          });
 
-      await fetchUserRequests(); // Refresh the list
-      return data;
+        if (insertError) {
+          console.error('Error creating change request:', insertError);
+          throw new Error('Error al crear la solicitud de cambio');
+        }
+      }
+
+      // Build appropriate toast message
+      if (hasAutoApprove && hasRequiresApproval) {
+        toast({
+          title: "Cambios procesados",
+          description: "Algunos cambios se aplicaron inmediatamente. Otros requieren aprobación administrativa.",
+        });
+      } else if (hasAutoApprove) {
+        toast({
+          title: "Cambios aplicados",
+          description: "Todos los cambios han sido aplicados a tu perfil.",
+        });
+      } else if (hasRequiresApproval) {
+        toast({
+          title: "Solicitud enviada",
+          description: "Tu solicitud de cambio ha sido enviada para revisión administrativa.",
+        });
+      }
+
+      await fetchUserRequests();
+      
+      return {
+        autoApplied: autoApprove,
+        pendingApproval: requiresApproval,
+        hasAutoApplied: hasAutoApprove,
+        hasPendingApproval: hasRequiresApproval
+      };
     } catch (err) {
       console.error('Error in createChangeRequest:', err);
       throw err;
