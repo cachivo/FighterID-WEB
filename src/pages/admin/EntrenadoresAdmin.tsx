@@ -131,12 +131,12 @@ export default function EntrenadoresAdmin() {
 
               <div>
                 <Label htmlFor="gym_id">Gimnasio</Label>
-                <Select value={selectedGym} onValueChange={setSelectedGym}>
+                <Select value={selectedGym || '__none__'} onValueChange={(v) => setSelectedGym(v === '__none__' ? '' : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona un gimnasio" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin gimnasio</SelectItem>
+                    <SelectItem value="__none__">Sin gimnasio</SelectItem>
                     {gyms?.map(gym => (
                       <SelectItem key={gym.id} value={gym.id}>
                         {gym.nombre}

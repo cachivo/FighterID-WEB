@@ -151,14 +151,14 @@ export function CoachEditModal({ coach, open, onOpenChange }: CoachEditModalProp
           <div>
             <Label htmlFor="gym_id">Gimnasio</Label>
             <Select 
-              value={formData.gym_id} 
-              onValueChange={(value) => setFormData({ ...formData, gym_id: value })}
+              value={formData.gym_id || '__none__'} 
+              onValueChange={(value) => setFormData({ ...formData, gym_id: value === '__none__' ? '' : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un gimnasio" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin gimnasio</SelectItem>
+                <SelectItem value="__none__">Sin gimnasio</SelectItem>
                 {gyms?.map(gym => (
                   <SelectItem key={gym.id} value={gym.id}>
                     {gym.nombre}
