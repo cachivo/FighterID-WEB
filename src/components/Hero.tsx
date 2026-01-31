@@ -29,15 +29,6 @@ const Hero = () => {
         
         {/* Content */}
         <div className="relative z-10 text-center text-white px-4 sm:px-6 max-w-4xl mx-auto">
-          {/* LOGO OPTIMIZADO PARA MÓVIL */}
-          <div className="mb-4 sm:mb-6 md:mb-8 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
-          <img 
-              src="/lovable-uploads/fighter-id-logo-official.png" 
-              alt="Fighter ID"
-              className="h-32 sm:h-40 md:h-48 lg:h-56 w-auto mx-auto transition-all duration-500"
-            />
-          </div>
-          
           {/* Subtítulo */}
           <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 mb-4 sm:mb-6 md:mb-8 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
             Plataforma profesional de gestión de peleadores
@@ -98,14 +89,6 @@ const Hero = () => {
       
       {/* Content */}
       <div className="relative z-10 text-center text-white px-4 sm:px-6 max-w-4xl mx-auto">
-        <div className="mb-3 sm:mb-4 md:mb-6 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
-          <img 
-            src="/lovable-uploads/fighter-id-logo-official.png" 
-            alt="Fighter ID Logo"
-            className="h-28 sm:h-36 md:h-44 lg:h-52 w-auto mx-auto"
-          />
-        </div>
-        
         {/* Live indicator with cinematic style and dynamic data */}
         <div className="mt-2 sm:mt-3 md:mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-purple-neon-primary font-semibold animate-fade-in-up" style={{ animationDelay: '150ms' }}>
           <div className="flex items-center gap-2">
