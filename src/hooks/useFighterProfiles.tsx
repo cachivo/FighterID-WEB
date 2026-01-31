@@ -17,6 +17,16 @@ export interface FighterProfile {
   reach_cm?: number;
   fighting_style?: string;
   gym_name?: string;
+  gym_id?: string | null;
+  coach_id?: string | null;
+  coach?: {
+    id: string;
+    nombre: string;
+    apellidos?: string;
+    avatar_url?: string;
+    especialidades?: string[];
+    slug?: string;
+  };
   record_wins: number;
   record_losses: number;
   record_draws: number;
@@ -67,6 +77,7 @@ export interface FighterProfileData {
   fighting_style?: string;
   gym_name?: string;
   gym_id?: string | null;
+  coach_id?: string | null;
   bio?: string;
   avatar_url?: string;
   discipline?: 'MMA' | 'Boxeo' | 'Judo' | 'JiuJitsu' | 'Kickboxing' | 'MuayThai' | 'Grappling' | 'Otro';
@@ -340,7 +351,10 @@ export function useFighterProfiles() {
       // RLS policies ensure only authorized users see sensitive data
       const { data, error } = await supabase
         .from('fighter_profiles')
-        .select('*')
+        .select(`
+          *,
+          coach:coaches(id, nombre, apellidos, avatar_url, especialidades, slug)
+        `)
         .eq('id', id)
         .single();
 

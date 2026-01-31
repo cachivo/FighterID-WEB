@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileUpload } from '@/components/ui/file-upload';
 import { Plus, Users } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function EntrenadoresAdmin() {
   const { data: coaches, isLoading } = useCoaches();
@@ -18,27 +20,61 @@ export default function EntrenadoresAdmin() {
   const createCoach = useCreateCoach();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedGym, setSelectedGym] = useState<string>('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
+
+  const uploadAvatar = async (file: File, coachSlug: string): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${coachSlug}-${Date.now()}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('coaches')
+      .upload(fileName, file, { cacheControl: '3600', upsert: true });
+    
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      return null;
+    }
+    
+    const { data: { publicUrl } } = supabase.storage
+      .from('coaches')
+      .getPublicUrl(fileName);
+    
+    return publicUrl;
+  };
 
   const onSubmit = async (data: any) => {
     try {
+      setIsUploading(true);
       const slug = `${data.nombre}-${data.apellidos || ''}`.toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
 
+      let avatarUrl = null;
+      if (avatarFile) {
+        avatarUrl = await uploadAvatar(avatarFile, slug);
+      }
+
       await createCoach.mutateAsync({
         ...data,
         slug,
         gym_id: selectedGym || null,
+        avatar_url: avatarUrl,
         especialidades: data.especialidades ? data.especialidades.split(',').map((e: string) => e.trim()) : []
       });
       
       reset();
       setSelectedGym('');
+      setAvatarFile(null);
+      setAvatarPreview('');
       setIsDialogOpen(false);
     } catch (error: any) {
       toast.error('Error al crear entrenador: ' + error.message);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -111,6 +147,26 @@ export default function EntrenadoresAdmin() {
               </div>
 
               <div>
+                <Label>Foto de Perfil</Label>
+                <FileUpload
+                  onFileSelect={(file) => {
+                    setAvatarFile(file);
+                    setAvatarPreview(URL.createObjectURL(file));
+                  }}
+                  onRemoveFile={() => {
+                    setAvatarFile(null);
+                    setAvatarPreview('');
+                  }}
+                  accept="image/*"
+                  maxSize={3}
+                  preview={avatarPreview}
+                  loading={isUploading}
+                  autoResize={true}
+                  resizeOptions={{ maxWidth: 300, maxHeight: 300, quality: 0.85 }}
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="especialidades">Especialidades (separadas por coma)</Label>
                 <Input 
                   id="especialidades" 
@@ -161,8 +217,8 @@ export default function EntrenadoresAdmin() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={createCoach.isPending}>
-                  {createCoach.isPending ? 'Creando...' : 'Crear Entrenador'}
+                <Button type="submit" disabled={createCoach.isPending || isUploading}>
+                  {createCoach.isPending || isUploading ? 'Creando...' : 'Crear Entrenador'}
                 </Button>
               </div>
             </form>

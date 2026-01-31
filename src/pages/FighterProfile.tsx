@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, Trophy, MapPin, Users, BarChart3, Info, Home } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ArrowLeft, Shield, Trophy, MapPin, Users, BarChart3, Info, Home, GraduationCap } from 'lucide-react';
 import FighterUpdatesFeed from '@/components/FighterUpdatesFeed';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -317,6 +318,41 @@ export default function FighterProfile() {
                   <div>
                     <h4 className="font-semibold mb-2">Gimnasio</h4>
                     <p className="text-muted-foreground">{fighter.gym_name}</p>
+                  </div>
+                )}
+
+                {/* Coach */}
+                {fighter.coach && (
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      Entrenador
+                    </h4>
+                    <Link 
+                      to={`/entrenadores/${fighter.coach.slug}`}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    >
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={fighter.coach.avatar_url} alt={fighter.coach.nombre} />
+                        <AvatarFallback>
+                          {fighter.coach.nombre?.charAt(0) || 'E'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">
+                          {fighter.coach.nombre} {fighter.coach.apellidos || ''}
+                        </p>
+                        {fighter.coach.especialidades && fighter.coach.especialidades.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {fighter.coach.especialidades.slice(0, 3).map((esp) => (
+                              <Badge key={esp} variant="secondary" className="text-xs">
+                                {esp}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
                   </div>
                 )}
               </CardContent>

@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { FighterProfile, FighterProfileData, useFighterProfiles } from '@/hooks/useFighterProfiles';
 import { useGyms } from '@/hooks/useGyms';
+import { useCoaches } from '@/hooks/useCoaches';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { ENABLED_DISCIPLINES, WEIGHT_CLASSES } from '@/lib/constants/disciplines';
@@ -45,6 +46,7 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
     fighting_style: '',
     gym_name: '',
     gym_id: null,
+    coach_id: null,
     bio: '',
     avatar_url: '',
     discipline: undefined,
@@ -54,6 +56,9 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createFighterProfile } = useFighterProfiles();
   const { data: gyms, isLoading: gymsLoading, error: gymsError } = useGyms();
+  const { data: coaches, isLoading: coachesLoading } = useCoaches(
+    formData.gym_id ? { gym_id: formData.gym_id } : undefined
+  );
   const { toast } = useToast();
 
   // Debug: Log gyms data
@@ -126,7 +131,7 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
     }
   };
 
-  const handleChange = (field: keyof FighterProfileData, value: string | number | undefined) => {
+  const handleChange = (field: keyof FighterProfileData, value: string | number | undefined | null) => {
     setFormData(prev => ({
       ...prev,
       [field]: value === '' ? undefined : value
@@ -209,7 +214,10 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
               {gymsError && <p className="text-sm text-destructive">Error al cargar gimnasios</p>}
               <Select 
                 value={formData.gym_id || ''} 
-                onValueChange={(value) => handleChange('gym_id', value || null)}
+                onValueChange={(value) => {
+                  handleChange('gym_id', value || null);
+                  handleChange('coach_id', null); // Reset coach when gym changes
+                }}
               >
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Selecciona un gimnasio" />
@@ -241,6 +249,40 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
                 placeholder="O escribe el nombre del gimnasio manualmente"
                 className="mt-2"
               />
+          </div>
+
+          <div>
+            <Label htmlFor="coach_id" className="text-foreground">Entrenador</Label>
+            {coachesLoading && <p className="text-sm text-muted-foreground">Cargando entrenadores...</p>}
+            <Select 
+              value={formData.coach_id || ''} 
+              onValueChange={(value) => handleChange('coach_id', value || null)}
+            >
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Selecciona un entrenador" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border border-border z-50">
+                <SelectItem value="" className="bg-popover hover:bg-accent">
+                  Sin entrenador
+                </SelectItem>
+                {coaches && coaches.length > 0 ? (
+                  coaches.map(coach => (
+                    <SelectItem key={coach.id} value={coach.id} className="bg-popover hover:bg-accent">
+                      {coach.nombre} {coach.apellidos || ''}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-coaches" disabled className="bg-popover text-muted-foreground">
+                    {formData.gym_id ? 'No hay entrenadores en este gimnasio' : 'Selecciona un gimnasio primero'}
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              {formData.gym_id 
+                ? `${coaches?.length || 0} entrenador(es) en este gimnasio` 
+                : 'Selecciona un gimnasio para ver entrenadores disponibles'}
+            </p>
           </div>
 
           <div>
