@@ -1,164 +1,71 @@
 
+# Plan: Actualizar Página de Inicio de Sesión
 
-# Plan: Completar Sistema de Entrenadores para Peleadores
+## Cambios Requeridos
 
-## Resumen del Analisis
+### 1. Actualizar Textos de la Página Auth
 
-He revisado el sistema actual de entrenadores y encontre que:
+**Archivo:** `src/pages/Auth.tsx`
 
-| Componente | Estado | Detalle |
-|------------|--------|---------|
-| CRUD Admin de coaches | Funciona | Crear, editar, eliminar entrenadores |
-| Subir avatar de coach | FALTA | No hay campo de foto en formularios |
-| Selector coach en perfil de peleador | FALTA | La tabla `fighter_profiles` tiene `coach_id` pero no se usa en UI |
-| Mostrar coach en perfil publico | FALTA | La pagina del peleador no muestra su entrenador |
+| Línea | Actual | Nuevo |
+|-------|--------|-------|
+| 278 | "Acceso a Batalla" | "Acceso a Fighter ID" |
+| 279-281 | "Inicia sesión o regístrate para acceder a la plataforma" | "Inicia sesión o regístrate para acceder a tu perfil de peleador" |
 
-## Cambios Propuestos
+### 2. Verificar Redirección Post-Confirmación
 
-### 1. Agregar Avatar a Formularios de Coach
-
-**Archivos a modificar:**
-- `src/pages/admin/EntrenadoresAdmin.tsx` - Agregar FileUpload al dialog de crear
-- `src/components/admin/CoachEditModal.tsx` - Agregar FileUpload al modal de editar
-
-Incluir:
-- Campo de subida de imagen con preview
-- Subida a Supabase Storage bucket `coaches`
-- Mostrar avatar actual al editar
-
-### 2. Agregar Selector de Entrenador en Perfil de Peleador
-
-**Archivos a modificar:**
-- `src/hooks/useFighterProfiles.tsx` - Agregar `coach_id` al tipo de datos
-- `src/components/FighterProfileForm.tsx` - Agregar Select de entrenadores (al crear perfil)
-- `src/components/UserFighterProfileEditForm.tsx` - Agregar Select de entrenadores (al editar)
-
-Logica:
-- Dropdown que carga coaches del hook `useCoaches`
-- Filtrar coaches por `gym_id` si el peleador tiene gimnasio seleccionado
-- Campo opcional (un peleador puede no tener entrenador asignado)
-
-### 3. Mostrar Entrenador en Perfil Publico del Peleador
-
-**Archivo a modificar:** `src/pages/FighterProfile.tsx`
-
-Agregar seccion que muestre:
-- Avatar del entrenador
-- Nombre completo
-- Especialidades
-- Link al perfil del entrenador (si existe pagina publica)
-
-### 4. Crear Hook para Obtener Coach con Fighter
-
-**Modificar:** `src/hooks/useFighterProfiles.tsx`
-
-Actualizar query para incluir relacion con coach:
+El código actual en `useAuth.tsx` ya configura:
 ```typescript
-.select(`
-  *,
-  coach:coaches(id, nombre, apellidos, avatar_url, especialidades, gym_id)
-`)
+const redirectUrl = `${window.location.origin}/auth`;
 ```
 
-## Diagrama de Flujo Propuesto
+Esto significa que después de confirmar el email, el usuario debería ser redirigido a `/auth`. Sin embargo, la URL completa de Supabase incluye parámetros adicionales.
 
-```text
-Admin crea Entrenador
-       │
-       ▼
-┌────────────────────┐
-│ EntrenadoresAdmin  │
-│ + Avatar Upload    │
-└─────────┬──────────┘
-          │
-          ▼
-   Base de datos
-   (tabla coaches)
-          │
-          ▼
-┌────────────────────────────┐
-│ Peleador edita su perfil   │
-│                            │
-│ Selecciona:                │
-│  - Gimnasio (opcional)     │
-│  - Entrenador (opcional)   │
-└─────────┬──────────────────┘
-          │
-          ▼
-   fighter_profiles.coach_id
-          │
-          ▼
-┌────────────────────────────┐
-│ Perfil publico muestra:    │
-│                            │
-│ "Entrenado por:"           │
-│ [Avatar] Juan Perez        │
-│ Especialidades: MMA, BJJ   │
-└────────────────────────────┘
-```
+**Verificación necesaria:** Confirmar que en Supabase Dashboard > Authentication > URL Configuration:
+- Site URL esté configurado correctamente
+- Redirect URLs incluya la URL del proyecto
 
-## Seccion Tecnica
+### 3. Agregar Indicador Visual Post-Confirmación (Opcional)
 
-### Storage Bucket para Coaches
-- Verificar/crear bucket `coaches` en Supabase Storage
-- Politicas RLS: admins pueden subir, publico puede leer
+Cuando el usuario llega a `/auth` desde la confirmación de email, podríamos mostrar un mensaje de bienvenida. El parámetro `type=signup` o similar viene en la URL después de confirmar.
 
-### Tipos TypeScript a Actualizar
+**Cambio propuesto en `Auth.tsx`:**
+- Detectar si el usuario viene de una confirmación de email
+- Mostrar toast de "Email confirmado exitosamente"
+- Pre-seleccionar la pestaña de "Iniciar Sesión"
 
-```typescript
-// En useFighterProfiles.tsx
-export interface FighterProfile {
-  // ... campos existentes
-  coach_id?: string;
-  coach?: {
-    id: string;
-    nombre: string;
-    apellidos?: string;
-    avatar_url?: string;
-    especialidades?: string[];
-  };
-}
+## Resumen de Cambios
 
-export interface FighterProfileData {
-  // ... campos existentes
-  coach_id?: string | null;
-}
-```
-
-### Componente de Avatar Upload para Coaches
-
-Reutilizar el componente `FileUpload` existente:
-```typescript
-<FileUpload
-  onFileSelect={(file) => handleAvatarUpload(file)}
-  accept="image/*"
-  maxSize={3}
-  preview={formData.avatar_url}
-  autoResize={true}
-  resizeOptions={{ 
-    maxWidth: 300, 
-    maxHeight: 300, 
-    quality: 0.85 
-  }}
-/>
-```
-
-## Archivos a Crear/Modificar
-
-| Archivo | Accion |
+| Archivo | Cambio |
 |---------|--------|
-| `src/pages/admin/EntrenadoresAdmin.tsx` | Agregar avatar upload al crear |
-| `src/components/admin/CoachEditModal.tsx` | Agregar avatar upload al editar |
-| `src/components/FighterProfileForm.tsx` | Agregar selector de coach |
-| `src/components/UserFighterProfileEditForm.tsx` | Agregar selector de coach |
-| `src/hooks/useFighterProfiles.tsx` | Agregar coach_id y relacion |
-| `src/pages/FighterProfile.tsx` | Mostrar info del entrenador |
-| Migracion SQL | Crear bucket storage `coaches` |
+| `src/pages/Auth.tsx` | Cambiar título a "Acceso a Fighter ID" |
+| `src/pages/Auth.tsx` | Actualizar descripción |
+| `src/pages/Auth.tsx` | Detectar confirmación de email y mostrar mensaje |
 
-## Resultado Esperado
+## Sección Técnica
 
-1. Admin puede crear/editar entrenadores con foto de perfil
-2. Peleadores pueden seleccionar su entrenador al editar perfil
-3. Perfil publico del peleador muestra nombre y foto del entrenador
-4. Si el peleador selecciona un gimnasio, se filtran los entrenadores de ese gimnasio
+### Detección de Confirmación de Email
 
+Supabase redirige con parámetros como `?type=signup` o incluye hash con tokens. Podemos detectar esto:
+
+```typescript
+useEffect(() => {
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const type = hashParams.get('type');
+  
+  if (type === 'signup' || type === 'email') {
+    toast({
+      title: '✅ Email confirmado',
+      description: 'Tu cuenta ha sido verificada. Ahora puedes iniciar sesión.',
+    });
+    setActiveTab('signin');
+  }
+}, []);
+```
+
+### Configuración de Supabase Necesaria
+
+Si la redirección no funciona, el usuario debe verificar en Supabase Dashboard:
+1. **Authentication > URL Configuration**
+2. **Site URL:** `https://fighterid.lovable.app` (o la URL de preview)
+3. **Redirect URLs:** Agregar ambas URLs (preview y producción)
