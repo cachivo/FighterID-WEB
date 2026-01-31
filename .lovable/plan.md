@@ -1,179 +1,185 @@
 
 
-# Plan: Consolidación del Sistema de Moderación Admin
+# Plan: Implementar Aprobación Selectiva (Opción B)
 
-## Análisis de Redundancia Detectada
-
-### Componente 1: Centro de Moderación (`/admin/pending-changes`)
-| Aspecto | Detalle |
-|---------|---------|
-| Hook | `usePendingChanges` |
-| Datos | 3 tipos: Profile Changes, Fighter Updates, Doping Tests |
-| Filtro | Solo muestra items PENDING |
-| UI | Cards con diálogos |
-| Funciones | Aprobar/Rechazar de 3 tipos de contenido |
-
-### Componente 2: Solicitudes de Cambio (`/admin/profile-requests`)
-| Aspecto | Detalle |
-|---------|---------|
-| Hook | `useProfileChangeRequests` |
-| Datos | Solo Profile Change Requests |
-| Filtro | Muestra TODOS los estados (PENDING, APPROVED, REJECTED) |
-| UI | Tabla con estadísticas |
-| Funciones | Aprobar/Rechazar + opción "Solicitar Info" |
-
----
-
-## Problema Identificado
+## Estado Actual vs Deseado
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    SOLAPAMIENTO ACTUAL                               │
+│                    ESTADO ACTUAL                                     │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
-│  Centro de Moderación          Solicitudes de Cambio                 │
-│  ┌─────────────────────┐       ┌─────────────────────┐              │
-│  │ ☑ Profile Changes   │       │ ☑ Profile Changes   │ ← DUPLICADO  │
-│  │   (solo PENDING)    │       │   (TODOS estados)   │              │
-│  ├─────────────────────┤       └─────────────────────┘              │
-│  │ ☑ Fighter Updates   │                                            │
-│  │   (solo PENDING)    │                                            │
-│  ├─────────────────────┤                                            │
-│  │ ☑ Doping Tests      │                                            │
-│  │   (solo PENDING)    │                                            │
-│  └─────────────────────┘                                            │
+│   Usuario cambia CUALQUIER campo                                     │
+│              ↓                                                       │
+│   status = 'PENDING' (siempre)                                      │
+│              ↓                                                       │
+│   Admin debe aprobar TODO manualmente                               │
 │                                                                      │
-│  RESULTADO: 2 lugares para gestionar Profile Changes                │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                    ESTADO DESEADO (Opción B)                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│   Usuario cambia campos                                              │
+│              ↓                                                       │
+│   ┌─────────────────────────────────────────────────────────────┐   │
+│   │ ¿Solo campos SEGUROS?                                        │   │
+│   │                                                              │   │
+│   │   SÍ → AUTO-APROBAR                                          │   │
+│   │        (aplicar inmediatamente)                              │   │
+│   │                                                              │   │
+│   │   NO → PENDING                                               │   │
+│   │        (requiere revisión admin)                             │   │
+│   └─────────────────────────────────────────────────────────────┘   │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Solución Propuesta: Consolidación Inteligente
+## Clasificación de Campos
 
-Fusionar ambas páginas en un **Centro de Moderación mejorado** que incluya:
+### Campos SEGUROS (Auto-aprobación)
+| Campo | Razón |
+|-------|-------|
+| `nickname` | Cosmético, no afecta elegibilidad |
+| `bio` | Texto descriptivo personal |
+| `fighting_style` | Preferencia de estilo |
+| `stance` | Guardia (Orthodox/Southpaw) |
+| `gym_name` | Información de afiliación |
+| `boxrec_url` | Link externo |
+| `tapology_url` | Link externo |
+| `height_cm` | Físico, verificable en pesaje |
+| `reach_cm` | Físico, verificable en pesaje |
+| `martial_arts` | Artes que practica (experiencia) |
+| `medical_conditions` | El usuario conoce su información |
+| `medical_allergies` | El usuario conoce su información |
+| `emergency_contact_*` | Contacto personal del usuario |
 
-1. **Filtrado por estado** (no solo pending)
-2. **Estadísticas visuales** (del ProfileChangeRequests)
-3. **Historial completo** de cada tipo de solicitud
-4. **Eliminar página redundante**
-
----
-
-## Arquitectura Propuesta
-
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│            NUEVO CENTRO DE MODERACIÓN UNIFICADO                      │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  [Stats Cards]                                                       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐               │
-│  │ Pending  │ │ Approved │ │ Rejected │ │  Total   │               │
-│  │    12    │ │    45    │ │     3    │ │    60    │               │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘               │
-│                                                                      │
-│  [Filtros]                                                           │
-│  Estado: [Todos ▼] [Pendientes] [Aprobados] [Rechazados]            │
-│                                                                      │
-│  [Tabs]                                                              │
-│  ┌───────────────┬────────────────┬──────────────┐                  │
-│  │   Perfiles    │   Updates      │    Dopaje    │                  │
-│  │     (8)       │     (3)        │      (1)     │                  │
-│  └───────────────┴────────────────┴──────────────┘                  │
-│                                                                      │
-│  [Lista de items según tab y filtro activo]                         │
-│  ┌───────────────────────────────────────────────────────────────┐ │
-│  │ Avatar | Nombre | Tipo de Cambio | Estado | Fecha | Acciones  │ │
-│  ├───────────────────────────────────────────────────────────────┤ │
-│  │   👤   │ Clara Pinto │ Récord │ Pending │ 31/01 │ [Revisar]   │ │
-│  │   👤   │ José Mejia  │ Bio    │ Pending │ 31/01 │ [Revisar]   │ │
-│  │   👤   │ Willis Yang │ Récord │ Approved│ 30/01 │ [Ver]       │ │
-│  └───────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Cambios a Implementar
-
-### 1. Actualizar `usePendingChanges.tsx`
-- Agregar parámetro opcional `status` para filtrar (no solo PENDING)
-- Agregar función `fetchAllByType()` que retorna todos los estados
-- Mantener `fetchPendingOnly()` para el contador del sidebar
-
-### 2. Actualizar `PendingChangesHub.tsx`
-- Agregar filtro de estado (Select: Todos/Pendientes/Aprobados/Rechazados)
-- Agregar cards de estadísticas al inicio
-- Agregar opción "Solicitar Info" del ProfileChangeRequests
-- Mejorar tabla/lista con información del revisor y fecha de revisión
-
-### 3. Eliminar `ProfileChangeRequests.tsx`
-- Mover funcionalidad "Solicitar Info" al Centro de Moderación
-- Eliminar archivo
-- Eliminar ruta de App.tsx
-
-### 4. Actualizar `AdminSidebar.tsx`
-- Eliminar item "Solicitudes de Cambio"
+### Campos SENSIBLES (Requieren aprobación)
+| Campo | Razón |
+|-------|-------|
+| `first_name`, `last_name` | Identidad oficial en licencia |
+| `record_wins`, `record_losses`, `record_draws` | Afecta ranking y matchmaking |
+| `weight_class` | Determina categoría de pelea |
+| `weight_kg` | Afecta elegibilidad de categoría |
+| `level` | Amateur vs Profesional (regulaciones distintas) |
+| `discipline` | Tipo de licencia (MMA vs Boxeo) |
+| `gender` | Elegibilidad de competencia |
+| `country` | Regulaciones por país |
+| `document_type`, `document_number` | Documentos de identidad |
+| `birthdate` | Edad mínima para competir |
 
 ---
 
 ## Archivos a Modificar
 
-| Archivo | Acción |
-|---------|--------|
-| `src/hooks/usePendingChanges.tsx` | Agregar filtrado por status |
-| `src/pages/admin/PendingChangesHub.tsx` | Agregar filtros, stats, mejorar UI |
-| `src/pages/admin/ProfileChangeRequests.tsx` | **ELIMINAR** |
-| `src/components/AdminSidebar.tsx` | Remover item redundante |
-| `src/App.tsx` | Remover ruta `/admin/profile-requests` |
-| `src/hooks/useProfileChangeRequests.ts` | Mantener (usado por peleadores para crear solicitudes) |
+### 1. Crear constantes de clasificación de campos
+**Archivo: `src/lib/constants/fieldApprovalRules.ts`**
+
+```typescript
+// Campos que se auto-aprueban (el usuario puede cambiar libremente)
+export const AUTO_APPROVE_FIELDS = [
+  'nickname', 'bio', 'fighting_style', 'stance', 'gym_name',
+  'boxrec_url', 'tapology_url', 'height_cm', 'reach_cm',
+  'martial_arts', 'medical_conditions', 'medical_allergies',
+  'emergency_contact_name', 'emergency_contact_phone', 
+  'emergency_contact_relation', 'insurance_company', 'insurance_policy'
+] as const;
+
+// Campos que requieren aprobación administrativa
+export const REQUIRES_APPROVAL_FIELDS = [
+  'first_name', 'last_name', 'record_wins', 'record_losses', 
+  'record_draws', 'weight_class', 'weight_kg', 'level', 
+  'discipline', 'gender', 'country', 'document_type', 
+  'document_number', 'birthdate', 'birthplace', 'blood_type'
+] as const;
+
+// Función helper para clasificar cambios
+export function classifyChanges(changes: Record<string, any>) {
+  const autoApprove: Record<string, any> = {};
+  const requiresApproval: Record<string, any> = {};
+  
+  Object.entries(changes).forEach(([field, value]) => {
+    if (AUTO_APPROVE_FIELDS.includes(field as any)) {
+      autoApprove[field] = value;
+    } else {
+      requiresApproval[field] = value;
+    }
+  });
+  
+  return { autoApprove, requiresApproval };
+}
+```
+
+### 2. Actualizar hook de solicitudes
+**Archivo: `src/hooks/useProfileChangeRequests.ts`**
+
+Modificar `createChangeRequest` para:
+1. Clasificar los cambios usando `classifyChanges()`
+2. Auto-aplicar campos seguros inmediatamente
+3. Solo crear solicitud PENDING si hay campos sensibles
+
+### 3. Actualizar UI de solicitud
+**Archivo: `src/pages/ProfileChangeRequest.tsx`**
+
+Modificar para:
+1. Mostrar qué campos se aplicarán inmediatamente
+2. Mostrar qué campos requieren aprobación
+3. Actualizar el mensaje de alerta para reflejar el flujo híbrido
 
 ---
 
-## Funcionalidades Mejoradas
+## Flujo de Usuario Actualizado
 
-### Nuevas características del Centro de Moderación:
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│              NUEVO FLUJO DE SOLICITUD DE CAMBIOS                     │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  Usuario modifica su perfil                                          │
+│              ↓                                                       │
+│  [Resumen de Cambios]                                               │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │                                                              │   │
+│  │  ✓ APLICACIÓN INMEDIATA (sin aprobación):                    │   │
+│  │    • Apodo: "El Tigre" → "El León"                           │   │
+│  │    • Bio: "Peleador amateur..." → "Campeón regional..."      │   │
+│  │    • Gimnasio: "Team Alpha" → "Team Beta"                    │   │
+│  │                                                              │   │
+│  │  ⏳ REQUIERE APROBACIÓN ADMINISTRATIVA:                       │   │
+│  │    • Categoría de peso: "Ligero" → "Welter"                  │   │
+│  │    • Récord: 5-2-0 → 6-2-0                                   │   │
+│  │                                                              │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                      │
+│  [Confirmar Cambios]                                                │
+│              ↓                                                       │
+│  • Campos seguros: Aplicados inmediatamente ✓                       │
+│  • Campos sensibles: Enviados para revisión admin                   │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-1. **Filtrado por estado**
-   - Todos
-   - Pendientes (default)
-   - Aprobados
-   - Rechazados
-   - Requiere Info
+---
 
-2. **Estadísticas visuales**
-   - Total de solicitudes
-   - Pendientes (badge rojo para urgencia)
-   - Aprobadas hoy/semana
-   - Rechazadas
+## Resumen de Impacto
 
-3. **Información de auditoría**
-   - Quién revisó
-   - Cuándo se revisó
-   - Notas del admin
+| Archivo | Acción |
+|---------|--------|
+| `src/lib/constants/fieldApprovalRules.ts` | **CREAR** - Clasificación de campos |
+| `src/hooks/useProfileChangeRequests.ts` | Modificar lógica de `createChangeRequest` |
+| `src/pages/ProfileChangeRequest.tsx` | Actualizar UI para mostrar clasificación |
 
-4. **Acción adicional**
-   - "Solicitar Más Información" (del ProfileChangeRequests original)
+**Tiempo estimado:** ~15 minutos
 
 ---
 
 ## Beneficios
 
-- **UX Simplificado**: Un solo lugar para toda la moderación
-- **Menos confusión**: No hay duplicación de funcionalidad
-- **Mejor auditoría**: Historial visible en el mismo lugar
-- **Código más limpio**: Menos archivos que mantener
-- **Sidebar más ordenado**: Menos opciones redundantes
-
----
-
-## Impacto
-
-- **Archivos a eliminar**: 1
-- **Archivos a modificar**: 4
-- **Funcionalidad preservada**: 100%
-- **Tiempo estimado**: ~25 minutos
+- **UX mejorada**: Cambios cosméticos son instantáneos
+- **Menos carga admin**: Solo revisan lo que realmente importa
+- **Seguridad mantenida**: Datos críticos siguen protegidos
+- **Transparencia**: Usuario sabe qué se aplica inmediatamente vs qué espera
 
