@@ -1,227 +1,129 @@
 
-# Plan: Mejorar Editor de Campañas de Email
+# Plan: Mostrar libras en todas las categorías de peso
 
-## Problema Actual
+## Problema Identificado
 
-El editor de campañas solo permite enviar a:
-- Todos los usuarios
-- Solo peleadores (todos)
-- Solo administradores
+Hay inconsistencias en el manejo de categorías de peso:
 
-**No hay forma de seleccionar peleadores específicos** para envíos individuales o grupos personalizados.
-
----
-
-## Solución Propuesta
-
-Agregar un **selector de destinatarios individuales** al editor de campañas con:
-
-1. **Nueva opción de filtro**: "Selección Manual"
-2. **Buscador de peleadores** con autocompletado
-3. **Lista de destinatarios seleccionados** con opción de remover
-4. **Input para emails externos** (no registrados en la plataforma)
+| Ubicación | Estado Actual | Problema |
+|-----------|--------------|----------|
+| `disciplines.ts` | `WEIGHT_CLASSES` con lbs | Correcto |
+| `FightersProfiles.tsx` | Lista local en INGLÉS | No usa constantes centralizadas |
+| `FighterCard.tsx` | Muestra valor crudo | Sin lbs |
+| `FighterMiniature.tsx` | Muestra valor crudo | Sin lbs |
+| `FighterProfile.tsx` | Muestra valor crudo | Sin lbs |
 
 ---
 
-## Arquitectura de la Solución
+## Solución
 
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                 EDITOR DE CAMPAÑA MEJORADO                           │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  Para: [Seleccionar tipo de destinatarios ▼]                        │
-│        ├─ Todos los usuarios                                        │
-│        ├─ Solo peleadores                                           │
-│        ├─ Solo administradores                                      │
-│        └─ Selección Manual  ← NUEVO                                 │
-│                                                                      │
-│  ┌─────────────────────────────────────────────────────────────┐   │
-│  │ SI "Selección Manual" está activo:                           │   │
-│  │                                                              │   │
-│  │ [🔍 Buscar peleador...                               ]       │   │
-│  │                                                              │   │
-│  │ Destinatarios (3):                                           │   │
-│  │ ┌──────────────────────────────────────────────────────┐    │   │
-│  │ │ 👤 Randy Tercero (randy@email.com)           [X]     │    │   │
-│  │ │ 👤 Juan Pérez (juan@email.com)               [X]     │    │   │
-│  │ │ 📧 externo@cliente.com                       [X]     │    │   │
-│  │ └──────────────────────────────────────────────────────┘    │   │
-│  │                                                              │   │
-│  │ [+ Agregar email manualmente]                                │   │
-│  │                                                              │   │
-│  └─────────────────────────────────────────────────────────────┘   │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Cambios a Implementar
-
-### 1. Crear Componente de Selector de Destinatarios
-
-**Nuevo archivo: `src/components/admin/EmailRecipientSelector.tsx`**
+### 1. Agregar función helper en `disciplines.ts`
 
 ```typescript
-// Componente que permite:
-// - Buscar peleadores por nombre
-// - Ver resultados con avatar, nombre y email
-// - Seleccionar múltiples destinatarios
-// - Agregar emails externos manualmente
-// - Ver lista de seleccionados con opción de remover
+// Helper para obtener label con libras desde el valor
+export const getWeightClassLabel = (value: string | undefined | null): string => {
+  if (!value) return 'Sin categoría';
+  const found = WEIGHT_CLASSES.find(wc => wc.value === value);
+  return found ? found.label : value;
+};
 ```
 
-### 2. Actualizar EmailCampaignEditor
+### 2. Actualizar `FightersProfiles.tsx`
 
-**Archivo: `src/pages/admin/EmailCampaignEditor.tsx`**
+- Eliminar la lista local `WEIGHT_CLASSES` en inglés
+- Importar y usar `WEIGHT_CLASSES` de `disciplines.ts`
+- Usar `getWeightClassLabel()` para mostrar las categorías
 
-Cambios:
-- Agregar opción "custom" al Select de destinatarios
-- Mostrar el nuevo selector cuando se elige "custom"
-- Pasar la lista de emails al edge function como `custom_emails`
-- Actualizar mensaje de confirmación para mostrar cantidad
+### 3. Actualizar componentes de visualización
 
-### 3. Actualizar Edge Function (sin cambios)
-
-El backend ya soporta `custom_emails`, solo necesitamos enviar los datos correctamente desde el frontend.
+Usar `getWeightClassLabel(fighter.weight_class)` en:
+- `FighterCard.tsx` (Badge de categoría)
+- `FighterMiniature.tsx` (Info adicional)
+- `FighterProfile.tsx` (Badge de categoría)
+- `ExternalFighterForm.tsx` (ya usa WEIGHT_CLASSES correctamente)
 
 ---
 
-## Flujo de Usuario
+## Archivos a Modificar
 
-```text
-1. Admin abre editor de campaña
-2. Selecciona "Selección Manual" en destinatarios
-3. Busca peleadores por nombre
-4. Click en peleador → se agrega a la lista
-5. Opcionalmente agrega emails externos
-6. Escribe el asunto y contenido
-7. Click "Enviar Campaña"
-8. Sistema envía a todos los emails seleccionados
-```
-
----
-
-## Componente EmailRecipientSelector
-
-### Props
-```typescript
-interface EmailRecipientSelectorProps {
-  selectedEmails: string[];
-  onEmailsChange: (emails: string[]) => void;
-}
-```
-
-### Funcionalidades
-- **Búsqueda en tiempo real**: Filtra peleadores mientras escribe
-- **Debounce**: Evita consultas excesivas (300ms)
-- **Resultados agrupados**: Peleadores registrados vs emails externos
-- **Validación de email**: Para entradas manuales
-- **Prevención de duplicados**: No permite agregar el mismo email dos veces
-
----
-
-## Archivos a Modificar/Crear
-
-| Archivo | Acción |
+| Archivo | Cambio |
 |---------|--------|
-| `src/components/admin/EmailRecipientSelector.tsx` | **CREAR** - Selector de destinatarios |
-| `src/pages/admin/EmailCampaignEditor.tsx` | Integrar selector, agregar opción "custom" |
+| `src/lib/constants/disciplines.ts` | Agregar helper `getWeightClassLabel()` |
+| `src/pages/admin/FightersProfiles.tsx` | Usar constantes centralizadas + helper |
+| `src/components/FighterCard.tsx` | Usar helper para badge |
+| `src/components/FighterMiniature.tsx` | Usar helper para mostrar peso |
+| `src/pages/FighterProfile.tsx` | Usar helper para badge |
+
+---
+
+## Resultado Esperado
+
+### Antes
+```
+Peso: Peso Ligero
+```
+
+### Después
+```
+Peso: Peso Ligero (155 lbs)
+```
 
 ---
 
 ## Detalles Técnicos
 
-### Query para buscar peleadores con email
+### Nuevo helper en `disciplines.ts`
 
 ```typescript
-const { data } = await supabase
-  .from('fighter_profiles')
-  .select(`
-    id,
-    first_name,
-    last_name,
-    nickname,
-    avatar_url,
-    user_id,
-    app_user!inner(email)
-  `)
-  .eq('active', true)
-  .or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,nickname.ilike.%${search}%`)
-  .limit(10);
+/**
+ * Get the full weight class label with lbs from the stored value
+ * @param value - The weight class value stored in DB (e.g., "Peso Ligero")
+ * @returns The full label with lbs (e.g., "Peso Ligero (155 lbs)")
+ */
+export const getWeightClassLabel = (value: string | undefined | null): string => {
+  if (!value) return 'Sin categoría';
+  const found = WEIGHT_CLASSES.find(wc => wc.value === value);
+  return found ? found.label : value; // Fallback al valor crudo si no se encuentra
+};
 ```
 
-### Estructura de datos enviada al backend
+### Uso en componentes
 
 ```typescript
-// Cuando se selecciona "custom"
-await supabase.functions.invoke("send-mass-email", {
-  body: {
-    subject: "Asunto del correo",
-    html_content: "<html>...</html>",
-    recipient_filter: "custom",
-    custom_emails: ["randy@email.com", "juan@email.com", "externo@cliente.com"],
-    test_mode: false,
-  },
-});
+// Importar
+import { getWeightClassLabel } from '@/lib/constants/disciplines';
+
+// Usar
+<Badge variant="secondary">{getWeightClassLabel(fighter.weight_class)}</Badge>
 ```
 
----
+### Actualización del filtro en FightersProfiles.tsx
 
-## UI del Selector
+```typescript
+// Importar constantes centralizadas
+import { WEIGHT_CLASSES, getWeightClassLabel } from '@/lib/constants/disciplines';
 
-### Estado vacío
-```
-🔍 Buscar peleador por nombre...
+// En el Select de filtro
+<SelectContent>
+  <SelectItem value="all">Todas las categorías</SelectItem>
+  {WEIGHT_CLASSES.map(wc => (
+    <SelectItem key={wc.value} value={wc.value}>
+      {wc.label}
+    </SelectItem>
+  ))}
+</SelectContent>
 
-[No hay destinatarios seleccionados]
-
-+ Agregar email manualmente
-```
-
-### Con búsqueda activa
-```
-🔍 Randy
-
-Resultados:
-┌────────────────────────────────────────┐
-│ 👤 Randy Tercero - randy@fighter.com   │
-│ 👤 Randy Couture - rc@ufc.com          │
-└────────────────────────────────────────┘
-```
-
-### Con seleccionados
-```
-🔍 Buscar peleador...
-
-Destinatarios (2):
-┌────────────────────────────────────────┐
-│ 👤 Randy Tercero          [✕ Quitar]  │
-│    randy@fighter.com                   │
-├────────────────────────────────────────┤
-│ 📧 patrocinador@empresa.com [✕ Quitar]│
-│    (Email externo)                     │
-└────────────────────────────────────────┘
-
-+ Agregar email manualmente
+// En la visualización
+<span className="text-sm font-medium">
+  {getWeightClassLabel(fighter.weight_class)}
+</span>
 ```
 
 ---
 
 ## Beneficios
 
-- **Comunicación directa**: Enviar a peleadores específicos
-- **Flexibilidad**: Combinar peleadores registrados con emails externos
-- **UX intuitiva**: Búsqueda rápida con resultados visuales
-- **Sin cambios backend**: Aprovecha funcionalidad existente
-- **Auditoría**: El log ya registra campañas con filtro "custom"
-
----
-
-## Impacto
-
-- **Archivos nuevos**: 1
-- **Archivos modificados**: 1
-- **Cambios en backend**: Ninguno
-- **Tiempo estimado**: ~20 minutos
+- **Consistencia**: Todas las vistas muestran el mismo formato
+- **Mantenibilidad**: Un solo lugar para cambiar las categorías
+- **Información completa**: Los admins y usuarios ven las libras siempre
+- **Sin breaking changes**: El valor almacenado en DB no cambia
