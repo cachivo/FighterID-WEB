@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserCheck, Mail } from 'lucide-react';
+import { Loader2, UserCheck, Mail, HelpCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFighterInvitations } from '@/hooks/useFighterInvitations';
 import { supabase } from '@/integrations/supabase/client';
@@ -330,12 +330,13 @@ export default function Auth() {
                   </Button>
                 </form>
               </Form>
-              <div className="mt-4 text-center">
+              <div className="mt-4 text-center border-t border-border/50 pt-4">
                 <Button
                   variant="link"
-                  className="text-sm text-white/90 hover:text-white"
+                  className="text-sm font-medium text-primary hover:text-primary/80 underline underline-offset-4"
                   onClick={() => window.location.href = '/auth/forgot-password'}
                 >
+                  <HelpCircle className="w-4 h-4 mr-1.5" />
                   ¿Olvidaste tu contraseña?
                 </Button>
               </div>

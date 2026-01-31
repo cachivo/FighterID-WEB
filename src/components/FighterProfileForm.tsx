@@ -14,14 +14,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 const WEIGHT_CLASSES = [
-  'Peso Mosca (125 lbs)',
-  'Peso Gallo (135 lbs)', 
-  'Peso Pluma (145 lbs)',
-  'Peso Ligero (155 lbs)',
-  'Peso Welter (170 lbs)',
-  'Peso Medio (185 lbs)',
-  'Peso Semipesado (205 lbs)',
-  'Peso Pesado (265 lbs)',
+  { value: 'Peso Paja', label: 'Peso Paja (115 lbs)' },
+  { value: 'Peso Mosca', label: 'Peso Mosca (125 lbs)' },
+  { value: 'Peso Gallo', label: 'Peso Gallo (135 lbs)' },
+  { value: 'Peso Pluma', label: 'Peso Pluma (145 lbs)' },
+  { value: 'Peso Ligero', label: 'Peso Ligero (155 lbs)' },
+  { value: 'Peso Welter', label: 'Peso Welter (170 lbs)' },
+  { value: 'Peso Medio', label: 'Peso Medio (185 lbs)' },
+  { value: 'Peso Semipesado', label: 'Peso Semipesado (205 lbs)' },
+  { value: 'Peso Pesado', label: 'Peso Pesado (265 lbs)' },
+  { value: 'Peso Superpesado', label: 'Peso Superpesado (+265 lbs)' },
 ];
 
 const FIGHTING_STYLES = [
@@ -305,13 +307,16 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
                   <SelectValue placeholder="Selecciona una división" />
                 </SelectTrigger>
                 <SelectContent>
-                  {WEIGHT_CLASSES.map(weightClass => (
-                    <SelectItem key={weightClass} value={weightClass}>
-                      {weightClass}
+                  {WEIGHT_CLASSES.map(wc => (
+                    <SelectItem key={wc.value} value={wc.value}>
+                      {wc.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Selecciona según tu peso de competencia
+              </p>
             </div>
             
             <div>
@@ -341,7 +346,15 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
                 id="height_cm"
                 type="number"
                 value={formData.height_cm || ''}
-                onChange={(e) => handleChange('height_cm', parseInt(e.target.value) || undefined)}
+                onChange={(e) => {
+                  const height = parseInt(e.target.value) || undefined;
+                  setFormData(prev => ({
+                    ...prev,
+                    height_cm: height,
+                    // Auto-calculate reach if not manually set
+                    reach_cm: height && (!prev.reach_cm || prev.reach_cm === prev.height_cm) ? height : prev.reach_cm
+                  }));
+                }}
                 placeholder="180"
               />
             </div>
@@ -367,6 +380,9 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
                 onChange={(e) => handleChange('reach_cm', parseInt(e.target.value) || undefined)}
                 placeholder="185"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Estimado según altura. Ajústalo si conoces tu medida.
+              </p>
             </div>
           </div>
 

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Eye, EyeOff, Shield, Mail, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Shield, Mail, CheckCircle, HelpCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function LicenseAuth() {
@@ -228,13 +228,14 @@ export default function LicenseAuth() {
                   {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </Button>
 
-                <div className="text-center">
+                <div className="text-center border-t border-purple-500/20 pt-4 mt-4">
                   <Button
                     type="button"
                     variant="link"
                     onClick={() => navigate('/license/forgot-password')}
-                    className="text-gold-400 hover:text-gold-300"
+                    className="text-gold-400 hover:text-gold-300 font-medium underline underline-offset-4"
                   >
+                    <HelpCircle className="w-4 h-4 mr-1.5" />
                     ¿Olvidaste tu contraseña?
                   </Button>
                 </div>

@@ -59,8 +59,16 @@ export default function LicenseOnboarding() {
   const [uploading, setUploading] = useState(false);
 
   const weightClasses = [
-    'Strawweight', 'Flyweight', 'Bantamweight', 'Featherweight',
-    'Lightweight', 'Welterweight', 'Middleweight', 'Light Heavyweight', 'Heavyweight'
+    { value: 'Peso Paja', label: 'Peso Paja (115 lbs)' },
+    { value: 'Peso Mosca', label: 'Peso Mosca (125 lbs)' },
+    { value: 'Peso Gallo', label: 'Peso Gallo (135 lbs)' },
+    { value: 'Peso Pluma', label: 'Peso Pluma (145 lbs)' },
+    { value: 'Peso Ligero', label: 'Peso Ligero (155 lbs)' },
+    { value: 'Peso Welter', label: 'Peso Welter (170 lbs)' },
+    { value: 'Peso Medio', label: 'Peso Medio (185 lbs)' },
+    { value: 'Peso Semipesado', label: 'Peso Semipesado (205 lbs)' },
+    { value: 'Peso Pesado', label: 'Peso Pesado (265 lbs)' },
+    { value: 'Peso Superpesado', label: 'Peso Superpesado (+265 lbs)' },
   ];
 
   const martialArts = [
@@ -371,7 +379,15 @@ export default function LicenseOnboarding() {
                       id="heightCm"
                       type="number"
                       value={formData.heightCm}
-                      onChange={(e) => setFormData({...formData, heightCm: e.target.value})}
+                      onChange={(e) => {
+                        const height = e.target.value;
+                        setFormData(prev => ({
+                          ...prev, 
+                          heightCm: height,
+                          // Auto-calculate reach if not manually set
+                          reachCm: (!prev.reachCm || prev.reachCm === prev.heightCm) ? height : prev.reachCm
+                        }));
+                      }}
                       placeholder="170"
                       required
                     />
@@ -397,6 +413,9 @@ export default function LicenseOnboarding() {
                       onChange={(e) => setFormData({...formData, reachCm: e.target.value})}
                       placeholder="175"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Estimado según altura. Ajústalo si conoces tu medida.
+                    </p>
                   </div>
                 </div>
 
@@ -408,13 +427,16 @@ export default function LicenseOnboarding() {
                         <SelectValue placeholder="Selecciona tu categoría" />
                       </SelectTrigger>
                       <SelectContent>
-                        {weightClasses.map((weightClass) => (
-                          <SelectItem key={weightClass} value={weightClass}>
-                            {weightClass}
+                        {weightClasses.map((wc) => (
+                          <SelectItem key={wc.value} value={wc.value}>
+                            {wc.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Selecciona según tu peso de competencia
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="stance">Stance</Label>
