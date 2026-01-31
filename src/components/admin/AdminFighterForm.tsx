@@ -15,29 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { useFighterProfiles, FighterProfile, AdminFighterFormData } from '@/hooks/useFighterProfiles';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-
-const WEIGHT_CLASSES = [
-  { value: 'Peso Paja', label: 'Peso Paja (115 lbs)' },
-  { value: 'Peso Mosca', label: 'Peso Mosca (125 lbs)' },
-  { value: 'Peso Gallo', label: 'Peso Gallo (135 lbs)' },
-  { value: 'Peso Pluma', label: 'Peso Pluma (145 lbs)' },
-  { value: 'Peso Ligero', label: 'Peso Ligero (155 lbs)' },
-  { value: 'Peso Welter', label: 'Peso Welter (170 lbs)' },
-  { value: 'Peso Medio', label: 'Peso Medio (185 lbs)' },
-  { value: 'Peso Semipesado', label: 'Peso Semipesado (205 lbs)' },
-  { value: 'Peso Pesado', label: 'Peso Pesado (265 lbs)' },
-  { value: 'Peso Superpesado', label: 'Peso Superpesado (+265 lbs)' },
-];
-
-const MARTIAL_ARTS = [
-  'MMA', 'Boxeo', 'Judo', 'JiuJitsu', 'Kickboxing', 'MuayThai', 'Grappling', 'Otro'
-];
-
-const FIGHTER_LEVELS = [
-  { value: 'AMATEUR', label: 'Amateur' },
-  { value: 'SEMI_PRO', label: 'Semi-Profesional' },
-  { value: 'PROFESSIONAL', label: 'Profesional' },
-];
+import { ENABLED_DISCIPLINES, WEIGHT_CLASSES, FIGHTER_LEVELS } from '@/lib/constants/disciplines';
 
 const GENDERS = [
   { value: 'M', label: 'Masculino' },
@@ -402,25 +380,40 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
               </div>
 
               <div>
-                <Label>Artes Marciales *</Label>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  {MARTIAL_ARTS.map((art) => (
-                    <div key={art} className="flex items-center space-x-2">
+                <Label>Disciplina(s) de Competencia *</Label>
+                <div className="space-y-3 mt-2">
+                  {ENABLED_DISCIPLINES.map((discipline) => (
+                    <div 
+                      key={discipline.value}
+                      className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                        formData.martial_arts?.includes(discipline.value) 
+                          ? 'border-primary bg-primary/5' 
+                          : 'hover:border-muted-foreground/30'
+                      }`}
+                      onClick={() => handleMartialArtsChange(discipline.value, !formData.martial_arts?.includes(discipline.value))}
+                    >
                       <Checkbox
-                        id={art}
-                        checked={formData.martial_arts?.includes(art) || false}
-                        onCheckedChange={(checked) => handleMartialArtsChange(art, checked as boolean)}
+                        id={`admin-${discipline.value}`}
+                        checked={formData.martial_arts?.includes(discipline.value) || false}
+                        onCheckedChange={(checked) => handleMartialArtsChange(discipline.value, checked as boolean)}
                       />
-                      <Label htmlFor={art} className="text-sm font-normal cursor-pointer">
-                        {art}
-                      </Label>
+                      <div className="flex-1">
+                        <Label htmlFor={`admin-${discipline.value}`} className="text-sm font-medium cursor-pointer">
+                          {discipline.label}
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {discipline.description}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
                 {formData.martial_arts && formData.martial_arts.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-3">
                     {formData.martial_arts.map((art) => (
-                      <Badge key={art} variant="secondary">{art}</Badge>
+                      <Badge key={art} variant="secondary">
+                        {ENABLED_DISCIPLINES.find(d => d.value === art)?.label || art}
+                      </Badge>
                     ))}
                   </div>
                 )}

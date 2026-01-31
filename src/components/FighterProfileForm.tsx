@@ -12,19 +12,7 @@ import { FighterProfile, FighterProfileData, useFighterProfiles } from '@/hooks/
 import { useGyms } from '@/hooks/useGyms';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-
-const WEIGHT_CLASSES = [
-  { value: 'Peso Paja', label: 'Peso Paja (115 lbs)' },
-  { value: 'Peso Mosca', label: 'Peso Mosca (125 lbs)' },
-  { value: 'Peso Gallo', label: 'Peso Gallo (135 lbs)' },
-  { value: 'Peso Pluma', label: 'Peso Pluma (145 lbs)' },
-  { value: 'Peso Ligero', label: 'Peso Ligero (155 lbs)' },
-  { value: 'Peso Welter', label: 'Peso Welter (170 lbs)' },
-  { value: 'Peso Medio', label: 'Peso Medio (185 lbs)' },
-  { value: 'Peso Semipesado', label: 'Peso Semipesado (205 lbs)' },
-  { value: 'Peso Pesado', label: 'Peso Pesado (265 lbs)' },
-  { value: 'Peso Superpesado', label: 'Peso Superpesado (+265 lbs)' },
-];
+import { ENABLED_DISCIPLINES, WEIGHT_CLASSES } from '@/lib/constants/disciplines';
 
 const FIGHTING_STYLES = [
   'Peleador Técnico',
@@ -36,17 +24,6 @@ const FIGHTING_STYLES = [
   'Híbrido',
   'Defensivo',
 ];
-
-const MARTIAL_ARTS = [
-  'MMA',
-  'Boxeo', 
-  'Judo',
-  'JiuJitsu',
-  'Kickboxing',
-  'MuayThai',
-  'Grappling',
-  'Otro'
-] as const;
 
 
 interface FighterProfileFormProps {
@@ -267,21 +244,34 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
           </div>
 
           <div>
-            <Label className="text-foreground">Artes Marciales / Estilos de Pelea *</Label>
+            <Label className="text-foreground">¿En qué disciplina(s) deseas competir? *</Label>
             <p className="text-sm text-muted-foreground mb-3">
-              Selecciona todas las artes marciales que practicas
+              Selecciona las disciplinas para las cuales deseas obtener tu Fighter ID
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              {MARTIAL_ARTS.map((art) => (
-                <div key={art} className="flex items-center space-x-2">
+            <div className="grid grid-cols-1 gap-3">
+              {ENABLED_DISCIPLINES.map((discipline) => (
+                <div 
+                  key={discipline.value} 
+                  className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                    formData.martial_arts?.includes(discipline.value) 
+                      ? 'border-primary bg-primary/5' 
+                      : 'hover:border-muted-foreground/30'
+                  }`}
+                  onClick={() => handleMartialArtsChange(discipline.value, !formData.martial_arts?.includes(discipline.value))}
+                >
                   <Checkbox
-                    id={art}
-                    checked={formData.martial_arts?.includes(art) || false}
-                    onCheckedChange={(checked) => handleMartialArtsChange(art, checked as boolean)}
+                    id={discipline.value}
+                    checked={formData.martial_arts?.includes(discipline.value) || false}
+                    onCheckedChange={(checked) => handleMartialArtsChange(discipline.value, checked as boolean)}
                   />
-                  <Label htmlFor={art} className="text-sm font-normal cursor-pointer">
-                    {art}
-                  </Label>
+                  <div className="flex-1">
+                    <Label htmlFor={discipline.value} className="text-sm font-medium cursor-pointer">
+                      {discipline.label}
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {discipline.description}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
