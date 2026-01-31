@@ -13,11 +13,7 @@ import { DeleteFighterDialog } from '@/components/admin/DeleteFighterDialog';
 import { FighterDetailModal } from '@/components/admin/FighterDetailModal';
 import { useAdminFighters, AdminFighterProfile } from '@/hooks/useAdminFighters';
 import { FighterProfile } from '@/hooks/useFighterProfiles';
-
-const WEIGHT_CLASSES = [
-  'Strawweight', 'Flyweight', 'Bantamweight', 'Featherweight', 
-  'Lightweight', 'Welterweight', 'Middleweight', 'Light Heavyweight', 'Heavyweight'
-];
+import { WEIGHT_CLASSES, getWeightClassLabel } from '@/lib/constants/disciplines';
 
 export default function FightersProfiles() {
   const navigate = useNavigate();
@@ -136,9 +132,9 @@ export default function FightersProfiles() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas las categorías</SelectItem>
-                {WEIGHT_CLASSES.map(weightClass => (
-                  <SelectItem key={weightClass} value={weightClass}>
-                    {weightClass}
+                {WEIGHT_CLASSES.map(wc => (
+                  <SelectItem key={wc.value} value={wc.value}>
+                    {wc.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -255,7 +251,7 @@ export default function FightersProfiles() {
                   
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Peso:</span>
-                    <span className="text-sm font-medium">{fighter.weight_class}</span>
+                    <span className="text-sm font-medium">{getWeightClassLabel(fighter.weight_class)}</span>
                   </div>
                   
                   {fighter.discipline && (

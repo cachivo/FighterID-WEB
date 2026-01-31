@@ -64,3 +64,14 @@ export type FighterLevel = typeof FIGHTER_LEVELS[number]['value'];
 // Helper to get discipline values only (for forms)
 export const getEnabledDisciplineValues = () => 
   ENABLED_DISCIPLINES.map(d => d.value);
+
+/**
+ * Get the full weight class label with lbs from the stored value
+ * @param value - The weight class value stored in DB (e.g., "Peso Ligero")
+ * @returns The full label with lbs (e.g., "Peso Ligero (155 lbs)")
+ */
+export const getWeightClassLabel = (value: string | undefined | null): string => {
+  if (!value) return 'Sin categoría';
+  const found = WEIGHT_CLASSES.find(wc => wc.value === value);
+  return found ? found.label : value;
+};

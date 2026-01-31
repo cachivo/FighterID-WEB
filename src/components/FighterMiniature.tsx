@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trophy, MapPin, Calendar } from 'lucide-react';
+import { getWeightClassLabel } from '@/lib/constants/disciplines';
 
 interface FighterMiniatureProps {
   fighter: {
@@ -86,7 +87,7 @@ export const FighterMiniature = ({ fighter }: FighterMiniatureProps) => {
                   {fighter.weight_class && (
                     <>
                       <span className="text-border">•</span>
-                      <span className="font-medium">{fighter.weight_class}</span>
+                      <span className="font-medium">{getWeightClassLabel(fighter.weight_class)}</span>
                     </>
                   )}
                 </div>

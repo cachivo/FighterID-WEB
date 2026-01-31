@@ -5,6 +5,7 @@ import { FighterProfile } from '@/hooks/useFighterProfiles';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Shield, Award, Medal, Trophy, Gem } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { getWeightClassLabel } from '@/lib/constants/disciplines';
 
 interface FighterCardProps {
   fighter: FighterProfile;
@@ -79,7 +80,7 @@ export function FighterCard({ fighter, onClick }: FighterCardProps) {
             )}
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <Badge variant="secondary" className="text-xs">
-                {fighter.weight_class}
+                {getWeightClassLabel(fighter.weight_class)}
               </Badge>
               <span className="text-xs text-muted-foreground">
                 {fighter.country}

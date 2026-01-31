@@ -12,6 +12,7 @@ import { ArrowLeft, Shield, Trophy, MapPin, Users, BarChart3, Info, Home } from 
 import FighterUpdatesFeed from '@/components/FighterUpdatesFeed';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getWeightClassLabel } from '@/lib/constants/disciplines';
 
 export default function FighterProfile() {
   const { id } = useParams<{ id: string }>();
@@ -134,7 +135,7 @@ export default function FighterProfile() {
                   <Badge className={getStatusColor(fighter.license_status)}>
                     {fighter.license_status === 'active' ? 'Activo' : fighter.license_status}
                   </Badge>
-                  <Badge variant="outline">{fighter.weight_class}</Badge>
+                  <Badge variant="outline">{getWeightClassLabel(fighter.weight_class)}</Badge>
                 </div>
                 
                 {fighter.nickname && (
