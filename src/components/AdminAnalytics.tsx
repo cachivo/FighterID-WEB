@@ -120,10 +120,10 @@ export default function AdminAnalytics() {
   const stats = analytics!;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Controls */}
       <div className="flex items-center justify-between">
-        <h3 className="text-2xl font-bold">Analytics Avanzados</h3>
+        <h3 className="text-lg font-bold">Analytics Avanzados</h3>
         <div className="flex items-center gap-2">
           <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-32">
@@ -213,11 +213,11 @@ export default function AdminAnalytics() {
 
       {/* Growth Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle>Crecimiento de Peleadores</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Crecimiento de Peleadores</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={stats.growthData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -231,14 +231,14 @@ export default function AdminAnalytics() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Discipline Distribution */}
         <Card>
-          <CardHeader>
-            <CardTitle>Eventos por Disciplina</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Eventos por Disciplina</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.disciplineData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -254,11 +254,11 @@ export default function AdminAnalytics() {
 
         {/* License Status */}
         <Card>
-          <CardHeader>
-            <CardTitle>Estado de Licencias</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Estado de Licencias</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -283,12 +283,12 @@ export default function AdminAnalytics() {
 
       {/* Top Fighters */}
       <Card>
-        <CardHeader>
-          <CardTitle>Top Peleadores por Récord</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Top Peleadores por Récord</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {stats.topFighters.map((fighter, index) => (
+            {stats.topFighters.slice(0, 5).map((fighter, index) => (
               <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                 <div className="flex items-center gap-3">
                   <Badge variant="secondary">#{index + 1}</Badge>

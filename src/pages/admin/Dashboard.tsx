@@ -40,31 +40,27 @@ export default function Dashboard() {
   ];
   return (
     <AdminLayoutWithAI>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard Administrativo</h2>
-          <p className="text-muted-foreground">
-            Panel de control con asistencia AI para la gestión completa del sistema
-          </p>
+          <h2 className="text-2xl font-bold tracking-tight">Dashboard Administrativo</h2>
         </div>
 
-        {/* AI Assistant Intro Card */}
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
-          <CardHeader>
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                <Bot className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <CardTitle>Asistente AI Administrativo Disponible</CardTitle>
+        {/* AI Assistant Intro Card - Compact */}
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 py-3 px-4">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+              <Bot className="h-4 w-4 text-primary-foreground" />
             </div>
-            <CardDescription>
-              Tu asistente inteligente bilingüe está listo para ayudarte con gestión de torneos, 
-              Fighter IDs, licencias y más. Encuéntralo en la esquina inferior derecha.
-            </CardDescription>
-          </CardHeader>
+            <div>
+              <p className="font-medium text-sm">Asistente AI disponible</p>
+              <p className="text-xs text-muted-foreground">
+                Ayuda con torneos, Fighter IDs y más. Esquina inferior derecha.
+              </p>
+            </div>
+          </div>
         </Card>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {statsConfig.map((stat) => (
             <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -85,16 +81,13 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {/* AI Quick Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle>Comandos AI Sugeridos</CardTitle>
-              <CardDescription>
-                Prueba estos comandos con el asistente AI
-              </CardDescription>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Comandos AI Sugeridos</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               <div className="flex items-center space-x-3 p-3 rounded-md bg-muted/50 border border-dashed">
                 <Users className="h-5 w-5 text-blue-600" />
                 <div className="flex-1">
@@ -120,13 +113,10 @@ export default function Dashboard() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Acciones Rápidas</CardTitle>
-              <CardDescription>
-                Accesos directos a las funciones más utilizadas
-              </CardDescription>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Acciones Rápidas</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               <div className="flex items-center space-x-4 rounded-md border p-4">
                 <Download className="h-5 w-5" />
                 <div className="flex-1 space-y-1">
@@ -177,7 +167,7 @@ export default function Dashboard() {
         <AdminAnalytics />
 
         {/* System Status and Recent Activity */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Estado del Sistema</CardTitle>

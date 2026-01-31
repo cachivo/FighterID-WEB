@@ -35,8 +35,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </Link>
             <h1 className="text-base font-semibold truncate">Panel de Administración</h1>
           </header>
-          <main className="flex-1 p-4 lg:p-6 bg-muted/10 overflow-auto">
-            <div className="max-w-full">
+          <main className="flex-1 p-4 lg:p-5 bg-muted/10 overflow-auto">
+            <div className="max-w-7xl mx-auto">
               {children}
             </div>
           </main>
