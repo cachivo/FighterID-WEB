@@ -15,17 +15,11 @@ import { toast } from '@/hooks/use-toast';
 import { useFighterProfiles, FighterProfile, AdminFighterFormData } from '@/hooks/useFighterProfiles';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { ENABLED_DISCIPLINES, WEIGHT_CLASSES, FIGHTER_LEVELS } from '@/lib/constants/disciplines';
+import { ENABLED_DISCIPLINES, WEIGHT_CLASSES, FIGHTER_LEVELS, STANCES } from '@/lib/constants/disciplines';
 
 const GENDERS = [
   { value: 'M', label: 'Masculino' },
   { value: 'F', label: 'Femenino' },
-];
-
-const STANCES = [
-  { value: 'Orthodox', label: 'Orthodox' },
-  { value: 'Southpaw', label: 'Southpaw' },
-  { value: 'Switch', label: 'Switch' },
 ];
 
 interface AdminFighterFormProps {

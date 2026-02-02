@@ -464,8 +464,8 @@ export default function ProfileChangeRequest() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Orthodox">Ortodoxa</SelectItem>
-                    <SelectItem value="Southpaw">Zurda</SelectItem>
+                    <SelectItem value="Ortodoxo">Ortodoxo</SelectItem>
+                    <SelectItem value="Zurdo">Zurdo</SelectItem>
                     <SelectItem value="Switch">Switch</SelectItem>
                   </SelectContent>
                 </Select>

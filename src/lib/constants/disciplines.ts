@@ -75,3 +75,12 @@ export const getWeightClassLabel = (value: string | undefined | null): string =>
   const found = WEIGHT_CLASSES.find(wc => wc.value === value);
   return found ? found.label : value;
 };
+
+// Stances for fighters (standardized in Spanish)
+export const STANCES = [
+  { value: 'Ortodoxo', label: 'Ortodoxo' },
+  { value: 'Zurdo', label: 'Zurdo' },
+  { value: 'Switch', label: 'Switch' },
+] as const;
+
+export type Stance = typeof STANCES[number]['value'];

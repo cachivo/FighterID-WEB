@@ -41,12 +41,7 @@ const GENDERS = [
   { value: 'Other', label: 'Otro' }
 ];
 
-const STANCES = [
-  { value: 'Orthodox', label: 'Orthodox' },
-  { value: 'Southpaw', label: 'Southpaw' },
-  { value: 'Switch', label: 'Switch' },
-  { value: 'Open', label: 'Open' }
-];
+import { STANCES } from '@/lib/constants/disciplines';
 
 const BLOOD_TYPES = [
   { value: 'A+', label: 'A+' },

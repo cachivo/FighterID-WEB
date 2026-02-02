@@ -648,8 +648,8 @@ export function UserFighterProfileEditForm({ profile, onSuccess, onCancel }: Use
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Orthodox">Orthodox</SelectItem>
-                          <SelectItem value="Southpaw">Southpaw</SelectItem>
+                          <SelectItem value="Ortodoxo">Ortodoxo</SelectItem>
+                          <SelectItem value="Zurdo">Zurdo</SelectItem>
                           <SelectItem value="Switch">Switch</SelectItem>
                         </SelectContent>
                       </Select>
