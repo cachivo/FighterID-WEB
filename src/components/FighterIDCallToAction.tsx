@@ -13,12 +13,12 @@ export function FighterIDCallToAction() {
   }
 
   return (
-    <section id="solicitar-licencia" className="relative py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+    <section id="solicitar-licencia" className="relative py-12 sm:py-16 lg:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
       {/* Background subtle */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/20 to-transparent" />
       
-      {/* Iconos flotantes con animaciones */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Iconos flotantes con animaciones - ocultos en móvil */}
+      <div className="absolute inset-0 pointer-events-none hidden sm:block">
         {/* Shield principal con pulse */}
         <div className="absolute top-10 left-1/2 -translate-x-1/2 animate-pulse">
           <Shield className="w-12 h-12 text-gold-400/30" />

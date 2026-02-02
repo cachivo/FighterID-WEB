@@ -471,6 +471,7 @@ export default function LicenseOnboarding() {
                   <Button 
                     type="button" 
                     onClick={() => setStep(2)}
+                    className="min-h-[44px] px-6 touch-manipulation"
                     disabled={!formData.firstName || !formData.lastName || !formData.heightCm || !formData.weightKg || !formData.weightClass || !formData.phone || !formData.martialArts.length || !formData.gender || !formData.birthdate || !formData.level}
                   >
                     Continuar
@@ -628,11 +629,20 @@ export default function LicenseOnboarding() {
                   />
                 </div>
 
-                <div className="flex justify-between">
-                  <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                <div className="flex justify-between gap-3">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setStep(1)}
+                    className="min-h-[44px] px-5 touch-manipulation"
+                  >
                     Atrás
                   </Button>
-                  <Button type="submit" disabled={loading || !identityDocument || !formData.level}>
+                  <Button 
+                    type="submit" 
+                    disabled={loading || !identityDocument || !formData.level}
+                    className="min-h-[44px] px-5 touch-manipulation"
+                  >
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

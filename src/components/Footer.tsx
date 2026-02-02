@@ -16,14 +16,14 @@ const Footer = () => {
               Conectando la cultura callejera con tecnología de vanguardia.
             </p>
             <div className="flex gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-8 sm:h-8 bg-accent rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform touch-manipulation">
-                <span className="text-xs sm:text-sm font-bold">IG</span>
+              <div className="w-11 h-11 bg-accent rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform touch-manipulation">
+                <span className="text-xs font-bold">IG</span>
               </div>
-              <div className="w-10 h-10 sm:w-8 sm:h-8 bg-accent rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform touch-manipulation">
-                <span className="text-xs sm:text-sm font-bold">YT</span>
+              <div className="w-11 h-11 bg-accent rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform touch-manipulation">
+                <span className="text-xs font-bold">YT</span>
               </div>
-              <div className="w-10 h-10 sm:w-8 sm:h-8 bg-accent rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform touch-manipulation">
-                <span className="text-xs sm:text-sm font-bold">TW</span>
+              <div className="w-11 h-11 bg-accent rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform touch-manipulation">
+                <span className="text-xs font-bold">TW</span>
               </div>
             </div>
           </div>

@@ -91,9 +91,9 @@ const Hero = () => {
       <div className="relative z-10 text-center text-white px-4 sm:px-6 max-w-4xl mx-auto">
         {/* Live indicator with cinematic style and dynamic data */}
         <div className="mt-2 sm:mt-3 md:mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-purple-neon-primary font-semibold animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-purple-neon-primary rounded-full animate-pulse-purple-neon shadow-lg shadow-purple-neon-primary/50"></div>
-            <span className="text-[10px] sm:text-xs md:text-sm tracking-wider text-center">
+          <div className="flex items-center gap-2 max-w-full">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-purple-neon-primary rounded-full animate-pulse-purple-neon shadow-lg shadow-purple-neon-primary/50 flex-shrink-0"></div>
+            <span className="text-[11px] sm:text-xs md:text-sm tracking-wider text-center truncate max-w-[200px] sm:max-w-none">
               {stats?.liveEvents && stats.liveEvents.length > 0 
                 ? `EN VIVO: ${stats.liveEvents[0].name.toUpperCase()}${stats.liveEvents[0].venue ? ` - ${stats.liveEvents[0].venue.toUpperCase()}` : ''}`
                 : stats?.nextEvent
