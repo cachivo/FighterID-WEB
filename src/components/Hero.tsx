@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useRealTimeStats } from '@/hooks/useRealTimeStats';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Zap, Shield, Trophy } from 'lucide-react';
+import { Calendar, Zap, Shield, Trophy, MapPin } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -103,11 +103,19 @@ const Hero = () => {
             </span>
           </div>
           
-          {/* Dynamic fighter count */}
-          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs bg-black/30 px-2.5 py-1 rounded-full backdrop-blur-sm">
-            <Zap className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            <span>{stats?.totalFighters || 0} Peleadores</span>
-          </div>
+          {/* Event additional info - discipline or venue */}
+          {stats?.liveEvents?.[0]?.discipline && (
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs bg-black/30 px-2.5 py-1 rounded-full backdrop-blur-sm">
+              <Trophy className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <span>{stats.liveEvents[0].discipline.toUpperCase()}</span>
+            </div>
+          )}
+          {!stats?.liveEvents?.length && stats?.nextEvent?.venue && (
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs bg-black/30 px-2.5 py-1 rounded-full backdrop-blur-sm">
+              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <span>{stats.nextEvent.venue.toUpperCase()}</span>
+            </div>
+          )}
         </div>
         
         {/* CTAs para usuarios autenticados */}
