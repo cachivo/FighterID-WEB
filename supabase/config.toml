@@ -47,3 +47,9 @@ verify_jwt = false
 
 [functions.receive-contact]
 verify_jwt = false
+
+[functions.notify-admin-pending]
+verify_jwt = false
+
+[functions.process-email-queue]
+verify_jwt = false

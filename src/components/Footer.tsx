@@ -12,8 +12,8 @@ const Footer = () => {
               />
             </div>
             <p className="text-gray-300 mb-4 text-sm sm:text-base">
-              La plataforma líder para eventos urbanos en vivo. 
-              Conectando la cultura callejera con tecnología de vanguardia.
+              Plataforma profesional de certificación y gestión de peleadores.
+              Tu identidad deportiva verificada y protegida.
             </p>
             <div className="flex gap-3 sm:gap-4">
               <div className="w-11 h-11 bg-accent rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform touch-manipulation">

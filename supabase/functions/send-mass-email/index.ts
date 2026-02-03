@@ -20,13 +20,14 @@ interface MassEmailRequest {
   custom_emails?: string[];
   test_mode?: boolean;
   test_email?: string;
+  priority?: number; // 1-10, lower = higher priority
 }
 
-// Rate limiting helpers
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-const RATE_LIMIT_DELAY = 600; // 600ms entre emails (1.6 emails/seg)
+const DAILY_LIMIT = 100;
+const RATE_LIMIT_DELAY = 600;
 
-// Función de reintento con backoff exponencial
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function sendEmailWithRetry(
   resend: Resend,
   emailData: any,
@@ -46,6 +47,12 @@ async function sendEmailWithRetry(
     }
   }
   throw new Error('Max retries exceeded');
+}
+
+function addDays(date: Date, days: number): string {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result.toISOString().split('T')[0];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -84,10 +91,9 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Only admins can send mass emails");
     }
 
-    // Crear cliente con service role
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     const requestData: MassEmailRequest = await req.json();
+    
     console.log("[MASS EMAIL] Request data:", {
       subject: requestData.subject,
       filter: requestData.recipient_filter,
@@ -98,12 +104,35 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Subject and html_content are required");
     }
 
+    const priority = requestData.priority || 5;
+    const today = new Date().toISOString().split('T')[0];
+
+    // TEST MODE: Send immediately without queue
+    if (requestData.test_mode && requestData.test_email) {
+      console.log("[MASS EMAIL] Test mode - sending directly to:", requestData.test_email);
+      
+      const emailFrom = getEmailFrom();
+      const result = await sendEmailWithRetry(resend, {
+        to: requestData.test_email,
+        subject: requestData.subject,
+        html: requestData.html_content,
+        from: emailFrom,
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          test_mode: true,
+          message: `Test email sent to ${requestData.test_email}`
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // PRODUCTION MODE: Use queue system
     let recipients: string[] = [];
 
-    if (requestData.test_mode && requestData.test_email) {
-      recipients = [requestData.test_email];
-      console.log("[MASS EMAIL] Test mode - sending to:", requestData.test_email);
-    } else if (requestData.recipient_filter === 'custom' && requestData.custom_emails) {
+    if (requestData.recipient_filter === 'custom' && requestData.custom_emails) {
       recipients = requestData.custom_emails;
       console.log("[MASS EMAIL] Custom recipients:", recipients.length);
     } else {
@@ -143,17 +172,17 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("No recipients found");
     }
 
-    // PASO 1: Crear registro de campaña PRIMERO (con html_content)
+    // Create campaign record
     const { data: campaignRecord, error: campaignError } = await supabase
       .from('email_campaign_log')
       .insert({
         sent_by: user.id,
         subject: requestData.subject,
-        html_content: requestData.html_content, // <-- FIX: Campo que faltaba
+        html_content: requestData.html_content,
         recipient_filter: requestData.recipient_filter || 'all',
         total_sent: 0,
         total_failed: 0,
-        test_mode: requestData.test_mode || false
+        test_mode: false
       })
       .select('id')
       .single();
@@ -166,111 +195,166 @@ const handler = async (req: Request): Promise<Response> => {
     const campaignId = campaignRecord.id;
     console.log("[MASS EMAIL] Campaign record created:", campaignId);
 
-    console.log("[MASS EMAIL] Sending emails sequentially with rate limiting...");
-
-    const results = {
-      success: 0,
-      failed: 0,
-      errors: [] as any[]
-    };
-
-    const emailFrom = getEmailFrom();
-    console.log("[MASS EMAIL] Using sender:", emailFrom);
+    // Get current daily usage
+    const { data: usageData } = await supabase
+      .rpc('get_or_create_daily_usage', { target_date: today });
     
-    const totalEmails = recipients.length;
+    const emailsSentToday = usageData?.emails_sent || 0;
+    let availableToday = DAILY_LIMIT - emailsSentToday;
 
-    // PASO 2: Envío secuencial con tracking individual
-    for (let i = 0; i < recipients.length; i++) {
-      const email = recipients[i];
-      
-      try {
-        const result = await sendEmailWithRetry(resend, {
-          to: email,
-          subject: requestData.subject,
-          html: requestData.html_content,
-          from: emailFrom,
-        });
-        
-        results.success++;
-        
-        // Registrar envío exitoso en email_sends
-        const resendId = result?.data?.id || null;
-        await supabase.from('email_sends').insert({
-          campaign_id: campaignId,
-          recipient_email: email,
-          status: 'sent',
-          resend_id: resendId
-        });
-        
-        // Log de progreso cada 10 emails
-        if ((i + 1) % 10 === 0 || i === recipients.length - 1) {
-          const percentage = Math.round(((i + 1) / totalEmails) * 100);
-          console.log(`[PROGRESS] ${i + 1}/${totalEmails} emails sent (${percentage}%)`);
+    console.log(`[MASS EMAIL] Daily quota: ${emailsSentToday}/${DAILY_LIMIT}, available: ${availableToday}`);
+
+    // Distribute emails across days
+    const emailFrom = getEmailFrom();
+    const distribution: Record<string, number> = {};
+    const queueItems: any[] = [];
+    const immediateEmails: string[] = [];
+
+    let currentDayOffset = 0;
+    let slotsUsedToday = 0;
+
+    for (const email of recipients) {
+      if (availableToday > 0 && slotsUsedToday < availableToday) {
+        // Send today immediately
+        immediateEmails.push(email);
+        slotsUsedToday++;
+        distribution[today] = (distribution[today] || 0) + 1;
+      } else {
+        // Queue for future days
+        if (slotsUsedToday >= availableToday) {
+          currentDayOffset++;
+          slotsUsedToday = 0;
+          availableToday = DAILY_LIMIT;
         }
         
-      } catch (error: any) {
-        results.failed++;
-        const errorMessage = error.message || 'Unknown error';
-        results.errors.push({
-          email,
-          message: errorMessage
-        });
-        
-        // Registrar fallo en email_sends
-        await supabase.from('email_sends').insert({
-          campaign_id: campaignId,
+        const scheduledDate = addDays(new Date(), currentDayOffset);
+        queueItems.push({
           recipient_email: email,
-          status: 'failed',
-          error_message: errorMessage
+          subject: requestData.subject,
+          html_content: requestData.html_content,
+          campaign_id: campaignId,
+          scheduled_for: scheduledDate,
+          status: 'pending',
+          priority: priority
         });
         
-        console.error(`[ERROR] Failed to send to ${email}:`, errorMessage);
-      }
-      
-      // Delay entre emails (excepto el último)
-      if (i < recipients.length - 1) {
-        await delay(RATE_LIMIT_DELAY);
+        distribution[scheduledDate] = (distribution[scheduledDate] || 0) + 1;
+        slotsUsedToday++;
       }
     }
 
-    console.log("[MASS EMAIL] Results:", results);
+    // Insert queued items
+    if (queueItems.length > 0) {
+      const { error: queueError } = await supabase
+        .from('email_queue')
+        .insert(queueItems);
 
-    // PASO 3: Actualizar totales en el registro de campaña
-    const { error: updateError } = await supabase
+      if (queueError) {
+        console.error("[MASS EMAIL] Error inserting queue items:", queueError);
+      } else {
+        console.log(`[MASS EMAIL] Queued ${queueItems.length} emails for future delivery`);
+      }
+    }
+
+    // Send immediate emails
+    const results = { success: 0, failed: 0, errors: [] as any[] };
+
+    if (immediateEmails.length > 0) {
+      console.log(`[MASS EMAIL] Sending ${immediateEmails.length} emails immediately`);
+
+      for (let i = 0; i < immediateEmails.length; i++) {
+        const email = immediateEmails[i];
+        
+        try {
+          const result = await sendEmailWithRetry(resend, {
+            to: email,
+            subject: requestData.subject,
+            html: requestData.html_content,
+            from: emailFrom,
+          });
+          
+          results.success++;
+          
+          const resendId = result?.data?.id || null;
+          await supabase.from('email_sends').insert({
+            campaign_id: campaignId,
+            recipient_email: email,
+            status: 'sent',
+            resend_id: resendId
+          });
+
+        } catch (error: any) {
+          results.failed++;
+          const errorMessage = error.message || 'Unknown error';
+          results.errors.push({ email, message: errorMessage });
+          
+          await supabase.from('email_sends').insert({
+            campaign_id: campaignId,
+            recipient_email: email,
+            status: 'failed',
+            error_message: errorMessage
+          });
+          
+          console.error(`[ERROR] Failed to send to ${email}:`, errorMessage);
+        }
+        
+        if (i < immediateEmails.length - 1) {
+          await delay(RATE_LIMIT_DELAY);
+        }
+      }
+
+      // Update daily counter
+      if (results.success > 0) {
+        await supabase.rpc('increment_daily_email_count', {
+          target_date: today,
+          increment_by: results.success
+        });
+      }
+    }
+
+    // Update campaign totals
+    await supabase
       .from('email_campaign_log')
       .update({
         total_sent: results.success,
         total_failed: results.failed,
         metadata: {
           total_recipients: recipients.length,
-          errors_sample: results.errors.slice(0, 10) // Primeros 10 errores
+          queued_count: queueItems.length,
+          distribution: distribution,
+          errors_sample: results.errors.slice(0, 10)
         }
       })
       .eq('id', campaignId);
 
-    if (updateError) {
-      console.error("[MASS EMAIL] Error updating campaign totals:", updateError);
-    }
+    console.log("[MASS EMAIL] Completed:", {
+      sent_today: results.success,
+      failed_today: results.failed,
+      queued: queueItems.length
+    });
 
     return new Response(
       JSON.stringify({
         success: true,
         campaign_id: campaignId,
-        results,
-        message: `Emails sent successfully. Success: ${results.success}, Failed: ${results.failed}`
+        summary: {
+          total_recipients: recipients.length,
+          sent_today: results.success,
+          failed_today: results.failed,
+          queued_for_later: queueItems.length,
+          distribution: distribution
+        },
+        message: queueItems.length > 0
+          ? `${results.success} emails enviados hoy. ${queueItems.length} programados para los próximos días.`
+          : `${results.success} emails enviados exitosamente.`
       }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
+
   } catch (error: any) {
     console.error("[MASS EMAIL] Error:", error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message
-      }),
+      JSON.stringify({ success: false, error: error.message }),
       {
         status: error.message.includes("Unauthorized") ? 401 : 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
