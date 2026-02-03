@@ -30,6 +30,13 @@ export interface FighterProfile {
   record_wins: number;
   record_losses: number;
   record_draws: number;
+  // Discipline-specific records
+  mma_record_wins?: number;
+  mma_record_losses?: number;
+  mma_record_draws?: number;
+  boxeo_record_wins?: number;
+  boxeo_record_losses?: number;
+  boxeo_record_draws?: number;
   avatar_url?: string;
   bio?: string;
   active: boolean;
@@ -113,9 +120,17 @@ export interface AdminFighterFormData {
   avatar_url?: string;
   discipline?: 'MMA' | 'Boxeo' | 'Judo' | 'JiuJitsu' | 'Kickboxing' | 'MuayThai' | 'Grappling' | 'Otro';
   martial_arts?: string[];
+  // Legacy combined record (deprecated - use discipline-specific records)
   record_wins?: number;
   record_losses?: number;
   record_draws?: number;
+  // Discipline-specific records
+  mma_record_wins?: number;
+  mma_record_losses?: number;
+  mma_record_draws?: number;
+  boxeo_record_wins?: number;
+  boxeo_record_losses?: number;
+  boxeo_record_draws?: number;
   
   gender?: string;
   boxrec_url?: string;
