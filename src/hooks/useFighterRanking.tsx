@@ -40,20 +40,34 @@ export function useFighterRanking(
     queryFn: async () => {
       const { data, error, count } = await supabase
         .from('fighter_profiles')
-        .select('id, first_name, last_name, nickname, avatar_url, record_wins, record_losses, record_draws, discipline, level, weight_class, country', { count: 'exact' })
+        .select(`
+          id, first_name, last_name, nickname, avatar_url, 
+          discipline, level, weight_class, country,
+          mma_record_wins, mma_record_losses, mma_record_draws,
+          boxeo_record_wins, boxeo_record_losses, boxeo_record_draws
+        `, { count: 'exact' })
         .eq('active', true)
-        .eq('discipline', discipline)
-        .order('record_wins', { ascending: false });
+        .eq('discipline', discipline);
 
       if (error) throw error;
 
-      // Calcular estadísticas y puntos de ranking
+      // Calcular estadísticas y puntos de ranking usando campos específicos por disciplina
       // Fórmula: Victoria = +3, Empate = +1, Derrota = -1
       const processed = (data || []).map(fighter => {
-        const total_fights = fighter.record_wins + fighter.record_losses + fighter.record_draws;
-        const wins = fighter.record_wins || 0;
-        const losses = fighter.record_losses || 0;
-        const draws = fighter.record_draws || 0;
+        let wins = 0, losses = 0, draws = 0;
+        
+        // Seleccionar récord según disciplina
+        if (discipline === 'MMA') {
+          wins = fighter.mma_record_wins || 0;
+          losses = fighter.mma_record_losses || 0;
+          draws = fighter.mma_record_draws || 0;
+        } else if (discipline === 'Boxeo') {
+          wins = fighter.boxeo_record_wins || 0;
+          losses = fighter.boxeo_record_losses || 0;
+          draws = fighter.boxeo_record_draws || 0;
+        }
+        
+        const total_fights = wins + losses + draws;
         const ranking_points = (wins * 3) + (draws * 1) - (losses * 1);
         
         return {
