@@ -845,6 +845,77 @@ export type Database = {
         }
         Relationships: []
       }
+      email_daily_usage: {
+        Row: {
+          date: string
+          emails_sent: number
+          updated_at: string
+        }
+        Insert: {
+          date: string
+          emails_sent?: number
+          updated_at?: string
+        }
+        Update: {
+          date?: string
+          emails_sent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_queue: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          error_message: string | null
+          html_content: string
+          id: string
+          priority: number
+          recipient_email: string
+          resend_id: string | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          html_content: string
+          id?: string
+          priority?: number
+          recipient_email: string
+          resend_id?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          html_content?: string
+          id?: string
+          priority?: number
+          recipient_email?: string
+          resend_id?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_queue_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaign_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_sends: {
         Row: {
           bounce_type: string | null
@@ -4498,6 +4569,20 @@ export type Database = {
           medical_conditions: string
         }[]
       }
+      get_or_create_daily_usage: {
+        Args: { target_date: string }
+        Returns: {
+          date: string
+          emails_sent: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "email_daily_usage"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_post_comments_with_author: {
         Args: { p_post_id: string }
         Returns: {
@@ -4568,6 +4653,10 @@ export type Database = {
           p_weight_lbs: number
         }
         Returns: string
+      }
+      increment_daily_email_count: {
+        Args: { increment_by?: number; target_date: string }
+        Returns: number
       }
       is_admin: { Args: never; Returns: boolean }
       is_assigned_judge: { Args: { p_fight_id: string }; Returns: boolean }
