@@ -14,7 +14,7 @@ interface FighterRankingData {
   level: string | null;
   weight_class: string;
   country: string;
-  win_rate: number;
+  ranking_points: number;
   total_fights: number;
 }
 
@@ -39,28 +39,32 @@ export function useFighterRanking(minFights: number = 3, page: number = 1, pageS
 
       if (error) throw error;
 
-      // Calcular estadísticas y win rate
+      // Calcular estadísticas y puntos de ranking
+      // Fórmula: Victoria = +3, Empate = +1, Derrota = -1
       const processed = data.map(fighter => {
         const total_fights = fighter.record_wins + fighter.record_losses + fighter.record_draws;
-        const win_rate = total_fights > 0 ? (fighter.record_wins / total_fights) * 100 : 0;
+        const wins = fighter.record_wins || 0;
+        const losses = fighter.record_losses || 0;
+        const draws = fighter.record_draws || 0;
+        const ranking_points = (wins * 3) + (draws * 1) - (losses * 1);
         
         return {
           ...fighter,
           total_fights,
-          win_rate,
-          record_wins: fighter.record_wins || 0,
-          record_losses: fighter.record_losses || 0,
-          record_draws: fighter.record_draws || 0,
+          ranking_points,
+          record_wins: wins,
+          record_losses: losses,
+          record_draws: draws,
         };
       });
 
-      // Filtrar por mínimo de peleas y ordenar por win rate
+      // Filtrar por mínimo de peleas y ordenar por puntos
       const filtered = processed
         .filter(f => f.total_fights >= minFights)
         .sort((a, b) => {
-          // Primero por win rate, luego por total de victorias
-          if (b.win_rate !== a.win_rate) {
-            return b.win_rate - a.win_rate;
+          // Primero por puntos, luego por total de victorias (desempate)
+          if (b.ranking_points !== a.ranking_points) {
+            return b.ranking_points - a.ranking_points;
           }
           return b.record_wins - a.record_wins;
         });

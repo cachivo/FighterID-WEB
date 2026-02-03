@@ -181,13 +181,13 @@ const Ranking = () => {
                           </div>
                         </div>
 
-                        {/* Win Rate */}
+                        {/* Puntos de Ranking */}
                         <div className="text-right min-w-[70px]">
                           <div className="text-base sm:text-lg font-bold text-purple-neon-primary">
-                            {fighter.win_rate.toFixed(1)}%
+                            {fighter.ranking_points}
                           </div>
                           <div className="text-xs text-gray-400">
-                            Win Rate
+                            pts
                           </div>
                         </div>
                       </div>
