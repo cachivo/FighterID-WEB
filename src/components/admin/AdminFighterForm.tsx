@@ -38,13 +38,19 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
     last_name: '',
     nickname: '',
     country: 'HN',
-    weight_class: 'Lightweight',
+    weight_class: 'Peso Ligero',
     martial_arts: [],
     record_wins: 0,
     record_losses: 0,
     record_draws: 0,
+    mma_record_wins: 0,
+    mma_record_losses: 0,
+    mma_record_draws: 0,
+    boxeo_record_wins: 0,
+    boxeo_record_losses: 0,
+    boxeo_record_draws: 0,
     record_type: 'Amateur',
-    level: 'AMATEUR',
+    level: 'Amateur',
   });
 
   useEffect(() => {
@@ -64,8 +70,14 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
         record_wins: existingFighter.record_wins,
         record_losses: existingFighter.record_losses,
         record_draws: existingFighter.record_draws,
+        mma_record_wins: (existingFighter as any).mma_record_wins || 0,
+        mma_record_losses: (existingFighter as any).mma_record_losses || 0,
+        mma_record_draws: (existingFighter as any).mma_record_draws || 0,
+        boxeo_record_wins: (existingFighter as any).boxeo_record_wins || 0,
+        boxeo_record_losses: (existingFighter as any).boxeo_record_losses || 0,
+        boxeo_record_draws: (existingFighter as any).boxeo_record_draws || 0,
         record_type: existingFighter.record_type || 'Amateur',
-        level: existingFighter.level || 'AMATEUR',
+        level: existingFighter.level || 'Amateur',
         gender: existingFighter.gender || '',
         height_cm: existingFighter.height_cm || 0,
         weight_kg: Number(existingFighter.weight_kg) || 0,
@@ -458,7 +470,10 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
                     min="0"
                     value={formData.record_wins}
                     onChange={(e) => handleChange('record_wins', parseInt(e.target.value) || 0)}
+                    disabled
+                    className="bg-muted/50"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Legacy (no editar)</p>
                 </div>
                 <div className="col-span-1">
                   <Label htmlFor="record_losses">Derrotas</Label>
@@ -468,6 +483,8 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
                     min="0"
                     value={formData.record_losses}
                     onChange={(e) => handleChange('record_losses', parseInt(e.target.value) || 0)}
+                    disabled
+                    className="bg-muted/50"
                   />
                 </div>
                 <div className="col-span-1">
@@ -478,6 +495,8 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
                     min="0"
                     value={formData.record_draws}
                     onChange={(e) => handleChange('record_draws', parseInt(e.target.value) || 0)}
+                    disabled
+                    className="bg-muted/50"
                   />
                 </div>
                 <div className="col-span-1">
@@ -493,6 +512,108 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Récords por Disciplina */}
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="font-semibold text-sm text-muted-foreground">Récords por Disciplina</h4>
+                
+                {/* MMA Record - Solo si MMA está seleccionado */}
+                {formData.martial_arts?.includes('MMA') && (
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">🥊</span>
+                      <h4 className="font-semibold">Récord MMA</h4>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="mma_record_wins">Victorias</Label>
+                        <Input
+                          id="mma_record_wins"
+                          type="number"
+                          min="0"
+                          value={formData.mma_record_wins || 0}
+                          onChange={(e) => handleChange('mma_record_wins', parseInt(e.target.value) || 0)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="mma_record_losses">Derrotas</Label>
+                        <Input
+                          id="mma_record_losses"
+                          type="number"
+                          min="0"
+                          value={formData.mma_record_losses || 0}
+                          onChange={(e) => handleChange('mma_record_losses', parseInt(e.target.value) || 0)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="mma_record_draws">Empates</Label>
+                        <Input
+                          id="mma_record_draws"
+                          type="number"
+                          min="0"
+                          value={formData.mma_record_draws || 0}
+                          onChange={(e) => handleChange('mma_record_draws', parseInt(e.target.value) || 0)}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Record: {formData.mma_record_wins || 0}-{formData.mma_record_losses || 0}-{formData.mma_record_draws || 0}
+                    </p>
+                  </div>
+                )}
+
+                {/* Boxeo Record - Solo si Boxeo está seleccionado */}
+                {formData.martial_arts?.includes('Boxeo') && (
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">🥊</span>
+                      <h4 className="font-semibold">Récord Boxeo</h4>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="boxeo_record_wins">Victorias</Label>
+                        <Input
+                          id="boxeo_record_wins"
+                          type="number"
+                          min="0"
+                          value={formData.boxeo_record_wins || 0}
+                          onChange={(e) => handleChange('boxeo_record_wins', parseInt(e.target.value) || 0)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="boxeo_record_losses">Derrotas</Label>
+                        <Input
+                          id="boxeo_record_losses"
+                          type="number"
+                          min="0"
+                          value={formData.boxeo_record_losses || 0}
+                          onChange={(e) => handleChange('boxeo_record_losses', parseInt(e.target.value) || 0)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="boxeo_record_draws">Empates</Label>
+                        <Input
+                          id="boxeo_record_draws"
+                          type="number"
+                          min="0"
+                          value={formData.boxeo_record_draws || 0}
+                          onChange={(e) => handleChange('boxeo_record_draws', parseInt(e.target.value) || 0)}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Record: {formData.boxeo_record_wins || 0}-{formData.boxeo_record_losses || 0}-{formData.boxeo_record_draws || 0}
+                    </p>
+                  </div>
+                )}
+
+                {/* Mensaje si no hay disciplina seleccionada */}
+                {(!formData.martial_arts || formData.martial_arts.length === 0) && (
+                  <div className="text-center p-6 text-muted-foreground border rounded-lg border-dashed">
+                    Selecciona una disciplina para editar récords
+                  </div>
+                )}
               </div>
 
               <div>

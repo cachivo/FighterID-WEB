@@ -1738,6 +1738,9 @@ export type Database = {
           birthdate: string | null
           birthplace: string | null
           blood_type: string | null
+          boxeo_record_draws: number | null
+          boxeo_record_losses: number | null
+          boxeo_record_wins: number | null
           boxrec_url: string | null
           coach_id: string | null
           completion_level: string | null
@@ -1769,6 +1772,9 @@ export type Database = {
           martial_arts: string[] | null
           medical_allergies: string | null
           medical_conditions: string | null
+          mma_record_draws: number | null
+          mma_record_losses: number | null
+          mma_record_wins: number | null
           nickname: string | null
           organization_id: string | null
           primary_license_id: string | null
@@ -1791,6 +1797,9 @@ export type Database = {
           birthdate?: string | null
           birthplace?: string | null
           blood_type?: string | null
+          boxeo_record_draws?: number | null
+          boxeo_record_losses?: number | null
+          boxeo_record_wins?: number | null
           boxrec_url?: string | null
           coach_id?: string | null
           completion_level?: string | null
@@ -1822,6 +1831,9 @@ export type Database = {
           martial_arts?: string[] | null
           medical_allergies?: string | null
           medical_conditions?: string | null
+          mma_record_draws?: number | null
+          mma_record_losses?: number | null
+          mma_record_wins?: number | null
           nickname?: string | null
           organization_id?: string | null
           primary_license_id?: string | null
@@ -1844,6 +1856,9 @@ export type Database = {
           birthdate?: string | null
           birthplace?: string | null
           blood_type?: string | null
+          boxeo_record_draws?: number | null
+          boxeo_record_losses?: number | null
+          boxeo_record_wins?: number | null
           boxrec_url?: string | null
           coach_id?: string | null
           completion_level?: string | null
@@ -1875,6 +1890,9 @@ export type Database = {
           martial_arts?: string[] | null
           medical_allergies?: string | null
           medical_conditions?: string | null
+          mma_record_draws?: number | null
+          mma_record_losses?: number | null
+          mma_record_wins?: number | null
           nickname?: string | null
           organization_id?: string | null
           primary_license_id?: string | null
