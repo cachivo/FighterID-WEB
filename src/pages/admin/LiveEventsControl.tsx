@@ -729,7 +729,7 @@ const DebugEventButton = ({ eventId }: { eventId: string }) => {
       console.groupEnd();
 
       toast({
-        title: '✅ Diagnóstico completado',
+        title: 'Diagnóstico completado',
         description: `${fights?.length || 0} peleas analizadas. Ver consola para detalles.`
       });
     } catch (error: any) {

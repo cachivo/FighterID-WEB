@@ -72,7 +72,7 @@ export function PrepareFightDialog({ fight, availableJudges }: PrepareFightDialo
 
     setPreparationResult(data);
     toast({
-      title: "✅ Pelea Preparada",
+      title: "Pelea Preparada",
       description: "Rounds creados y oficiales asignados exitosamente"
     });
   };
@@ -175,7 +175,7 @@ export function PrepareFightDialog({ fight, availableJudges }: PrepareFightDialo
             <div className="space-y-4">
               <div className="bg-green-50 dark:bg-green-950 border-2 border-green-500 rounded-lg p-4">
                 <h3 className="font-semibold text-green-700 dark:text-green-300 mb-2">
-                  ✅ Pelea Preparada Exitosamente
+                  Pelea Preparada Exitosamente
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Se crearon {preparationResult.rounds?.length || 3} rounds y se asignaron los oficiales.

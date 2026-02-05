@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Square, Clock } from 'lucide-react';
+import { Play, Pause, Square, Clock, CircleDot, Coffee, Timer, CheckCircle } from 'lucide-react';
 import { formatRoundTime } from '@/lib/scoring-utils';
 
 export default function Station3RoundControl() {
@@ -91,13 +91,13 @@ export default function Station3RoundControl() {
   const getRoundStatusBadge = (status: string) => {
     switch (status) {
       case 'live':
-        return <Badge className="bg-green-500">▶️ En Curso</Badge>;
+        return <Badge className="bg-green-500 flex items-center gap-1"><Play className="h-3 w-3" /> En Curso</Badge>;
       case 'paused':
-        return <Badge className="bg-yellow-500">⏸️ Pausado</Badge>;
+        return <Badge className="bg-yellow-500 flex items-center gap-1"><Pause className="h-3 w-3" /> Pausado</Badge>;
       case 'ended':
-        return <Badge className="bg-gray-500">✅ Finalizado</Badge>;
+        return <Badge className="bg-gray-500 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Finalizado</Badge>;
       case 'scheduled':
-        return <Badge variant="outline">⏳ Pendiente</Badge>;
+        return <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3" /> Pendiente</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -111,7 +111,10 @@ export default function Station3RoundControl() {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">⏱️ Control de Rounds - Estación 3</h1>
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+          <Timer className="h-8 w-8" />
+          Control de Rounds - Estación 3
+        </h1>
         <p className="text-muted-foreground">Cronómetro oficial • {session.judge_name}</p>
       </div>
 
@@ -122,7 +125,10 @@ export default function Station3RoundControl() {
           {isRestPeriod && (
             <Card className="border-orange-500 bg-orange-500/10">
               <CardHeader>
-                <CardTitle className="text-orange-600">☕ Periodo de Descanso</CardTitle>
+                <CardTitle className="text-orange-600 flex items-center gap-2">
+                  <Coffee className="h-5 w-5" />
+                  Periodo de Descanso
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-6xl font-mono font-bold text-orange-600 text-center">
@@ -249,7 +255,10 @@ export default function Station3RoundControl() {
               <div className="grid grid-cols-2 gap-4">
                 {/* Peleador Rojo */}
                 <div className="bg-red-500/10 border-2 border-red-500 rounded-lg p-4">
-                  <div className="text-red-600 font-bold text-lg mb-2">🔴 Esquina Roja</div>
+                  <div className="text-red-600 font-bold text-lg mb-2 flex items-center gap-2">
+                    <CircleDot className="h-5 w-5" />
+                    Esquina Roja
+                  </div>
                   <div className="font-semibold text-lg mb-3">{fighters.red}</div>
                   <div className="text-sm text-muted-foreground">IAg (10s):</div>
                   <div className="text-3xl font-mono font-bold text-red-600">
@@ -262,7 +271,10 @@ export default function Station3RoundControl() {
 
                 {/* Peleador Azul */}
                 <div className="bg-blue-500/10 border-2 border-blue-500 rounded-lg p-4">
-                  <div className="text-blue-600 font-bold text-lg mb-2">🔵 Esquina Azul</div>
+                  <div className="text-blue-600 font-bold text-lg mb-2 flex items-center gap-2">
+                    <CircleDot className="h-5 w-5" />
+                    Esquina Azul
+                  </div>
                   <div className="font-semibold text-lg mb-3">{fighters.blue}</div>
                   <div className="text-sm text-muted-foreground">IAg (10s):</div>
                   <div className="text-3xl font-mono font-bold text-blue-600">

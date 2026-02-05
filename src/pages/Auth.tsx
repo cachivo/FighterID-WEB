@@ -119,7 +119,7 @@ export default function Auth() {
     
     if (type === 'signup' || type === 'email') {
       toast({
-        title: '✅ Email confirmado',
+        title: 'Email confirmado',
         description: 'Tu cuenta ha sido verificada. Ahora puedes iniciar sesión.',
       });
       setActiveTab('signin');
@@ -200,7 +200,7 @@ export default function Auth() {
         // Handle already registered - redirect to login
         if (signUpError.message?.includes('already registered')) {
           toast({
-            title: "✅ Cuenta existente detectada",
+            title: "Cuenta existente detectada",
             description: "Este email ya está registrado. Redirigiendo a inicio de sesión...",
             duration: 3000,
           });
@@ -266,7 +266,7 @@ export default function Auth() {
           if (acceptError) throw acceptError;
 
           toast({
-            title: '✅ Registro completo',
+            title: 'Registro completo',
             description: 'Tu perfil de peleador ha sido creado exitosamente',
           });
         }

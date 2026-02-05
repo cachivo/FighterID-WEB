@@ -322,13 +322,13 @@ const EventDetail = () => {
                             #{fight.fight_number}
                           </Badge>
                           {fight.card_position === 'main_event' && (
-                            <Badge className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white border-0 shadow-lg shadow-yellow-500/50 animate-pulse">
-                              ⭐ PELEA ESTELAR
+                            <Badge className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white border-0 shadow-lg shadow-yellow-500/50 animate-pulse flex items-center gap-1">
+                              PELEA ESTELAR
                             </Badge>
                           )}
                           {fight.card_position === 'co_main_event' && (
-                            <Badge className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white border-0 shadow-lg shadow-purple-500/50">
-                              ⭐ CO-ESTELAR
+                            <Badge className="text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white border-0 shadow-lg shadow-purple-500/50 flex items-center gap-1">
+                              CO-ESTELAR
                             </Badge>
                           )}
                           <Badge className={`${getFightTypeColor(fight.fight_type)} px-3 sm:px-4 py-1.5 sm:py-2 font-bold text-xs sm:text-sm`}>
@@ -592,8 +592,8 @@ const EventDetail = () => {
                             </div>
                             
                             {/* Lightning bolts */}
-                            <div className="absolute -left-8 top-1/2 -translate-y-1/2 text-4xl opacity-50 animate-pulse">⚡</div>
-                            <div className="absolute -right-8 top-1/2 -translate-y-1/2 text-4xl opacity-50 animate-pulse" style={{ animationDelay: '0.5s' }}>⚡</div>
+                            <div className="absolute -left-8 top-1/2 -translate-y-1/2 text-4xl opacity-50 animate-pulse text-yellow-400">|</div>
+                            <div className="absolute -right-8 top-1/2 -translate-y-1/2 text-4xl opacity-50 animate-pulse text-yellow-400" style={{ animationDelay: '0.5s' }}>|</div>
                           </div>
                           
                           {fight.status !== 'scheduled' && (

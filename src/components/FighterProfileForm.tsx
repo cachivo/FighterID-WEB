@@ -38,7 +38,7 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
     first_name: '',
     last_name: '',
     nickname: '',
-    country: 'HN',
+    country: 'Honduras',
     weight_class: '',
     height_cm: undefined,
     weight_kg: undefined,
@@ -286,9 +286,9 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
           </div>
 
           <div>
-            <Label className="text-foreground">¿En qué disciplina(s) deseas competir? *</Label>
+            <Label className="text-foreground">Disciplina de Competencia *</Label>
             <p className="text-sm text-muted-foreground mb-3">
-              Selecciona las disciplinas para las cuales deseas obtener tu Fighter ID
+              Selecciona la disciplina en la cual deseas competir oficialmente
             </p>
             <div className="grid grid-cols-1 gap-3">
               {ENABLED_DISCIPLINES.map((discipline) => (

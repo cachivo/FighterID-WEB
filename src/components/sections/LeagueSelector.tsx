@@ -67,7 +67,7 @@ import { Swords } from "lucide-react";
                value="Boxeo"
                className="data-[state=active]:bg-purple-neon-primary data-[state=active]:text-black px-6 py-2 gap-2"
              >
-               <span className="text-lg">🥊</span>
+                <Swords className="h-4 w-4" />
                BOXEO
              </TabsTrigger>
            </TabsList>

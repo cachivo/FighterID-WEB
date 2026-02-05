@@ -30,7 +30,7 @@ export const QuickUpdateRandyImage = () => {
         .eq('id', 'ee7851bd-e53f-4ef6-a0d8-d5dec4920986');
 
       toast({
-        title: '✅ Imagen de Randy actualizada',
+        title: 'Imagen de Randy actualizada',
         description: 'Recarga la página del evento (F5) para ver el cambio',
       });
       

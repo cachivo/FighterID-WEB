@@ -526,10 +526,7 @@
                  
                  {formData.martial_arts?.includes('MMA') && (
                    <div className="p-4 border rounded-lg bg-muted/30">
-                     <div className="flex items-center gap-2 mb-3">
-                       <span className="text-lg">🥊</span>
-                       <h4 className="font-semibold">Récord MMA</h4>
-                     </div>
+                     <h4 className="font-semibold mb-3">Récord MMA</h4>
                      <div className="grid grid-cols-3 gap-4">
                        <div>
                          <Label htmlFor="mma_record_wins">Victorias</Label>
@@ -570,10 +567,7 @@
  
                  {formData.martial_arts?.includes('Boxeo') && (
                    <div className="p-4 border rounded-lg bg-muted/30">
-                     <div className="flex items-center gap-2 mb-3">
-                       <span className="text-lg">🥊</span>
-                       <h4 className="font-semibold">Récord Boxeo</h4>
-                     </div>
+                     <h4 className="font-semibold mb-3">Récord Boxeo</h4>
                      <div className="grid grid-cols-3 gap-4">
                        <div>
                          <Label htmlFor="boxeo_record_wins">Victorias</Label>

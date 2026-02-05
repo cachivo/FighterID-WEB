@@ -60,7 +60,7 @@ export default function FightersProfilesInvite() {
       setRegistrationLink(data.registrationLink);
       
       toast({
-        title: '✅ Invitación enviada',
+        title: 'Invitación enviada',
         description: `Se ha enviado un email de invitación a ${formData.email}`,
       });
       

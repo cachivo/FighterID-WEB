@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Trophy, Users, Target, Award, TrendingUp } from "lucide-react";
+import { Trophy, Users, Target, Award, TrendingUp, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -207,7 +207,9 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
                               <span className="text-xs text-gray-400 italic truncate">"{ranking.fighter.nickname}"</span>
                             )}
                             {ranking.is_champion && (
-                              <Badge className="bg-yellow-500 text-yellow-950 text-[10px]">👑 CAMPEÓN</Badge>
+                              <Badge className="bg-yellow-500 text-yellow-950 text-[10px] flex items-center gap-0.5">
+                                <Crown className="h-3 w-3" /> CAMPEÓN
+                              </Badge>
                             )}
                           </div>
                           

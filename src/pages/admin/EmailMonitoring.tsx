@@ -31,7 +31,7 @@ export default function EmailMonitoring() {
 <body>
   <div class="container">
     <div class="header">
-      <h1 style="margin: 0;">✅ Email de Prueba</h1>
+      <h1 style="margin: 0;">Email de Prueba</h1>
       <p style="margin: 10px 0 0 0; opacity: 0.9;">Fighter ID - Sistema de Correos</p>
     </div>
     <div class="content">
@@ -41,14 +41,14 @@ export default function EmailMonitoring() {
       <p>Este es un correo de prueba para verificar que el sistema de emails está funcionando correctamente.</p>
       
       <div class="info-box">
-        <p style="margin: 0 0 10px 0; font-weight: 600;">📊 Información del Envío:</p>
+        <p style="margin: 0 0 10px 0; font-weight: 600;">Información del Envío:</p>
         <p style="margin: 5px 0;"><strong>Remitente:</strong> notificaciones@fighter-id.org</p>
         <p style="margin: 5px 0;"><strong>Dominio:</strong> fighter-id.org (Verificado ✓)</p>
         <p style="margin: 5px 0;"><strong>Proveedor:</strong> Resend</p>
         <p style="margin: 5px 0;"><strong>Fecha y Hora:</strong> ${new Date().toLocaleString('es-MX')}</p>
       </div>
       
-      <p style="color: #10b981; font-weight: 600;">✅ Si recibiste este correo en tu bandeja de entrada (no en spam), el sistema está funcionando correctamente.</p>
+      <p style="color: #10b981; font-weight: 600;">Si recibiste este correo en tu bandeja de entrada (no en spam), el sistema está funcionando correctamente.</p>
       
       <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
         <strong>Próximos pasos:</strong><br>
@@ -77,7 +77,7 @@ export default function EmailMonitoring() {
 
       const { data, error } = await supabase.functions.invoke('send-mass-email', {
         body: {
-          subject: '✅ Prueba del Sistema de Emails - Fighter ID',
+          subject: 'Prueba del Sistema de Emails - Fighter ID',
           html_content: testEmailHTML,
           test_mode: true,
           test_email: currentUser.email
@@ -87,7 +87,7 @@ export default function EmailMonitoring() {
       if (error) throw error;
 
       toast({
-        title: "✅ Correo de prueba enviado",
+        title: "Correo de prueba enviado",
         description: `El correo se envió exitosamente a ${currentUser.email}. Revisa tu bandeja de entrada.`,
       });
 

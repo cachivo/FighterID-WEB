@@ -286,7 +286,7 @@ export function UserFighterProfileEditForm({ profile, onSuccess, onCancel }: Use
           if (phoneError) throw phoneError;
         }
 
-        console.log("✅ Immediate updates applied, gamification score updated via trigger");
+        console.log("[SUCCESS] Immediate updates applied, gamification score updated via trigger");
       }
 
       // 2. CREAR SOLICITUD para récord (solo si está bloqueado Y hay cambios)
@@ -318,7 +318,7 @@ export function UserFighterProfileEditForm({ profile, onSuccess, onCancel }: Use
             user_id: appUser.id,
             requested_changes: recordChanges,
             status: 'PENDING',
-            admin_notes: '🥊 CAMBIO DE RÉCORD - Licencia aprobada, requiere verificación administrativa'
+            admin_notes: 'CAMBIO DE RÉCORD - Licencia aprobada, requiere verificación administrativa'
           });
 
         toast({
@@ -330,7 +330,7 @@ export function UserFighterProfileEditForm({ profile, onSuccess, onCancel }: Use
       // 3. Mensaje final al usuario
       if (Object.keys(immediateUpdates).length > 0 || avatarFile) {
         toast({
-          title: "✅ Perfil actualizado",
+          title: "Perfil actualizado",
           description: "Los cambios se aplicaron inmediatamente y tu puntuación de gamificación se actualizó."
         });
       }

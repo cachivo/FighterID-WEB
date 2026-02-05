@@ -135,7 +135,7 @@ export function StationPinLogin() {
 
       localStorage.setItem('station_session', JSON.stringify(sessionData));
 
-      toast.success('🎯 Acceso concedido', {
+      toast.success('Acceso concedido', {
         description: `Bienvenido, ${judgeName || 'Juez'}`,
       });
 

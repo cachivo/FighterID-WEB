@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Trophy, Calendar, MapPin, Users } from 'lucide-react';
+import { Zap, Flame, Award } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
 
@@ -189,8 +190,9 @@ export default function FightResults() {
                     {summary?.highlights && summary.highlights.length > 0 && (
                       <div className="mb-4 flex flex-wrap gap-2">
                         {summary.highlights.map((highlight: string, idx: number) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
-                            ⚡ {highlight}
+                          <Badge key={idx} variant="outline" className="text-xs flex items-center gap-1">
+                            <Zap className="h-3 w-3" />
+                            {highlight}
                           </Badge>
                         ))}
                       </div>
@@ -254,13 +256,15 @@ export default function FightResults() {
                         <Separator className="my-4" />
                         <div className="flex gap-2 justify-center">
                           {result.performance_bonus && (
-                            <Badge variant="secondary" className="text-sm px-4 py-2">
-                              🏆 Bono de Actuación
+                            <Badge variant="secondary" className="text-sm px-4 py-2 flex items-center gap-1">
+                              <Award className="h-4 w-4" />
+                              Bono de Actuación
                             </Badge>
                           )}
                           {result.fight_of_night && (
-                            <Badge variant="secondary" className="text-sm px-4 py-2">
-                              🔥 Pelea de la Noche
+                            <Badge variant="secondary" className="text-sm px-4 py-2 flex items-center gap-1">
+                              <Flame className="h-4 w-4" />
+                              Pelea de la Noche
                             </Badge>
                           )}
                         </div>

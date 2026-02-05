@@ -21,7 +21,7 @@ const TestNewsFunction = () => {
       
       setResult(data);
       toast({
-        title: "✅ Noticias actualizadas",
+        title: "Noticias actualizadas",
         description: `${data.inserted} nuevas noticias insertadas, ${data.socialPosts} posts creados`,
       });
     } catch (error: any) {

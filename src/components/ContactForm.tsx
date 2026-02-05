@@ -30,7 +30,7 @@ export function ContactForm() {
       if (error) throw error;
 
       toast({
-        title: "✅ Mensaje enviado",
+        title: "Mensaje enviado",
         description: "Nos pondremos en contacto contigo pronto.",
       });
 
@@ -39,7 +39,7 @@ export function ContactForm() {
     } catch (error: any) {
       console.error('Contact form error:', error);
       toast({
-        title: "❌ Error",
+        title: "Error",
         description: error.message || "No se pudo enviar el mensaje. Inténtalo de nuevo.",
         variant: "destructive",
       });

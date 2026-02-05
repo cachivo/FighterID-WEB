@@ -10,15 +10,19 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, Shield, Trophy, MapPin, Users, BarChart3, Info, Home, GraduationCap } from 'lucide-react';
+import { Crown, Award, Swords } from 'lucide-react';
 import FighterUpdatesFeed from '@/components/FighterUpdatesFeed';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getWeightClassLabel } from '@/lib/constants/disciplines';
+import { useFighterActiveLeagues } from '@/hooks/useFighterActiveLeagues';
+import { MARTIAL_ARTS_TRAINING } from '@/lib/constants/disciplines';
 
 export default function FighterProfile() {
   const { id } = useParams<{ id: string }>();
   const { getFighterById } = useFighterProfiles();
   const { calculateCombinedRecord, isLoading: isLoadingRecord } = useCombinedFighterRecord(id || null);
+  const { data: activeLeagues, isLoading: isLoadingLeagues } = useFighterActiveLeagues(id || null);
   const [fighter, setFighter] = useState<FighterProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [recordType, setRecordType] = useState<RecordType>('AMATEUR');
@@ -292,17 +296,65 @@ export default function FighterProfile() {
 
                 {/* Martial Arts */}
                 <div>
-                  <h4 className="font-semibold mb-2">Disciplinas</h4>
+                  <h4 className="font-semibold mb-2">Artes Marciales (Entrenamiento)</h4>
                   <div className="flex flex-wrap gap-2">
                     {fighter.martial_arts && fighter.martial_arts.length > 0 ? (
                       fighter.martial_arts.map((art) => (
-                        <Badge key={art} variant="outline">{art}</Badge>
+                        <Badge key={art} variant="outline">
+                          {MARTIAL_ARTS_TRAINING.find(m => m.value === art)?.label || art}
+                        </Badge>
                       ))
                     ) : (
                       <Badge variant="outline">{fighter.discipline || 'N/A'}</Badge>
                     )}
                   </div>
                 </div>
+
+                {/* Active Leagues - Separated from martial arts */}
+                {activeLeagues && activeLeagues.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Award className="h-4 w-4" />
+                        Ligas Activas
+                      </h4>
+                      <div className="space-y-3">
+                        {activeLeagues.map((league) => (
+                          <div 
+                            key={league.id}
+                            className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-full bg-primary/10">
+                                <Swords className="h-4 w-4 text-primary" />
+                              </div>
+                              <div>
+                                <div className="font-medium flex items-center gap-2">
+                                  {league.organization_short_name}
+                                  {league.is_champion && (
+                                    <Crown className="h-4 w-4 text-yellow-500" />
+                                  )}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {league.discipline} • {league.level} • {league.weight_class}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-primary">{league.points} pts</div>
+                              {league.ranking_position && (
+                                <div className="text-xs text-muted-foreground">
+                                  Posición #{league.ranking_position}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {/* Fighting Style */}
                 {fighter.fighting_style && (

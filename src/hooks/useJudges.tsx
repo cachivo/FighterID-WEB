@@ -85,7 +85,7 @@ export function useJudges() {
       console.log('[CREATE JUDGE] Juez creado exitosamente');
       
       toast({
-        title: "✅ Éxito",
+        title: "Éxito",
         description: "Juez creado correctamente",
       });
 
