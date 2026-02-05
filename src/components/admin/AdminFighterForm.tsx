@@ -15,7 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { useFighterProfiles, FighterProfile, AdminFighterFormData } from '@/hooks/useFighterProfiles';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { ENABLED_DISCIPLINES, WEIGHT_CLASSES, FIGHTER_LEVELS, STANCES } from '@/lib/constants/disciplines';
+import { ENABLED_DISCIPLINES, WEIGHT_CLASSES, FIGHTER_LEVELS, STANCES, COUNTRIES } from '@/lib/constants/disciplines';
 
 const GENDERS = [
   { value: 'M', label: 'Masculino' },
@@ -38,7 +38,16 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
     last_name: '',
     nickname: '',
     country: 'HN',
+   country: 'Honduras',
     weight_class: 'Peso Ligero',
+   country: 'Honduras',
+   weight_class: 'Peso Ligero',
+   const [formData, setFormData] = useState<Partial<AdminFighterFormData>>({
+     first_name: '',
+     last_name: '',
+     nickname: '',
+     country: 'Honduras',
+     weight_class: 'Peso Ligero',
     martial_arts: [],
     record_wins: 0,
     record_losses: 0,
@@ -52,6 +61,25 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
     record_type: 'Amateur',
     level: 'Amateur',
   });
+ const [formData, setFormData] = useState<Partial<AdminFighterFormData>>({
+   first_name: '',
+   last_name: '',
+   nickname: '',
+   country: 'Honduras',
+   weight_class: 'Peso Ligero',
+   martial_arts: [],
+   record_wins: 0,
+   record_losses: 0,
+   record_draws: 0,
+   mma_record_wins: 0,
+   mma_record_losses: 0,
+   mma_record_draws: 0,
+   boxeo_record_wins: 0,
+   boxeo_record_losses: 0,
+   boxeo_record_draws: 0,
+   record_type: 'Amateur',
+   level: 'Amateur',
+ });
 
   useEffect(() => {
     if (existingFighter && mode === 'edit') {
@@ -63,10 +91,91 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
         last_name: existingFighter.last_name,
         nickname: existingFighter.nickname || '',
         country: existingFighter.country || 'HN',
+       country: existingFighter.country || 'Honduras',
         weight_class: existingFighter.weight_class,
+       country: existingFighter.country || 'Honduras',
+       weight_class: existingFighter.weight_class,
         avatar_url: existingFighter.avatar_url || '',
+     setFormData({
+       first_name: existingFighter.first_name,
+       last_name: existingFighter.last_name,
+       nickname: existingFighter.nickname || '',
+       country: existingFighter.country || 'Honduras',
+       weight_class: existingFighter.weight_class,
+       avatar_url: existingFighter.avatar_url || '',
         discipline: existingFighter.discipline || undefined,
+ const [isSubmitting, setIsSubmitting] = useState(false);
+ const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
+ const [formData, setFormData] = useState<Partial<AdminFighterFormData>>({
+   first_name: '',
+   last_name: '',
+   nickname: '',
+   country: 'Honduras',
+   weight_class: 'Peso Ligero',
+   martial_arts: [],
+   record_wins: 0,
+   record_losses: 0,
+   record_draws: 0,
+   mma_record_wins: 0,
+   mma_record_losses: 0,
+   mma_record_draws: 0,
+   boxeo_record_wins: 0,
+   boxeo_record_losses: 0,
+   boxeo_record_draws: 0,
+   record_type: 'Amateur',
+   level: 'Amateur',
+ });
+
+ useEffect(() => {
+   if (existingFighter && mode === 'edit') {
+     const fighterBirthdate = existingFighter.birthdate ? new Date(existingFighter.birthdate) : undefined;
+     setBirthDate(fighterBirthdate);
+     
+     setFormData({
+       first_name: existingFighter.first_name,
+       last_name: existingFighter.last_name,
+       nickname: existingFighter.nickname || '',
+       country: existingFighter.country || 'Honduras',
+       weight_class: existingFighter.weight_class,
+       avatar_url: existingFighter.avatar_url || '',
+       discipline: existingFighter.discipline || undefined,
         martial_arts: existingFighter.martial_arts || [],
+ const [isSubmitting, setIsSubmitting] = useState(false);
+ const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
+ const [formData, setFormData] = useState<Partial<AdminFighterFormData>>({
+   first_name: '',
+   last_name: '',
+   nickname: '',
+   country: 'Honduras',
+   weight_class: 'Peso Ligero',
+   martial_arts: [],
+   record_wins: 0,
+   record_losses: 0,
+   record_draws: 0,
+   mma_record_wins: 0,
+   mma_record_losses: 0,
+   mma_record_draws: 0,
+   boxeo_record_wins: 0,
+   boxeo_record_losses: 0,
+   boxeo_record_draws: 0,
+   record_type: 'Amateur',
+   level: 'Amateur',
+ });
+
+ useEffect(() => {
+   if (existingFighter && mode === 'edit') {
+     const fighterBirthdate = existingFighter.birthdate ? new Date(existingFighter.birthdate) : undefined;
+     setBirthDate(fighterBirthdate);
+     
+     setFormData({
+       first_name: existingFighter.first_name,
+       last_name: existingFighter.last_name,
+       nickname: existingFighter.nickname || '',
+       country: existingFighter.country || 'Honduras',
+       weight_class: existingFighter.weight_class,
+       avatar_url: existingFighter.avatar_url || '',
+       discipline: existingFighter.discipline || undefined,
+       martial_arts: existingFighter.martial_arts || [],
         record_wins: existingFighter.record_wins,
         record_losses: existingFighter.record_losses,
         record_draws: existingFighter.record_draws,
@@ -243,11 +352,18 @@ export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }:
                 </div>
                 <div>
                   <Label htmlFor="country">País</Label>
-                  <Input
-                    id="country"
-                    value={formData.country}
-                    onChange={(e) => handleChange('country', e.target.value)}
-                  />
+                 <Select value={formData.country} onValueChange={(value) => handleChange('country', value)}>
+                   <SelectTrigger>
+                     <SelectValue placeholder="Seleccionar país" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     {COUNTRIES.map(c => (
+                       <SelectItem key={c.value} value={c.value}>
+                         {c.label}
+                       </SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
                 </div>
               </div>
 

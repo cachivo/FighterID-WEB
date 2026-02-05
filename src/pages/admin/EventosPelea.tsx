@@ -94,7 +94,10 @@ export default function EventosPelea() {
     weight_class: '',
     gym: '',
     country: 'HN',
+   country: 'Honduras',
     record: { wins: 0, losses: 0, draws: 0 }
+   country: 'Honduras',
+   record: { wins: 0, losses: 0, draws: 0 }
   });
   const [externalFighterBData, setExternalFighterBData] = useState({
     name: '',
@@ -102,6 +105,7 @@ export default function EventosPelea() {
     weight_class: '',
     gym: '',
     country: 'HN',
+   country: 'Honduras',
     record: { wins: 0, losses: 0, draws: 0 }
   });
   const [imageFileA, setImageFileA] = useState<File | undefined>();
