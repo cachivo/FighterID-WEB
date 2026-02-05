@@ -10,6 +10,12 @@
      nickname: string | null;
      avatar_url: string | null;
      country: string | null;
+    mma_record_wins: number | null;
+    mma_record_losses: number | null;
+    mma_record_draws: number | null;
+    boxeo_record_wins: number | null;
+    boxeo_record_losses: number | null;
+    boxeo_record_draws: number | null;
    };
    weight_class: string;
    level: string;
@@ -26,6 +32,7 @@
    hasMore: boolean;
    weightClasses: string[];
    levels: string[];
+  discipline: 'MMA' | 'Boxeo';
  }
  
  export function useOrganizationRanking(
@@ -41,7 +48,7 @@
        // First get the organization ID
        const { data: org, error: orgError } = await supabase
          .from('ranking_organizations')
-         .select('id, allowed_levels')
+        .select('id, allowed_levels, discipline')
          .eq('code', organizationCode)
          .single();
  
@@ -65,7 +72,13 @@
              last_name,
              nickname,
              avatar_url,
-             country
+            country,
+            mma_record_wins,
+            mma_record_losses,
+            mma_record_draws,
+            boxeo_record_wins,
+            boxeo_record_losses,
+            boxeo_record_draws
            )
          `, { count: 'exact' })
          .eq('organization_id', org.id)
@@ -107,6 +120,12 @@
            nickname: r.fighter_profiles.nickname,
            avatar_url: r.fighter_profiles.avatar_url,
            country: r.fighter_profiles.country,
+          mma_record_wins: r.fighter_profiles.mma_record_wins,
+          mma_record_losses: r.fighter_profiles.mma_record_losses,
+          mma_record_draws: r.fighter_profiles.mma_record_draws,
+          boxeo_record_wins: r.fighter_profiles.boxeo_record_wins,
+          boxeo_record_losses: r.fighter_profiles.boxeo_record_losses,
+          boxeo_record_draws: r.fighter_profiles.boxeo_record_draws,
          },
          weight_class: r.weight_class,
          level: r.level,
@@ -128,6 +147,7 @@
          hasMore: end < (count || 0),
          weightClasses,
          levels,
+        discipline: org.discipline as 'MMA' | 'Boxeo',
        };
      },
      enabled: !!organizationCode,
