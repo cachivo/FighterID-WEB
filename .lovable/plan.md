@@ -1,205 +1,319 @@
 
+# Plan: Administracion de Rankings por Disciplina y Optimizacion Movil
 
-# Plan: Uniformidad de Base de Datos - Fighter ID
+## Resumen Ejecutivo
 
-## Resumen de Cambios
-
-Normalizar todos los datos de peleadores para establecer uniformidad y preparar el sistema de rankings.
+Este plan aborda tres areas criticas:
+1. Crear paginas de administracion para rankings separados por disciplina
+2. Resolver problemas de rendimiento en dispositivos moviles de gama baja
+3. Corregir inconsistencias en la creacion de perfiles (paises con codigos vs nombres completos)
 
 ---
 
-## Estructura de Rankings Definida
+## Estructura de Rankings Propuesta
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
-│                      DISCIPLINAS OFICIALES                         │
+│                    ADMINISTRACION DE RANKINGS                      │
 ├────────────────────────────────────────────────────────────────────┤
 │                                                                    │
-│   ┌──────────────────────┐      ┌──────────────────────┐         │
-│   │        MMA           │      │       BOXEO          │         │
-│   ├──────────────────────┤      ├──────────────────────┤         │
-│   │                      │      │                      │         │
-│   │   Ranking: UCC HN    │      │   Pro: BDG Pro Box   │         │
-│   │   (Todos los niveles)│      │   Amateur: HHF       │         │
-│   │                      │      │   (Rankings separados)│         │
-│   └──────────────────────┘      └──────────────────────┘         │
+│  ┌─────────────────────┐    ┌─────────────────────┐              │
+│  │    MMA - UCC HN     │    │       BOXEO         │              │
+│  ├─────────────────────┤    ├─────────────────────┤              │
+│  │ • Ver peleadores    │    │ PRO: BDG Pro Boxing │              │
+│  │ • Asignar ranking   │    │ • Ver peleadores    │              │
+│  │ • Ajustar posicion  │    │ • Asignar ranking   │              │
+│  │ • Filtrar por nivel │    │                     │              │
+│  └─────────────────────┘    │ AMATEUR: HHF        │              │
+│                             │ • Ver peleadores    │              │
+│                             │ • Ranking separado  │              │
+│                             └─────────────────────┘              │
 │                                                                    │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Fase 1: Limpieza de Datos (SQL Updates)
+## Fase 1: Pagina de Administracion de Rankings
 
-### 1.1 Normalizar Países
+### 1.1 Crear nueva pagina `/admin/rankings`
 
-```sql
--- Cambiar códigos de país a nombres completos
-UPDATE fighter_profiles SET country = 'Honduras' WHERE country IN ('HN', 'Honduras ');
-UPDATE fighter_profiles SET country = 'Guatemala' WHERE country = 'GUATEMALA';
-UPDATE fighter_profiles SET country = 'Panamá' WHERE country = 'PANAMA';
-UPDATE fighter_profiles SET country = 'Nicaragua' WHERE country = 'NICARAGUA';
-UPDATE fighter_profiles SET country = 'México' WHERE country = 'MEXICO';
-UPDATE fighter_profiles SET country = 'Canadá' WHERE country = 'CANADA';
-UPDATE fighter_profiles SET country = 'El Salvador' WHERE country = 'EL SALVADOR';
+**Archivo:** `src/pages/admin/RankingsManagement.tsx`
+
+Funcionalidades:
+- Tabs para cambiar entre disciplinas (MMA / Boxeo)
+- Sub-tabs para ligas (UCC, BDG Pro, HHF Amateur)
+- Tabla de peleadores ordenados por puntos
+- Acciones:
+  - Asignar peleador a ranking
+  - Remover de ranking
+  - Ajustar puntos manualmente (con auditoria)
+  - Filtrar por nivel (Amateur/Pro)
+  - Filtrar por categoria de peso
+
+### 1.2 Agregar entrada en sidebar
+
+**Archivo:** `src/components/AdminSidebar.tsx`
+
+```typescript
+// Agregar en adminItems
+{ 
+  title: 'Gestión de Rankings', 
+  url: '/admin/rankings', 
+  icon: Trophy 
+},
 ```
 
-**Registros afectados: 55**
+### 1.3 Agregar ruta en App.tsx
 
-### 1.2 Normalizar Niveles
-
-```sql
--- Estandarizar valores de nivel
-UPDATE fighter_profiles SET level = 'Amateur' WHERE level = 'AMATEUR';
-UPDATE fighter_profiles SET level = 'Semi-profesional' WHERE level IN ('SEMI_PRO', 'Semi-Profesional');
-UPDATE fighter_profiles SET level = 'Amateur' WHERE level IS NULL;
+```typescript
+<Route path="/admin/rankings" element={<RankingsManagement />} />
 ```
-
-**Registros afectados: 14**
-
-### 1.3 Limpiar Espacios en Nombres
-
-```sql
--- Eliminar espacios al inicio y final de nombres
-UPDATE fighter_profiles SET first_name = TRIM(first_name) WHERE first_name != TRIM(first_name);
-UPDATE fighter_profiles SET last_name = TRIM(last_name) WHERE last_name != TRIM(last_name);
-```
-
-**Registros afectados: ~20**
-
-### 1.4 Migrar Disciplina MuayThai
-
-```sql
--- Willis Yang: cambiar MuayThai → MMA (asumiendo que compite en MMA)
-UPDATE fighter_profiles 
-SET discipline = 'MMA', 
-    martial_arts = ARRAY['MuayThai', 'MMA']
-WHERE id = 'b9701ce3-909b-41a7-ae7a-9a0217cf6846';
-```
-
-**Registros afectados: 1**
 
 ---
 
-## Fase 2: Agregar BDG Pro Boxing a Partners
+## Fase 2: Optimizacion de Rendimiento Movil
 
-```sql
--- Insertar BDG Pro Boxing como organización de boxeo profesional
-INSERT INTO partners (nombre, tipo, descripcion, orden, activo)
-VALUES (
-  'BDG Pro Boxing',
-  'Organización',
-  'Organización oficial de boxeo profesional en Honduras',
-  2,
-  true
+### 2.1 Crear componente ErrorBoundary
+
+**Archivo:** `src/components/ErrorBoundary.tsx`
+
+Problema actual: No existe manejo de errores a nivel de componente. Cuando una seccion falla, toda la pagina crashea.
+
+```typescript
+// ErrorBoundary con UI amigable
+- Captura errores de renderizado
+- Muestra mensaje de error amigable
+- Boton para reintentar
+- Log de errores para debugging
+```
+
+### 2.2 Paginacion en Admin FightersProfiles
+
+**Archivo:** `src/pages/admin/FightersProfiles.tsx`
+
+Problemas actuales:
+- Carga TODOS los peleadores (57+) de una vez
+- Sin virtualizacion ni paginacion
+- Causa crashes en dispositivos de gama baja
+
+Solucion:
+```typescript
+// Agregar paginacion del lado del cliente
+const [page, setPage] = useState(1);
+const PAGE_SIZE = 20;
+
+// Paginacion de resultados
+const paginatedFighters = filteredFighters.slice(
+  (page - 1) * PAGE_SIZE, 
+  page * PAGE_SIZE
 );
 ```
 
+### 2.3 Lazy Loading de componentes admin
+
+**Archivo:** `src/App.tsx`
+
+Agregar lazy loading para paginas admin pesadas:
+```typescript
+const FightersProfiles = lazy(() => import('./pages/admin/FightersProfiles'));
+const RankingsManagement = lazy(() => import('./pages/admin/RankingsManagement'));
+const PendingChangesHub = lazy(() => import('./pages/admin/PendingChangesHub'));
+```
+
+### 2.4 Optimizar carga de imagenes
+
+**Archivo:** `src/pages/admin/FightersProfiles.tsx`
+
+- Usar `loading="lazy"` nativo en imagenes
+- Reducir tamano de grid a 10 items max antes de paginar
+- Agregar skeleton mas ligero
+
 ---
 
-## Fase 3: Actualizar Constantes en Frontend
+## Fase 3: Correccion de Perfiles (Paises)
 
-### Archivo: `src/lib/constants/disciplines.ts`
+### 3.1 Archivos que usan 'HN' en lugar de 'Honduras'
 
-Agregar lista de países estandarizados:
+| Archivo | Linea | Problema |
+|---------|-------|----------|
+| `LicenseOnboarding.tsx` | 30 | `country: 'HN'` |
+| `AdminFighterForm.tsx` | 40 | `country: 'HN'` |
+| `EventosPelea.tsx` | 96, 104 | `country: 'HN'` |
+| `ProfileSetup.tsx` | 38 | `country: 'HN'` |
+
+### 3.2 Correccion en cada archivo
+
+**LicenseOnboarding.tsx:**
+```typescript
+// ANTES
+country: 'HN',
+
+// DESPUES
+country: 'Honduras',
+```
+
+**AdminFighterForm.tsx:**
+```typescript
+// ANTES
+country: 'HN',
+
+// DESPUES  
+import { COUNTRIES } from '@/lib/constants/disciplines';
+// ...
+country: 'Honduras',
+
+// Cambiar Input por Select
+<Select value={formData.country} onValueChange={(value) => handleChange('country', value)}>
+  <SelectTrigger>
+    <SelectValue placeholder="Seleccionar pais" />
+  </SelectTrigger>
+  <SelectContent>
+    {COUNTRIES.map((c) => (
+      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+```
+
+---
+
+## Fase 4: Clasificacion Rapida de Peleadores
+
+### 4.1 Agregar filtro por disciplina en admin
+
+**Archivo:** `src/pages/admin/FightersProfiles.tsx`
 
 ```typescript
-// Países de Centroamérica y región (estandarizados)
-export const COUNTRIES = [
-  { value: 'Honduras', label: 'Honduras' },
-  { value: 'Guatemala', label: 'Guatemala' },
-  { value: 'El Salvador', label: 'El Salvador' },
-  { value: 'Nicaragua', label: 'Nicaragua' },
-  { value: 'Panamá', label: 'Panamá' },
-  { value: 'Costa Rica', label: 'Costa Rica' },
-  { value: 'México', label: 'México' },
-  { value: 'Estados Unidos', label: 'Estados Unidos' },
-  { value: 'Canadá', label: 'Canadá' },
-  { value: 'Otro', label: 'Otro' },
-] as const;
+// Agregar estado
+const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
+
+// Agregar filtro
+<Select value={selectedDiscipline} onValueChange={setSelectedDiscipline}>
+  <SelectTrigger className="w-full md:w-40">
+    <SelectValue placeholder="Disciplina" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="all">Todas</SelectItem>
+    <SelectItem value="MMA">MMA</SelectItem>
+    <SelectItem value="Boxeo">Boxeo</SelectItem>
+  </SelectContent>
+</Select>
+
+// Aplicar en filteredFighters
+const matchesDiscipline = selectedDiscipline === 'all' || fighter.discipline === selectedDiscipline;
 ```
 
-### Agregar Artes Marciales de Perfil
+### 4.2 Acciones masivas para asignar ranking
+
+- Checkbox de seleccion multiple
+- Boton "Asignar a Ranking"
+- Modal para seleccionar ranking destino
+
+---
+
+## Archivos a Crear
+
+| Archivo | Descripcion |
+|---------|-------------|
+| `src/pages/admin/RankingsManagement.tsx` | Pagina principal de gestion de rankings |
+| `src/components/ErrorBoundary.tsx` | Componente para manejo graceful de errores |
+| `src/components/admin/RankingTable.tsx` | Tabla de peleadores por ranking |
+| `src/components/admin/FighterRankingCard.tsx` | Tarjeta compacta para listas de ranking |
+
+---
+
+## Archivos a Modificar
+
+| Archivo | Cambios |
+|---------|---------|
+| `src/components/AdminSidebar.tsx` | Agregar enlace a Rankings |
+| `src/App.tsx` | Agregar ruta /admin/rankings, lazy loading |
+| `src/pages/admin/FightersProfiles.tsx` | Paginacion, filtro disciplina, ErrorBoundary |
+| `src/pages/license/LicenseOnboarding.tsx` | Cambiar 'HN' a 'Honduras' |
+| `src/components/admin/AdminFighterForm.tsx` | Usar COUNTRIES, Select en lugar de Input |
+| `src/pages/admin/EventosPelea.tsx` | Cambiar default 'HN' a 'Honduras' |
+| `src/pages/profile/ProfileSetup.tsx` | Cambiar 'HN' a 'Honduras' |
+
+---
+
+## Seccion Tecnica: Optimizacion de Memoria
+
+### Problema: Crashes en dispositivos de gama baja
+
+**Causa raiz:**
+1. Carga de todos los perfiles sin paginacion
+2. Renderizado simultaneo de 50+ imagenes
+3. No hay ErrorBoundary para atrapar errores
+4. Re-renders innecesarios por falta de memoizacion
+
+**Solucion tecnica:**
 
 ```typescript
-// Artes marciales para perfil de entrenamiento (NO son disciplinas de competencia)
-export const MARTIAL_ARTS_TRAINING = [
-  { value: 'MMA', label: 'MMA' },
-  { value: 'Boxeo', label: 'Boxeo' },
-  { value: 'MuayThai', label: 'Muay Thai' },
-  { value: 'JiuJitsu', label: 'Jiu-Jitsu Brasileño' },
-  { value: 'Judo', label: 'Judo' },
-  { value: 'Kickboxing', label: 'Kickboxing' },
-  { value: 'Grappling', label: 'Grappling' },
-  { value: 'Wrestling', label: 'Lucha Libre' },
-  { value: 'Karate', label: 'Karate' },
-  { value: 'TaeKwonDo', label: 'Tae Kwon Do' },
-] as const;
+// 1. Virtualizacion con react-window (opcional para fase 2)
+// 2. Paginacion del lado del cliente
+// 3. useMemo para filtros costosos
+// 4. Skeleton loading mas ligero
+
+const paginatedFighters = useMemo(() => {
+  return filteredFighters.slice(
+    (page - 1) * PAGE_SIZE, 
+    page * PAGE_SIZE
+  );
+}, [filteredFighters, page]);
+```
+
+### ErrorBoundary Implementation
+
+```typescript
+class ErrorBoundary extends React.Component<Props, State> {
+  state = { hasError: false, error: null };
+  
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ErrorBoundary]', error, info);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card className="p-6 text-center">
+          <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h3>Algo salio mal</h3>
+          <Button onClick={() => window.location.reload()}>
+            Recargar pagina
+          </Button>
+        </Card>
+      );
+    }
+    return this.props.children;
+  }
+}
 ```
 
 ---
 
-## Fase 4: Crear Estructura de Rankings
+## Metricas de Exito
 
-Cuando se apruebe la migración del sistema de puntos, los rankings quedarán así:
-
-| Código | Nombre | Disciplina | Organización |
-|--------|--------|------------|--------------|
-| `UCC_MMA` | UCC MMA Honduras | MMA | UCC |
-| `BDG_PRO_BOX` | BDG Boxeo Profesional | Boxeo | BDG Pro Boxing |
-| `HHF_AMATEUR` | Honduras Hood Fights | Boxeo | HHF |
-
----
-
-## Resumen de Cambios por Archivo
-
-| Archivo/Recurso | Acción | Descripción |
-|-----------------|--------|-------------|
-| Base de datos | UPDATE | Normalizar 55 países |
-| Base de datos | UPDATE | Normalizar 14 niveles |
-| Base de datos | UPDATE | Limpiar ~20 nombres con espacios |
-| Base de datos | UPDATE | Migrar 1 peleador MuayThai → MMA |
-| Base de datos | INSERT | Agregar BDG Pro Boxing a partners |
-| `disciplines.ts` | MODIFY | Agregar constantes COUNTRIES y MARTIAL_ARTS_TRAINING |
-
----
-
-## Validaciones Post-Actualización
-
-```sql
--- Query de verificación final
-SELECT 
-  'Disciplinas' as check_type,
-  discipline::text as value,
-  COUNT(*) as count
-FROM fighter_profiles WHERE active = true
-GROUP BY discipline
-UNION ALL
-SELECT 
-  'Niveles' as check_type,
-  level as value,
-  COUNT(*) as count
-FROM fighter_profiles WHERE active = true
-GROUP BY level
-UNION ALL
-SELECT 
-  'Países' as check_type,
-  country as value,
-  COUNT(*) as count
-FROM fighter_profiles WHERE active = true
-GROUP BY country
-ORDER BY check_type, count DESC;
-```
-
----
-
-## Resultado Esperado
-
-| Métrica | Antes | Después |
+| Metrica | Antes | Despues |
 |---------|-------|---------|
-| Disciplinas únicas | 3 (MMA, Boxeo, MuayThai) | 2 (MMA, Boxeo) |
-| Formatos de país | 9 variaciones | Nombres completos estandarizados |
-| Formatos de nivel | 5 variaciones | 3 valores estándar |
-| Nombres con espacios | 20+ | 0 |
-| Organizaciones de Boxeo | 1 (HHF) | 2 (HHF Amateur, BDG Pro) |
+| Tiempo de carga admin/fighters | ~3s (57 items) | <1s (20 items) |
+| Crashes en movil | Reportados | Manejados gracefully |
+| Paises con codigo 'HN' | 4 archivos | 0 archivos |
+| Paginas admin con lazy loading | 7 | 15+ |
+| Filtros de disciplina | No existe | MMA/Boxeo |
+
+---
+
+## Orden de Implementacion
+
+1. **Fase 2.1**: ErrorBoundary (previene crashes)
+2. **Fase 3**: Correccion de paises (consistencia de datos)
+3. **Fase 2.2**: Paginacion en admin (rendimiento)
+4. **Fase 4.1**: Filtro de disciplina (clasificacion)
+5. **Fase 1**: Pagina de Rankings (funcionalidad nueva)
+6. **Fase 2.3**: Lazy loading adicional (optimizacion final)
 
