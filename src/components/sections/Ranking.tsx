@@ -16,14 +16,14 @@ interface RankingProps {
 }
 
 const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
-  const [selectedLevel, setSelectedLevel] = useState<string>('all');
+  const [selectedLevel, setSelectedLevel] = useState<string>('');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
   
   const { data: organizations } = useRankingOrganizations();
   const { data: rankingData, isLoading } = useOrganizationRanking(
     organizationCode,
-    selectedLevel !== 'all' ? selectedLevel : undefined,
+    selectedLevel || undefined,
     undefined,
     page,
     PAGE_SIZE
@@ -33,6 +33,13 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
 
   const currentOrg = organizations?.find(org => org.code === organizationCode);
   const availableLevels = currentOrg?.allowed_levels || [];
+
+  // Auto-select first available level when levels load
+  useEffect(() => {
+    if (availableLevels.length > 0 && !selectedLevel) {
+      setSelectedLevel(availableLevels[0]);
+    }
+  }, [availableLevels, selectedLevel]);
 
   // Reset page when org or level changes
   useEffect(() => {
@@ -125,16 +132,10 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
           </h3>
           
           {/* Tabs de nivel */}
-          {availableLevels.length > 1 && (
+          {availableLevels.length > 0 && (
             <div className="flex justify-center mb-6">
               <Tabs value={selectedLevel} onValueChange={setSelectedLevel}>
                 <TabsList className="bg-black/60 border border-purple-neon-primary/30">
-                  <TabsTrigger 
-                    value="all"
-                    className="data-[state=active]:bg-purple-neon-primary data-[state=active]:text-black"
-                  >
-                    Todos
-                  </TabsTrigger>
                   {availableLevels.map(level => (
                     <TabsTrigger 
                       key={level} 
@@ -173,10 +174,21 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
             >
               <div className="space-y-3 sm:space-y-4">
                 {rankings.map((ranking, index) => {
-                const rankColors = ['text-yellow-400', 'text-gray-300', 'text-orange-400'];
-                const rankColor = index < 3 ? rankColors[index] : 'text-purple-neon-primary';
-                
-                return (
+                  const rankColors = ['text-yellow-400', 'text-gray-300', 'text-orange-400'];
+                  const rankColor = index < 3 ? rankColors[index] : 'text-purple-neon-primary';
+                  
+                  // Get record based on discipline
+                  const wins = rankingData?.discipline === 'MMA' 
+                    ? ranking.fighter.mma_record_wins 
+                    : ranking.fighter.boxeo_record_wins;
+                  const losses = rankingData?.discipline === 'MMA'
+                    ? ranking.fighter.mma_record_losses
+                    : ranking.fighter.boxeo_record_losses;
+                  const draws = rankingData?.discipline === 'MMA'
+                    ? ranking.fighter.mma_record_draws
+                    : ranking.fighter.boxeo_record_draws;
+                  
+                  return (
                   <Card 
                     key={ranking.id} 
                     className="bg-black/40 border-purple-neon-primary/20 backdrop-blur-sm hover:bg-black/60 transition-all duration-300 cursor-pointer touch-manipulation group"
@@ -220,6 +232,14 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
                             <Badge variant="secondary" className="text-xs">
                               {ranking.level}
                             </Badge>
+                            {/* Fighter Record */}
+                            <span className="text-xs font-mono">
+                              <span className="text-green-400">{wins || 0}</span>
+                              <span className="text-gray-500">-</span>
+                              <span className="text-red-400">{losses || 0}</span>
+                              <span className="text-gray-500">-</span>
+                              <span className="text-gray-400">{draws || 0}</span>
+                            </span>
                           </div>
                         </div>
 
@@ -235,8 +255,8 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
                       </div>
                     </CardContent>
                   </Card>
-                );
-              })}
+                  );
+                })}
               </div>
             </InfiniteScrollContainer>
           ) : (
