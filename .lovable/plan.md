@@ -1,117 +1,109 @@
 
-# Plan: Correccion de UI Rankings en Pagina Principal
+# Plan: Separar Disciplina de Competencia de Artes Marciales de Entrenamiento
 
-## Problemas Identificados
+## Problema Identificado
 
-### 1. Tab "Todos" que mezcla niveles
-**Ubicacion:** `src/components/sections/Ranking.tsx` lineas 132-137
+En el panel de administracion (`FighterEditModal.tsx`), la seccion "Disciplinas y Estilo" mezcla dos conceptos diferentes:
 
-```typescript
-// ACTUAL - Linea 132-137
-<TabsTrigger value="all" ...>
-  Todos
-</TabsTrigger>
+**Estado actual (incorrecto):**
+```
+Disciplinas y Estilo
+├── Nivel (Amateur/Semi/Pro)
+└── Artes Marciales (checkbox multiple)
+    ├── MMA          ← Disciplina de COMPETENCIA
+    ├── Boxeo        ← Disciplina de COMPETENCIA  
+    ├── Judo         ← Arte de ENTRENAMIENTO
+    ├── JiuJitsu     ← Arte de ENTRENAMIENTO
+    └── ...
 ```
 
-**Correccion:** Eliminar este tab y seleccionar automaticamente el primer nivel disponible.
-
-### 2. Record de peleadores no visible
-**Ubicacion:** `src/hooks/useOrganizationRanking.tsx` lineas 63-69
-
-El SELECT actual solo trae datos basicos del peleador:
-```typescript
-fighter_profiles!inner (
-  first_name,
-  last_name,
-  nickname,
-  avatar_url,
-  country
-)
+**Estado correcto (propuesto):**
 ```
+CARD 1: Disciplina de Competencia
+├── Disciplina: [MMA ▼] o [Boxeo ▼]  ← SELECT unico
+└── Nivel: [Amateur/Semi/Pro ▼]
 
-**Falta agregar:** Los campos de record segun disciplina:
-- MMA: `mma_record_wins`, `mma_record_losses`, `mma_record_draws`
-- Boxeo: `boxeo_record_wins`, `boxeo_record_losses`, `boxeo_record_draws`
+CARD 2: Artes Marciales de Entrenamiento
+└── Checkboxes multiples:
+    ├── Muay Thai
+    ├── Jiu-Jitsu Brasileño
+    ├── Judo
+    ├── Kickboxing
+    ├── Grappling
+    ├── Lucha Libre
+    ├── Karate
+    └── Tae Kwon Do
+```
 
 ---
 
 ## Solucion Tecnica
 
-### Archivo 1: `src/hooks/useOrganizationRanking.tsx`
+### Archivo: `src/components/admin/FighterEditModal.tsx`
 
-**Cambios:**
-1. Agregar campos de record al SELECT de fighter_profiles
-2. Agregar la disciplina de la organizacion al retorno para saber cual record mostrar
+**Cambio 1:** Eliminar la constante local `MARTIAL_ARTS` (linea 24-26) y usar las constantes centralizadas
 
 ```typescript
-// Nuevo interface RankingEntry
-export interface RankingEntry {
-  // ... campos existentes ...
-  fighter: {
-    first_name: string;
-    last_name: string;
-    nickname: string | null;
-    avatar_url: string | null;
-    country: string | null;
-    // NUEVOS campos de record
-    mma_record_wins: number | null;
-    mma_record_losses: number | null;
-    mma_record_draws: number | null;
-    boxeo_record_wins: number | null;
-    boxeo_record_losses: number | null;
-    boxeo_record_draws: number | null;
-  };
-}
+// ANTES (linea 24-26)
+const MARTIAL_ARTS = [
+  'MMA', 'Boxeo', 'Judo', 'JiuJitsu', 'Kickboxing', 'MuayThai', 'Grappling', 'Otro'
+];
 
-// Agregar discipline al resultado
-export interface OrganizationRankingResult {
-  // ... campos existentes ...
-  discipline: 'MMA' | 'Boxeo'; // NUEVO
-}
+// DESPUES - Importar desde disciplines.ts
+import { 
+  ENABLED_DISCIPLINES, 
+  MARTIAL_ARTS_TRAINING,  // AGREGAR
+  WEIGHT_CLASSES, 
+  FIGHTER_LEVELS, 
+  STANCES 
+} from '@/lib/constants/disciplines';
 ```
 
-### Archivo 2: `src/components/sections/Ranking.tsx`
+**Cambio 2:** Separar en DOS cards distintas (lineas 635-689)
 
-**Cambios:**
+```
+CARD 1: "Disciplina de Competencia"
+├── Select: Disciplina (MMA o Boxeo) - OBLIGATORIO
+└── Select: Nivel (Amateur/Semi/Pro)
 
-1. **Eliminar tab "Todos"** - lineas 132-137
-2. **Inicializar con primer nivel disponible** - cambiar `useState<string>('all')` por logica dinamica
-3. **Mostrar record** - agregar columna de record en cada card de peleador
-
-```typescript
-// ANTES
-const [selectedLevel, setSelectedLevel] = useState<string>('all');
-
-// DESPUES
-const [selectedLevel, setSelectedLevel] = useState<string>('');
-
-// Efecto para seleccionar primer nivel cuando carga
-useEffect(() => {
-  if (availableLevels.length > 0 && !selectedLevel) {
-    setSelectedLevel(availableLevels[0]);
-  }
-}, [availableLevels, selectedLevel]);
+CARD 2: "Artes Marciales de Entrenamiento"  
+└── Checkboxes: MARTIAL_ARTS_TRAINING (sin MMA ni Boxeo)
+    - Solo artes de entrenamiento complementarias
 ```
 
-**Mostrar record segun disciplina:**
-```typescript
-// En cada card de peleador
-const wins = rankingData?.discipline === 'MMA' 
-  ? ranking.fighter.mma_record_wins 
-  : ranking.fighter.boxeo_record_wins;
-const losses = rankingData?.discipline === 'MMA'
-  ? ranking.fighter.mma_record_losses
-  : ranking.fighter.boxeo_record_losses;
-const draws = rankingData?.discipline === 'MMA'
-  ? ranking.fighter.mma_record_draws
-  : ranking.fighter.boxeo_record_draws;
+**Cambio 3:** Actualizar la logica de manejo
 
-// Mostrar como: "5-2-0" o "W-L-D"
-<span className="text-green-400">{wins || 0}</span>
-<span>-</span>
-<span className="text-red-400">{losses || 0}</span>
-<span>-</span>
-<span className="text-gray-400">{draws || 0}</span>
+```typescript
+// La disciplina principal (MMA/Boxeo) se guarda en field 'discipline'
+// Las artes de entrenamiento se guardan en field 'martial_arts'
+// Ya NO se mezclan
+```
+
+---
+
+## Estructura Visual Propuesta
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  DISCIPLINA DE COMPETENCIA                                  │
+├─────────────────────────────────────────────────────────────┤
+│  Disciplina *            Nivel Competitivo                  │
+│  ┌─────────────────┐    ┌─────────────────┐                │
+│  │ MMA           ▼│    │ Amateur       ▼│                │
+│  └─────────────────┘    └─────────────────┘                │
+│                                                             │
+│  Define en que ranking aparece el peleador                  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  ARTES MARCIALES DE ENTRENAMIENTO                           │
+├─────────────────────────────────────────────────────────────┤
+│  ☑ Muay Thai        ☐ Judo         ☑ Wrestling            │
+│  ☑ Jiu-Jitsu        ☐ Kickboxing   ☐ Karate               │
+│  ☐ Grappling        ☐ Tae Kwon Do                          │
+│                                                             │
+│  Artes que practica para su preparacion (informativo)       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -120,40 +112,62 @@ const draws = rankingData?.discipline === 'MMA'
 
 | Archivo | Cambios |
 |---------|---------|
-| `src/hooks/useOrganizationRanking.tsx` | Agregar campos de record al SELECT, incluir discipline en resultado |
-| `src/components/sections/Ranking.tsx` | Eliminar tab "Todos", mostrar record, auto-seleccionar primer nivel |
+| `src/components/admin/FighterEditModal.tsx` | Separar en 2 cards, usar constantes correctas |
+| `src/lib/constants/disciplines.ts` | Remover MMA y Boxeo de MARTIAL_ARTS_TRAINING |
 
 ---
 
-## Resultado Visual Esperado
+## Cambio en disciplines.ts
 
-**ANTES:**
-```
-[Todos] [Pro] [Semi] [Amateur]
+Actualmente `MARTIAL_ARTS_TRAINING` incluye MMA y Boxeo, lo cual es redundante si ya tenemos `ENABLED_DISCIPLINES`. Se propone limpiar:
 
-#1 Fighter Name
-   Peso Ligero | Amateur
-   15 pts
+```typescript
+// ANTES
+export const MARTIAL_ARTS_TRAINING = [
+  { value: 'MMA', label: 'MMA' },           // REMOVER
+  { value: 'Boxeo', label: 'Boxeo' },       // REMOVER
+  { value: 'MuayThai', label: 'Muay Thai' },
+  // ...
+];
+
+// DESPUES - Solo artes de entrenamiento
+export const MARTIAL_ARTS_TRAINING = [
+  { value: 'MuayThai', label: 'Muay Thai' },
+  { value: 'JiuJitsu', label: 'Jiu-Jitsu Brasileño' },
+  { value: 'Judo', label: 'Judo' },
+  { value: 'Kickboxing', label: 'Kickboxing' },
+  { value: 'Grappling', label: 'Grappling' },
+  { value: 'Wrestling', label: 'Lucha Libre' },
+  { value: 'Karate', label: 'Karate' },
+  { value: 'TaeKwonDo', label: 'Tae Kwon Do' },
+];
 ```
 
-**DESPUES:**
-```
-[Pro] [Semi] [Amateur]   <-- Sin "Todos"
+---
 
-#1 Fighter Name          5-2-0   <-- Record visible
-   Peso Ligero | Amateur
-   15 pts
-```
+## Beneficios
+
+1. **Claridad conceptual**: Disciplina de competencia separada de artes de entrenamiento
+2. **Consistencia con rankings**: El campo `discipline` define en que liga aparece
+3. **Mejor UX**: El admin entiende que MMA/Boxeo es para rankings, el resto es informativo
+4. **Dato limpio**: `martial_arts[]` contendra solo artes de entrenamiento, no disciplinas
 
 ---
 
 ## Seccion Tecnica
 
-### Logica de seleccion de record
+### Mapeo de campos en base de datos
 
-La disciplina se determina por la organizacion:
-- `UCC_MMA` → discipline = 'MMA' → usar `mma_record_*`
-- `BDG_PRO` → discipline = 'Boxeo' → usar `boxeo_record_*`  
-- `HHF_AMATEUR` → discipline = 'Boxeo' → usar `boxeo_record_*`
+| Campo | Uso |
+|-------|-----|
+| `discipline` | Disciplina de competencia (MMA o Boxeo) - Define ranking |
+| `martial_arts` | Array de artes marciales de entrenamiento (informativo) |
+| `level` | Nivel competitivo (Amateur/Semi/Pro) |
 
-Esta informacion ya existe en la tabla `ranking_organizations.discipline`, solo necesitamos propagarla al frontend.
+### Logica de Records
+
+Los records de combate se muestran segun el valor de `discipline`:
+- Si `discipline = 'MMA'` → Mostrar campos `mma_record_*`
+- Si `discipline = 'Boxeo'` → Mostrar campos `boxeo_record_*`
+
+Esto ya funciona correctamente, solo necesitamos asegurar que la seleccion de disciplina sea clara y separada.
