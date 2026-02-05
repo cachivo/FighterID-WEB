@@ -1,232 +1,164 @@
 
-# Plan: Sincronización Completa de Disciplina + Corrección Visual Final
+# Auditoría Completa del Sistema de Rankings
 
-## DIAGNÓSTICO DE LA AUDITORÍA
+## DIAGNÓSTICO
 
-### Hallazgo Crítico: Cambio de Disciplina No Sincronizado
+### Problema Principal Encontrado
+
+El ranking de Boxeo aparece vacío en la página principal porque el sistema selecciona automáticamente el primer nivel de la lista (`Profesional`), pero no hay ningún peleador profesional activo en BDG_PRO.
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      INCOHERENCIA DETECTADA                             │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  PELEADOR          │ PERFIL      │ RANKING ACTUAL  │ ESPERADO          │
-│  ─────────────────────────────────────────────────────────────────────  │
-│  Moises Cardenas   │ Boxeo       │ UCC_MMA (MMA)   │ BDG_PRO o HHF     │
-│  Willis Yang       │ Boxeo       │ UCC_MMA (MMA)   │ BDG_PRO o HHF     │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO ACTUAL (PROBLEMÁTICO)                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Usuario selecciona "BOXEO"                                                  │
+│         │                                                                    │
+│         ▼                                                                    │
+│  LeagueSelector selecciona primera org → BDG_PRO                            │
+│         │                                                                    │
+│         ▼                                                                    │
+│  Ranking.tsx auto-selecciona primer nivel de allowed_levels                 │
+│  allowed_levels = [Profesional, Semi-profesional] → "Profesional"           │
+│         │                                                                    │
+│         ▼                                                                    │
+│  Query: WHERE organization = BDG_PRO AND level = "Profesional"              │
+│         │                                                                    │
+│         ▼                                                                    │
+│  RESULTADO: 0 peleadores (aunque hay 1 Semi-profesional)                    │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Causa Raíz
+### Estado Actual de la Base de Datos
 
-La función `admin_update_fighter_profile` sincroniza:
-- ✅ `level` → fighter_rankings
-- ✅ `weight_class` → fighter_rankings  
-- ❌ `discipline` → **NO SINCRONIZA** (rankings incompatibles permanecen activos)
+| Organización | Disciplina | Nivel | Peleadores Activos |
+|--------------|------------|-------|-------------------|
+| UCC_MMA | MMA | Amateur | 39 |
+| UCC_MMA | MMA | Profesional | 9 |
+| UCC_MMA | MMA | Semi-profesional | 7 |
+| BDG_PRO | Boxeo | Semi-profesional | 1 |
+| BDG_PRO | Boxeo | Profesional | 0 |
+| HHF_AMATEUR | Boxeo | Amateur | 1 |
 
-### Organizaciones Disponibles
+### Problema de Coherencia Identificado
 
-| Código | Disciplina | Niveles Permitidos |
-|--------|------------|-------------------|
-| UCC_MMA | MMA | Amateur, Semi-profesional, Profesional |
-| BDG_PRO | Boxeo | Profesional, Semi-profesional |
-| HHF_AMATEUR | Boxeo | Amateur |
+El componente `Ranking.tsx` (líneas 38-42) tiene esta lógica:
+
+```tsx
+// Auto-select first available level when levels load
+useEffect(() => {
+  if (availableLevels.length > 0 && !selectedLevel) {
+    setSelectedLevel(availableLevels[0]); // ← PROBLEMA: Selecciona el primero, no el que tiene datos
+  }
+}, [availableLevels, selectedLevel]);
+```
 
 ---
 
 ## SOLUCIÓN PROPUESTA
 
-### Parte 1: Actualizar RPC para Sincronizar Disciplina
+### Cambio en Ranking.tsx: Selección Inteligente de Nivel
 
-Modificar `admin_update_fighter_profile` para:
-
-1. **Detectar cambio de disciplina**
-2. **Desactivar rankings incompatibles** (donde la disciplina de la organización no coincide)
-3. **Inscribir automáticamente** en la organización correcta según disciplina + nivel
-
-```sql
--- Nueva lógica cuando cambia discipline:
-IF p_profile_data ? 'discipline' THEN
-  -- 1. Obtener nueva disciplina y nivel actual
-  v_new_discipline := p_profile_data->>'discipline';
-  SELECT level INTO v_current_level FROM fighter_profiles WHERE id = p_fighter_id;
-  
-  -- 2. Desactivar rankings de organizaciones con disciplina diferente
-  UPDATE fighter_rankings fr
-  SET is_active = false, updated_at = now()
-  FROM ranking_organizations ro
-  WHERE fr.organization_id = ro.id
-    AND fr.fighter_id = p_fighter_id
-    AND fr.is_active = true
-    AND ro.discipline != v_new_discipline;
-  
-  -- 3. Inscribir automáticamente en organización correcta
-  -- MMA → UCC_MMA
-  -- Boxeo Amateur → HHF_AMATEUR
-  -- Boxeo Pro/Semi → BDG_PRO
-  v_target_org := CASE
-    WHEN v_new_discipline = 'MMA' THEN 'UCC_MMA'
-    WHEN v_new_discipline = 'Boxeo' AND v_current_level = 'Amateur' THEN 'HHF_AMATEUR'
-    WHEN v_new_discipline = 'Boxeo' THEN 'BDG_PRO'
-    ELSE NULL
-  END;
-  
-  -- 4. Insertar si no existe ranking activo en la nueva org
-  IF v_target_org IS NOT NULL THEN
-    INSERT INTO fighter_rankings (fighter_id, organization_id, level, weight_class, points)
-    SELECT p_fighter_id, ro.id, v_current_level, fp.weight_class, 0
-    FROM ranking_organizations ro, fighter_profiles fp
-    WHERE ro.code = v_target_org AND fp.id = p_fighter_id
-    ON CONFLICT DO NOTHING;
-  END IF;
-END IF;
-```
-
-### Parte 2: Corregir Datos Existentes (One-time fix)
-
-```sql
--- Desactivar rankings incompatibles para Moises y Willis
-UPDATE fighter_rankings fr
-SET is_active = false, updated_at = now()
-FROM fighter_profiles fp, ranking_organizations ro
-WHERE fr.fighter_id = fp.id
-  AND fr.organization_id = ro.id
-  AND fr.is_active = true
-  AND fp.discipline::text != ro.discipline;
-
--- Inscribir en organizaciones correctas según disciplina + nivel
-INSERT INTO fighter_rankings (fighter_id, organization_id, weight_class, level, points)
-SELECT 
-  fp.id,
-  ro.id,
-  fp.weight_class,
-  fp.level,
-  0
-FROM fighter_profiles fp
-CROSS JOIN ranking_organizations ro
-WHERE fp.discipline::text = ro.discipline
-  AND fp.level = ANY(ro.allowed_levels)
-  AND NOT EXISTS (
-    SELECT 1 FROM fighter_rankings fr 
-    WHERE fr.fighter_id = fp.id 
-    AND fr.organization_id = ro.id 
-    AND fr.is_active = true
-  )
-  -- Solo para peleadores que tienen disciplina pero no ranking correcto
-  AND fp.discipline IS NOT NULL
-  AND EXISTS (
-    SELECT 1 FROM fighter_rankings fr2
-    JOIN ranking_organizations ro2 ON fr2.organization_id = ro2.id
-    WHERE fr2.fighter_id = fp.id AND ro2.discipline != fp.discipline::text
-  );
-```
-
-### Parte 3: Corregir Layout de Tarjetas (Altura Fija Real)
-
-El fix anterior usó `h-[3.5rem]` pero no es suficiente para nombres largos. Necesitamos:
+Modificar la lógica para que auto-seleccione el nivel con más peleadores activos en lugar del primer nivel de la lista.
 
 ```tsx
-// ANTES (insuficiente):
-<div className="h-[3.5rem] flex flex-col justify-start overflow-hidden">
+// ANTES (problemático):
+useEffect(() => {
+  if (availableLevels.length > 0 && !selectedLevel) {
+    setSelectedLevel(availableLevels[0]);
+  }
+}, [availableLevels, selectedLevel]);
 
-// DESPUÉS (solución robusta):
-<div className="h-14 flex flex-col justify-center">
-  <CardTitle className="text-base font-semibold leading-tight line-clamp-1">
-    {fighter.first_name} {fighter.last_name}
-  </CardTitle>
-  <p className="text-sm text-muted-foreground truncate mt-0.5">
-    {fighter.nickname ? `"${fighter.nickname}"` : '\u00A0'}
-  </p>
-</div>
+// DESPUÉS (inteligente):
+useEffect(() => {
+  if (rankingData && availableLevels.length > 0 && !selectedLevel) {
+    // Obtener conteo de peleadores por nivel
+    const levelCounts = rankingData.levels.reduce((acc, level) => {
+      const count = rankingData.rankings.filter(r => r.level === level).length;
+      acc[level] = count;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    // Seleccionar el nivel con más peleadores
+    const sortedLevels = availableLevels.sort((a, b) => 
+      (levelCounts[b] || 0) - (levelCounts[a] || 0)
+    );
+    
+    setSelectedLevel(sortedLevels[0] || availableLevels[0]);
+  }
+}, [availableLevels, selectedLevel, rankingData]);
 ```
 
-**Cambios clave:**
-- `h-14` (56px) - altura fija estandarizada
-- `line-clamp-1` - limita nombre a UNA sola línea (trunca con ...)
-- `text-base` en lugar de `text-lg` - reduce tamaño para mejor fit
-- `justify-center` - centra verticalmente cuando hay poco texto
+### Alternativa más simple: Modificar useOrganizationRanking
+
+Añadir información de conteo por nivel directamente en el hook para que el componente pueda tomar decisiones inteligentes:
+
+```tsx
+// En useOrganizationRanking.tsx, añadir:
+levelCounts: Record<string, number>; // { "Amateur": 39, "Profesional": 9, ... }
+```
 
 ---
 
 ## ARCHIVOS A MODIFICAR
 
-| Archivo | Cambio | Criticidad |
-|---------|--------|------------|
-| **Nueva migración SQL** | Actualizar RPC + fix de datos existentes | CRÍTICA |
-| `src/pages/admin/FightersProfiles.tsx` | Aplicar altura fija h-14 y line-clamp-1 | ALTA |
+| Archivo | Cambio | Impacto |
+|---------|--------|---------|
+| `src/hooks/useOrganizationRanking.tsx` | Añadir `levelCounts` al resultado | Provee datos para selección inteligente |
+| `src/components/sections/Ranking.tsx` | Auto-seleccionar nivel con más datos | Resuelve ranking vacío de Boxeo |
 
 ---
 
-## FLUJO VISUAL POST-IMPLEMENTACIÓN
+## FLUJO CORREGIDO
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│     ANTES DE CAMBIAR DISCIPLINA (Perfil: MMA, Ranking: UCC_MMA)        │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  fighter_profiles          fighter_rankings                             │
-│  ┌─────────────────┐      ┌─────────────────────────────┐               │
-│  │ discipline: MMA │      │ UCC_MMA (MMA) - is_active: ✓ │              │
-│  │ level: Amateur  │      │ points: 100                  │              │
-│  └─────────────────┘      └─────────────────────────────┘               │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-
-                              ▼ Admin cambia disciplina a Boxeo ▼
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│    DESPUÉS DE CAMBIAR DISCIPLINA (Perfil: Boxeo, Ranking: HHF_AMATEUR) │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  fighter_profiles          fighter_rankings                             │
-│  ┌───────────────────┐    ┌─────────────────────────────┐               │
-│  │ discipline: Boxeo │    │ UCC_MMA (MMA) - is_active: ✗ │ ← Desactivado│
-│  │ level: Amateur    │    │ points: 100 (preservado)    │               │
-│  └───────────────────┘    ├─────────────────────────────┤               │
-│                           │ HHF_AMATEUR (Boxeo) - ✓     │ ← Nuevo       │
-│                           │ points: 0 (inicio)          │               │
-│                           └─────────────────────────────┘               │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO CORREGIDO                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Usuario selecciona "BOXEO"                                                  │
+│         │                                                                    │
+│         ▼                                                                    │
+│  LeagueSelector selecciona primera org → BDG_PRO                            │
+│         │                                                                    │
+│         ▼                                                                    │
+│  Ranking.tsx consulta levelCounts = { Semi-profesional: 1, Profesional: 0 } │
+│         │                                                                    │
+│         ▼                                                                    │
+│  Auto-selecciona nivel con más datos → "Semi-profesional"                   │
+│         │                                                                    │
+│         ▼                                                                    │
+│  RESULTADO: 1 peleador mostrado (Moises Cardenas)                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## VERIFICACIÓN POST-IMPLEMENTACIÓN
 
-### Test 1: Sincronización de Disciplina
-1. Abrir perfil de **Moises Cardenas** en Perfiles de Peleadores
-2. Verificar que ahora aparece en **BDG Pro** o **HHF Amateur** (según su nivel)
-3. Verificar que YA NO aparece en **UCC MMA**
+### Test 1: Ranking de Boxeo en Página Principal
+1. Ir a la página principal como usuario autenticado
+2. Hacer scroll hasta el selector de ligas
+3. Seleccionar "BOXEO"
+4. Verificar que aparece "Moises Cardenas" en BDG Pro (Semi-profesional)
+5. Cambiar a HHF Amateur → Verificar que aparece "Willis Yang"
 
-### Test 2: Cambio de Disciplina en Vivo
-1. Seleccionar un peleador con disciplina MMA
-2. Cambiar disciplina a Boxeo desde tab Combate
-3. Verificar automáticamente:
-   - Ranking de MMA se desactiva
-   - Se crea ranking en organización de Boxeo correcta
+### Test 2: Coherencia con Admin Panel
+1. Ir a `/admin/rankings`
+2. Seleccionar Boxeo → BDG Pro
+3. Verificar que muestra los mismos datos que la página principal
 
-### Test 3: Uniformidad Visual
-1. Verificar que TODAS las tarjetas tienen exactamente la misma altura
-2. Verificar que nombres largos se truncan con "..."
-
-### Query de Validación
-```sql
--- Debe devolver 0 filas si todo está coherente
-SELECT fp.first_name, fp.discipline::text, ro.discipline as ranking_org
-FROM fighter_profiles fp
-JOIN fighter_rankings fr ON fp.id = fr.fighter_id AND fr.is_active = true
-JOIN ranking_organizations ro ON fr.organization_id = ro.id
-WHERE fp.discipline::text != ro.discipline;
-```
+### Test 3: Cambio de Disciplina
+1. Editar un peleador de MMA y cambiar a Boxeo
+2. Verificar que aparece inmediatamente en el ranking de Boxeo correcto
+3. Verificar que ya no aparece en UCC MMA
 
 ---
 
 ## RESUMEN DE CAMBIOS
 
-1. ✅ Sincronización automática de disciplina (nueva funcionalidad)
-2. ✅ Desactivación de rankings incompatibles al cambiar disciplina
-3. ✅ Inscripción automática en organización correcta
-4. ✅ Fix de datos existentes (Moises, Willis)
-5. ✅ Layout uniforme con altura fija y truncamiento
+1. **useOrganizationRanking.tsx**: Añadir `levelCounts` para exponer conteo de peleadores por nivel
+2. **Ranking.tsx**: Implementar selección inteligente basada en datos disponibles
+3. Sin cambios en base de datos (los datos ya están correctos)
