@@ -1,260 +1,205 @@
 
-# Plan: Estabilización del Sistema y Unificación de Idioma
 
-## Problemas Identificados
+# Plan: Uniformidad de Base de Datos - Fighter ID
 
-### 1. VIOLACIÓN CRÍTICA: Win Rate/Porcentaje de Victorias en el Código
+## Resumen de Cambios
 
-El sistema muestra **win rate** y **porcentaje de victorias** en múltiples lugares, lo cual viola las reglas del sistema de ranking que establecen claramente:
-
-> ⚠️ "No hay win rate. No hay porcentaje de victorias. Rankings son 100% basados en puntos."
-
-**Archivos afectados:**
-
-| Archivo | Problema |
-|---------|----------|
-| `src/pages/FighterProfile.tsx` | Muestra `{winPercentage}% Victorias` (líneas 199, 379) |
-| `src/hooks/useFighterHistory.tsx` | Calcula `winPercentage` (línea 71) |
-| `src/hooks/useCombinedFighterRecord.tsx` | Retorna `winPercentage` (línea 65) |
-| `src/components/FighterMiniature.tsx` | Muestra "Efectividad: X%" (líneas 128-134) |
-| `src/components/EnhancedFighterID.tsx` | Muestra `{winPercentage}% Victorias` (línea 165) |
-| `src/components/AdminAnalytics.tsx` | Muestra "X% win rate" (línea 304) |
-| `src/pages/social/UserProfile.tsx` | Etiqueta "Win Rate" (línea 321) |
-| `src/components/admin/AIAssistant/ChatWidget.tsx` | Muestra "Win Rate" (línea 133) |
+Normalizar todos los datos de peleadores para establecer uniformidad y preparar el sistema de rankings.
 
 ---
 
-### 2. Textos en Inglés que Requieren Traducción
+## Estructura de Rankings Definida
 
-**Términos encontrados:**
-
-| Inglés | Español Correcto |
-|--------|------------------|
-| "Win Rate" | Eliminar (no usar porcentajes) |
-| "Stance" | "Guardia" |
-| "Fighters" | "Peleadores" |
-| "Loading..." | "Cargando..." |
-| "Error" | "Error" (correcto) |
-| "Success" | "Éxito" |
-| "Failed" | "Falló" |
-| "Please" | "Por favor" |
+```text
+┌────────────────────────────────────────────────────────────────────┐
+│                      DISCIPLINAS OFICIALES                         │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│   ┌──────────────────────┐      ┌──────────────────────┐         │
+│   │        MMA           │      │       BOXEO          │         │
+│   ├──────────────────────┤      ├──────────────────────┤         │
+│   │                      │      │                      │         │
+│   │   Ranking: UCC HN    │      │   Pro: BDG Pro Box   │         │
+│   │   (Todos los niveles)│      │   Amateur: HHF       │         │
+│   │                      │      │   (Rankings separados)│         │
+│   └──────────────────────┘      └──────────────────────┘         │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-### 3. Problemas de Estabilidad Potenciales
+## Fase 1: Limpieza de Datos (SQL Updates)
 
-**A. Errores asíncronos no manejados**
+### 1.1 Normalizar Países
 
-El `App.tsx` no tiene un manejador global de promesas rechazadas, lo que puede causar pantallas blancas:
+```sql
+-- Cambiar códigos de país a nombres completos
+UPDATE fighter_profiles SET country = 'Honduras' WHERE country IN ('HN', 'Honduras ');
+UPDATE fighter_profiles SET country = 'Guatemala' WHERE country = 'GUATEMALA';
+UPDATE fighter_profiles SET country = 'Panamá' WHERE country = 'PANAMA';
+UPDATE fighter_profiles SET country = 'Nicaragua' WHERE country = 'NICARAGUA';
+UPDATE fighter_profiles SET country = 'México' WHERE country = 'MEXICO';
+UPDATE fighter_profiles SET country = 'Canadá' WHERE country = 'CANADA';
+UPDATE fighter_profiles SET country = 'El Salvador' WHERE country = 'EL SALVADOR';
+```
+
+**Registros afectados: 55**
+
+### 1.2 Normalizar Niveles
+
+```sql
+-- Estandarizar valores de nivel
+UPDATE fighter_profiles SET level = 'Amateur' WHERE level = 'AMATEUR';
+UPDATE fighter_profiles SET level = 'Semi-profesional' WHERE level IN ('SEMI_PRO', 'Semi-Profesional');
+UPDATE fighter_profiles SET level = 'Amateur' WHERE level IS NULL;
+```
+
+**Registros afectados: 14**
+
+### 1.3 Limpiar Espacios en Nombres
+
+```sql
+-- Eliminar espacios al inicio y final de nombres
+UPDATE fighter_profiles SET first_name = TRIM(first_name) WHERE first_name != TRIM(first_name);
+UPDATE fighter_profiles SET last_name = TRIM(last_name) WHERE last_name != TRIM(last_name);
+```
+
+**Registros afectados: ~20**
+
+### 1.4 Migrar Disciplina MuayThai
+
+```sql
+-- Willis Yang: cambiar MuayThai → MMA (asumiendo que compite en MMA)
+UPDATE fighter_profiles 
+SET discipline = 'MMA', 
+    martial_arts = ARRAY['MuayThai', 'MMA']
+WHERE id = 'b9701ce3-909b-41a7-ae7a-9a0217cf6846';
+```
+
+**Registros afectados: 1**
+
+---
+
+## Fase 2: Agregar BDG Pro Boxing a Partners
+
+```sql
+-- Insertar BDG Pro Boxing como organización de boxeo profesional
+INSERT INTO partners (nombre, tipo, descripcion, orden, activo)
+VALUES (
+  'BDG Pro Boxing',
+  'Organización',
+  'Organización oficial de boxeo profesional en Honduras',
+  2,
+  true
+);
+```
+
+---
+
+## Fase 3: Actualizar Constantes en Frontend
+
+### Archivo: `src/lib/constants/disciplines.ts`
+
+Agregar lista de países estandarizados:
 
 ```typescript
-// FALTA en App.tsx
-useEffect(() => {
-  const handleRejection = (event: PromiseRejectionEvent) => {
-    console.error("Error no manejado:", event.reason);
-    toast.error("Ocurrió un error. Intenta nuevamente.");
-    event.preventDefault();
-  };
-  window.addEventListener("unhandledrejection", handleRejection);
-  return () => window.removeEventListener("unhandledrejection", handleRejection);
-}, []);
+// Países de Centroamérica y región (estandarizados)
+export const COUNTRIES = [
+  { value: 'Honduras', label: 'Honduras' },
+  { value: 'Guatemala', label: 'Guatemala' },
+  { value: 'El Salvador', label: 'El Salvador' },
+  { value: 'Nicaragua', label: 'Nicaragua' },
+  { value: 'Panamá', label: 'Panamá' },
+  { value: 'Costa Rica', label: 'Costa Rica' },
+  { value: 'México', label: 'México' },
+  { value: 'Estados Unidos', label: 'Estados Unidos' },
+  { value: 'Canadá', label: 'Canadá' },
+  { value: 'Otro', label: 'Otro' },
+] as const;
 ```
 
-**B. Timeout de 8 segundos puede ser insuficiente**
-
-En conexiones lentas, el timeout de 8s en `useLicenseAuth.tsx` puede cortar la carga prematuramente.
-
----
-
-## Solución Propuesta
-
-### Fase 1: Eliminar Win Rate/Porcentajes (CRÍTICO)
-
-**1.1 Modificar `src/pages/FighterProfile.tsx`**
-
-Reemplazar:
-```tsx
-// ANTES (INCORRECTO)
-<Trophy className="h-4 w-4 text-green-600" />
-{winPercentage}% Victorias
-```
-
-Por:
-```tsx
-// DESPUÉS (CORRECTO)
-<Trophy className="h-4 w-4 text-green-600" />
-{currentRecord.wins} Victoria{currentRecord.wins !== 1 ? 's' : ''}
-```
-
-**1.2 Modificar `src/components/FighterMiniature.tsx`**
-
-Eliminar la barra de progreso de "Efectividad" y reemplazar con conteo de peleas:
-```tsx
-// ANTES
-<span>Efectividad:</span>
-<span>{winPercentage}%</span>
-
-// DESPUÉS
-<span>Peleas Totales:</span>
-<span>{totalFights}</span>
-```
-
-**1.3 Modificar `src/components/EnhancedFighterID.tsx`**
-
-Cambiar porcentaje por texto de victorias:
-```tsx
-// ANTES
-{calculateRecord(recordType).winPercentage}% Victorias
-
-// DESPUÉS
-{calculateRecord(recordType).wins} Victoria{calculateRecord(recordType).wins !== 1 ? 's' : ''} Registradas
-```
-
-**1.4 Modificar `src/pages/social/UserProfile.tsx`**
-
-Cambiar label de "Win Rate":
-```tsx
-// ANTES
-<div>Win Rate</div>
-
-// DESPUÉS  
-<div>Victorias</div>
-```
-
-**1.5 Actualizar hooks para no calcular porcentajes**
-
-En `useFighterHistory.tsx` y `useCombinedFighterRecord.tsx`:
-- Mantener `winPercentage` en la interfaz por compatibilidad pero documentar como deprecado
-- No mostrar el valor en ninguna UI
-
----
-
-### Fase 2: Unificación de Idioma a Español
-
-**2.1 Términos a cambiar globalmente:**
+### Agregar Artes Marciales de Perfil
 
 ```typescript
-// src/pages/FighterProfile.tsx - línea 241
-{ label: 'Stance', value: ... }  →  { label: 'Guardia', value: ... }
-
-// src/pages/FighterProfile.tsx - línea 69
-Volver a Fighters  →  Volver a Peleadores
-
-// Múltiples archivos - toasts
-title: "Error"  →  title: "Error" (ya correcto)
-title: "Success"  →  title: "Éxito"
-```
-
-**2.2 Buscar y reemplazar sistemáticamente:**
-
-| Patrón | Reemplazo |
-|--------|-----------|
-| `"Fighters"` (como label) | `"Peleadores"` |
-| `"Stance"` | `"Guardia"` |
-| `"Win Rate"` | Eliminar o `"Victorias"` |
-| `"Loading"` | `"Cargando"` |
-
----
-
-### Fase 3: Mejoras de Estabilidad
-
-**3.1 Agregar manejador global de errores en `App.tsx`:**
-
-```typescript
-const App = () => {
-  useEffect(() => {
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error('[GLOBAL ERROR]', event.reason);
-      event.preventDefault();
-    };
-    
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
-    return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-  }, []);
-
-  return (
-    // ... resto del código
-  );
-};
-```
-
-**3.2 Aumentar timeout en `useLicenseAuth.tsx` para conexiones lentas:**
-
-```typescript
-// De 8s a 12s con mensaje de progreso
-const backupTimeout = setTimeout(() => {
-  if (mounted) {
-    console.warn('[TIMEOUT] Backup timeout triggered');
-    setLoadingMessage('La carga está tardando más de lo esperado...');
-    setLoading(false);
-  }
-}, 12000);
-```
-
-**3.3 Agregar try-catch defensivo en componentes de perfil:**
-
-```typescript
-// En getUserFighterProfile
-try {
-  const profile = await getUserFighterProfile();
-  if (profile) {
-    setProfile(profile);
-  }
-} catch (error) {
-  console.error('Error cargando perfil:', error);
-  toast({ 
-    title: "Error", 
-    description: "No se pudo cargar el perfil. Intenta refrescar la página.",
-    variant: "destructive"
-  });
-}
+// Artes marciales para perfil de entrenamiento (NO son disciplinas de competencia)
+export const MARTIAL_ARTS_TRAINING = [
+  { value: 'MMA', label: 'MMA' },
+  { value: 'Boxeo', label: 'Boxeo' },
+  { value: 'MuayThai', label: 'Muay Thai' },
+  { value: 'JiuJitsu', label: 'Jiu-Jitsu Brasileño' },
+  { value: 'Judo', label: 'Judo' },
+  { value: 'Kickboxing', label: 'Kickboxing' },
+  { value: 'Grappling', label: 'Grappling' },
+  { value: 'Wrestling', label: 'Lucha Libre' },
+  { value: 'Karate', label: 'Karate' },
+  { value: 'TaeKwonDo', label: 'Tae Kwon Do' },
+] as const;
 ```
 
 ---
 
-## Archivos a Modificar
+## Fase 4: Crear Estructura de Rankings
 
-| Archivo | Cambios |
-|---------|---------|
-| `src/pages/FighterProfile.tsx` | Eliminar winPercentage, traducir "Stance" → "Guardia", "Fighters" → "Peleadores" |
-| `src/components/FighterMiniature.tsx` | Eliminar barra de efectividad, mostrar peleas totales |
-| `src/components/EnhancedFighterID.tsx` | Eliminar porcentaje de victorias |
-| `src/pages/social/UserProfile.tsx` | Cambiar "Win Rate" → "Victorias" |
-| `src/components/admin/AIAssistant/ChatWidget.tsx` | Cambiar "Win Rate" → "Récord" |
-| `src/components/AdminAnalytics.tsx` | Eliminar cálculo de win rate |
-| `src/App.tsx` | Agregar manejador global de errores |
-| `src/hooks/useLicenseAuth.tsx` | Aumentar timeout, mejorar mensajes |
+Cuando se apruebe la migración del sistema de puntos, los rankings quedarán así:
+
+| Código | Nombre | Disciplina | Organización |
+|--------|--------|------------|--------------|
+| `UCC_MMA` | UCC MMA Honduras | MMA | UCC |
+| `BDG_PRO_BOX` | BDG Boxeo Profesional | Boxeo | BDG Pro Boxing |
+| `HHF_AMATEUR` | Honduras Hood Fights | Boxeo | HHF |
+
+---
+
+## Resumen de Cambios por Archivo
+
+| Archivo/Recurso | Acción | Descripción |
+|-----------------|--------|-------------|
+| Base de datos | UPDATE | Normalizar 55 países |
+| Base de datos | UPDATE | Normalizar 14 niveles |
+| Base de datos | UPDATE | Limpiar ~20 nombres con espacios |
+| Base de datos | UPDATE | Migrar 1 peleador MuayThai → MMA |
+| Base de datos | INSERT | Agregar BDG Pro Boxing a partners |
+| `disciplines.ts` | MODIFY | Agregar constantes COUNTRIES y MARTIAL_ARTS_TRAINING |
+
+---
+
+## Validaciones Post-Actualización
+
+```sql
+-- Query de verificación final
+SELECT 
+  'Disciplinas' as check_type,
+  discipline::text as value,
+  COUNT(*) as count
+FROM fighter_profiles WHERE active = true
+GROUP BY discipline
+UNION ALL
+SELECT 
+  'Niveles' as check_type,
+  level as value,
+  COUNT(*) as count
+FROM fighter_profiles WHERE active = true
+GROUP BY level
+UNION ALL
+SELECT 
+  'Países' as check_type,
+  country as value,
+  COUNT(*) as count
+FROM fighter_profiles WHERE active = true
+GROUP BY country
+ORDER BY check_type, count DESC;
+```
 
 ---
 
 ## Resultado Esperado
 
-1. **Sin porcentajes de victoria** en ninguna parte de la UI
-2. **Idioma 100% español** en toda la aplicación
-3. **Mayor estabilidad** con manejo de errores robusto
-4. **Mejor UX** en conexiones lentas con mensajes de progreso
-
----
-
-## Métricas de Éxito
-
 | Métrica | Antes | Después |
 |---------|-------|---------|
-| Instancias de "win rate" | 9+ archivos | ✅ 0 |
-| Textos en inglés visibles | Múltiples | ✅ Traducidos |
-| Crashes reportados | Variable | ✅ Global error handler agregado |
-| Timeout para carga | 8s | ✅ 12s |
+| Disciplinas únicas | 3 (MMA, Boxeo, MuayThai) | 2 (MMA, Boxeo) |
+| Formatos de país | 9 variaciones | Nombres completos estandarizados |
+| Formatos de nivel | 5 variaciones | 3 valores estándar |
+| Nombres con espacios | 20+ | 0 |
+| Organizaciones de Boxeo | 1 (HHF) | 2 (HHF Amateur, BDG Pro) |
 
----
-
-## ✅ COMPLETADO (2024-02-05)
-
-Cambios implementados:
-- `FighterProfile.tsx`: Eliminado winPercentage, "Stance" → "Guardia", "Fighters" → "Peleadores"
-- `FighterMiniature.tsx`: Eliminada barra de efectividad, ahora muestra peleas totales
-- `EnhancedFighterID.tsx`: Eliminado porcentaje de victorias
-- `UserProfile.tsx` (social): "Win Rate" → "Peleas"
-- `ChatWidget.tsx`: "Win Rate" → "Victorias Promedio"
-- `AdminAnalytics.tsx`: Eliminado cálculo de win rate
-- `App.tsx`: Agregado manejador global de errores
-- `useLicenseAuth.tsx`: Timeout aumentado de 8s a 12s
