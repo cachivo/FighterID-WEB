@@ -32,6 +32,7 @@
    hasMore: boolean;
    weightClasses: string[];
    levels: string[];
+  levelCounts: Record<string, number>;
   discipline: 'MMA' | 'Boxeo';
  }
  
@@ -110,6 +111,12 @@
          l => org.allowed_levels.includes(l)
        );
  
+        // Calculate count per level for smart selection
+        const levelCounts: Record<string, number> = {};
+        filtersData?.forEach(r => {
+          levelCounts[r.level] = (levelCounts[r.level] || 0) + 1;
+        });
+
        // Transform data to match interface
        const rankings: RankingEntry[] = (rankingsData || []).map((r: any) => ({
          id: r.id,
@@ -147,6 +154,7 @@
          hasMore: end < (count || 0),
          weightClasses,
          levels,
+          levelCounts,
         discipline: org.discipline as 'MMA' | 'Boxeo',
        };
      },

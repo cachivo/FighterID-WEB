@@ -34,12 +34,19 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
   const currentOrg = organizations?.find(org => org.code === organizationCode);
   const availableLevels = currentOrg?.allowed_levels || [];
 
-  // Auto-select first available level when levels load
+  // Smart auto-select: choose level with most active fighters
   useEffect(() => {
-    if (availableLevels.length > 0 && !selectedLevel) {
-      setSelectedLevel(availableLevels[0]);
+    if (rankingData && availableLevels.length > 0 && !selectedLevel) {
+      const levelCounts = rankingData.levelCounts;
+      
+      // Sort levels by fighter count (descending) and pick the one with most data
+      const sortedLevels = [...availableLevels].sort((a, b) => 
+        (levelCounts[b] || 0) - (levelCounts[a] || 0)
+      );
+      
+      setSelectedLevel(sortedLevels[0] || availableLevels[0]);
     }
-  }, [availableLevels, selectedLevel]);
+  }, [availableLevels, selectedLevel, rankingData]);
 
   // Reset page when org or level changes
   useEffect(() => {
