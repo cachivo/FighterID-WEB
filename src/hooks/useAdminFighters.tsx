@@ -24,6 +24,7 @@ export interface AdminFighterProfile {
   updated_at: string;
   user_id?: string;
   discipline?: 'MMA' | 'Boxeo' | 'Judo' | 'JiuJitsu' | 'Kickboxing' | 'MuayThai' | 'Grappling' | 'Otro';
+   level?: string;
 }
 
 export interface AdminFighterFormData {
