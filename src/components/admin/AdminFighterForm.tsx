@@ -1,5 +1,5 @@
  import { useState, useEffect } from 'react';
- import { Loader2, CalendarIcon } from 'lucide-react';
+import { Loader2, CalendarIcon, Trophy, Info } from 'lucide-react';
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
  import { Label } from '@/components/ui/label';
@@ -16,6 +16,8 @@
  import { format } from 'date-fns';
  import { cn } from '@/lib/utils';
 import { ENABLED_DISCIPLINES, MARTIAL_ARTS_TRAINING, WEIGHT_CLASSES, FIGHTER_LEVELS, STANCES, COUNTRIES } from '@/lib/constants/disciplines';
+import { useRankingOrganizations } from '@/hooks/useRankingOrganizations';
+import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership';
  
  const GENDERS = [
    { value: 'M', label: 'Masculino' },
@@ -31,8 +33,15 @@ import { ENABLED_DISCIPLINES, MARTIAL_ARTS_TRAINING, WEIGHT_CLASSES, FIGHTER_LEV
  
  export function AdminFighterForm({ mode, existingFighter, onSuccess, onCancel }: AdminFighterFormProps) {
    const { adminCreateFighterProfile, adminUpdateFighterProfile } = useFighterProfiles();
+  const { data: organizations } = useRankingOrganizations();
+  const { enrollFighter } = useFighterRankingMembership();
    const [isSubmitting, setIsSubmitting] = useState(false);
    const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
+  
+  // Initial league enrollment (only for create mode)
+  const [initialOrg, setInitialOrg] = useState('');
+  const [initialLevel, setInitialLevel] = useState('');
+
    const [formData, setFormData] = useState<Partial<AdminFighterFormData>>({
      first_name: '',
      last_name: '',
@@ -93,6 +102,16 @@ import { ENABLED_DISCIPLINES, MARTIAL_ARTS_TRAINING, WEIGHT_CLASSES, FIGHTER_LEV
      }
    }, [existingFighter, mode]);
  
+  // Get selected organization data
+  const selectedOrgData = organizations?.find(o => o.code === initialOrg);
+
+  // Auto-select first allowed level when organization changes
+  useEffect(() => {
+    if (selectedOrgData && selectedOrgData.allowed_levels.length > 0) {
+      setInitialLevel(selectedOrgData.allowed_levels[0]);
+    }
+  }, [selectedOrgData]);
+
    const handleChange = (field: keyof AdminFighterFormData, value: any) => {
      setFormData(prev => ({
        ...prev,
@@ -152,14 +171,35 @@ import { ENABLED_DISCIPLINES, MARTIAL_ARTS_TRAINING, WEIGHT_CLASSES, FIGHTER_LEV
        return;
      }
  
+    // Validate initial league selection for create mode
+    if (mode === 'create' && (!initialOrg || !initialLevel)) {
+      toast({
+        title: "Error de validación",
+        description: "Selecciona una liga inicial para el peleador",
+        variant: "destructive",
+      });
+      return;
+    }
+
      setIsSubmitting(true);
      
      try {
        if (mode === 'create') {
-         await adminCreateFighterProfile(formData);
+        const newFighterId = await adminCreateFighterProfile(formData);
+        
+        // Enroll in initial league
+        if (newFighterId && initialOrg && initialLevel) {
+          await enrollFighter({
+            fighterId: newFighterId,
+            organizationCode: initialOrg,
+            level: initialLevel,
+            weightClass: formData.weight_class || 'Peso Ligero',
+          });
+        }
+        
          toast({
            title: "¡Perfil creado!",
-           description: "El perfil del peleador ha sido creado exitosamente.",
+          description: "Perfil creado e inscrito en el ranking correctamente.",
          });
        } else if (mode === 'edit' && existingFighter) {
          const success = await adminUpdateFighterProfile(existingFighter.id, formData as AdminFighterFormData);
@@ -376,6 +416,69 @@ import { ENABLED_DISCIPLINES, MARTIAL_ARTS_TRAINING, WEIGHT_CLASSES, FIGHTER_LEV
  
          {/* Combat Tab */}
          <TabsContent value="combat" className="space-y-6">
+          {/* Initial League Enrollment - Only for Create mode */}
+          {mode === 'create' && (
+            <Card className="border-primary/50 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  Inscripción a Liga Inicial *
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                  <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <p className="text-sm text-muted-foreground">
+                    Este peleador comenzará a competir en la liga seleccionada con 0 puntos.
+                    Un administrador puede agregar ligas adicionales después.
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Liga/Organización *</Label>
+                    <Select value={initialOrg} onValueChange={setInitialOrg}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar liga" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {organizations?.map((org) => (
+                          <SelectItem key={org.code} value={org.code}>
+                            {org.short_name} ({org.discipline})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {selectedOrgData && (
+                    <div>
+                      <Label>Nivel *</Label>
+                      <Select value={initialLevel} onValueChange={setInitialLevel}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {selectedOrgData.allowed_levels.map((level) => (
+                            <SelectItem key={level} value={level}>
+                              {level}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+                
+                {initialOrg && initialLevel && (
+                  <p className="text-sm font-medium text-primary">
+                    ✓ Se inscribirá en {selectedOrgData?.name} - {initialLevel}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
            <Card>
              <CardHeader>
                <CardTitle>Información de Combate</CardTitle>

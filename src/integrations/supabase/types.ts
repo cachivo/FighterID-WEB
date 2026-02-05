@@ -4706,6 +4706,15 @@ export type Database = {
         Args: { p_license_id: string }
         Returns: undefined
       }
+      enroll_fighter_in_ranking: {
+        Args: {
+          p_fighter_id: string
+          p_level: string
+          p_organization_code: string
+          p_weight_class: string
+        }
+        Returns: string
+      }
       expire_old_licenses: { Args: never; Returns: undefined }
       generate_license_number: { Args: never; Returns: string }
       generate_license_qr_token: {
@@ -4884,6 +4893,10 @@ export type Database = {
         Args: { p_reason: string; p_ticket_id: string }
         Returns: undefined
       }
+      remove_fighter_from_ranking: {
+        Args: { p_ranking_id: string }
+        Returns: undefined
+      }
       remove_user_role: {
         Args: {
           p_role: Database["public"]["Enums"]["app_role"]
@@ -4906,6 +4919,10 @@ export type Database = {
       }
       suspend_license: {
         Args: { p_license_id: string; p_reason: string; p_until?: string }
+        Returns: undefined
+      }
+      update_fighter_ranking_level: {
+        Args: { p_new_level: string; p_ranking_id: string }
         Returns: undefined
       }
       update_single_fighter_record: {

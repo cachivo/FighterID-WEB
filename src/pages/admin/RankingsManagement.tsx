@@ -8,10 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OptimizedImage } from '@/components/ui/optimized-image';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trophy, Search, User, Medal, Filter, Edit, Crown } from 'lucide-react';
+import { Trophy, Search, User, Medal, Filter, Edit, Crown, UserPlus } from 'lucide-react';
 import { useRankingOrganizations } from '@/hooks/useRankingOrganizations';
 import { useOrganizationRanking } from '@/hooks/useOrganizationRanking';
 import { PointAdjustmentModal } from '@/components/admin/PointAdjustmentModal';
+import { EnrollFighterModal } from '@/components/admin/EnrollFighterModal';
 import { getWeightClassLabel } from '@/lib/constants/disciplines';
 
 export default function RankingsManagement() {
@@ -27,6 +28,7 @@ export default function RankingsManagement() {
     fighterName: string;
     currentPoints: number;
   } | null>(null);
+  const [enrollModalOpen, setEnrollModalOpen] = useState(false);
 
   const { data: rankingData, isLoading: loadingRanking } = useOrganizationRanking(
     selectedOrg,
@@ -37,6 +39,8 @@ export default function RankingsManagement() {
   );
 
   const currentOrgs = organizations?.filter(org => org.discipline === selectedDiscipline) || [];
+
+  const currentOrg = currentOrgs.find(o => o.code === selectedOrg);
 
   const filteredRankings = useMemo(() => {
     if (!rankingData?.rankings) return [];
@@ -182,10 +186,16 @@ export default function RankingsManagement() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-                Ranking {currentOrgs.find(o => o.code === selectedOrg)?.short_name || selectedOrg}
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  Ranking {currentOrg?.short_name || selectedOrg}
+                </CardTitle>
+                <Button size="sm" onClick={() => setEnrollModalOpen(true)}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Agregar Peleador
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {filteredRankings.length === 0 ? (
@@ -294,6 +304,14 @@ export default function RankingsManagement() {
           fighterName={adjustmentModal.fighterName}
           currentPoints={adjustmentModal.currentPoints}
           organizationCode={selectedOrg}
+        />
+      )}
+
+      {currentOrg && (
+        <EnrollFighterModal
+          open={enrollModalOpen}
+          onClose={() => setEnrollModalOpen(false)}
+          organization={currentOrg}
         />
       )}
     </div>

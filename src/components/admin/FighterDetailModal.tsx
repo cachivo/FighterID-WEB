@@ -11,12 +11,13 @@ import { Progress } from '@/components/ui/progress';
 import { 
   User, FileText, Shield, Activity, Clock, Phone, Mail, 
   MapPin, Calendar, Weight, Ruler, Target, AlertTriangle,
-  CheckCircle, XCircle, Eye, Download, ExternalLink, Trophy
+  CheckCircle, XCircle, Eye, Download, ExternalLink, Trophy, Medal
 } from 'lucide-react';
 import { useDetailedFighterData, DetailedFighterData } from '@/hooks/useDetailedFighterData';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { FighterLeaguesTab } from './FighterLeaguesTab';
 
 // Helper function to get correct record based on discipline
 const getRecordDisplay = (profile: any) => {
@@ -165,9 +166,10 @@ export const FighterDetailModal = ({ fighterId, open, onClose }: FighterDetailMo
 
                 {/* Tabs con información detallada */}
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid grid-cols-6 w-full">
+                  <TabsList className="grid grid-cols-7 w-full">
                     <TabsTrigger value="personal">Personal</TabsTrigger>
                     <TabsTrigger value="deportivo">Deportivo</TabsTrigger>
+                    <TabsTrigger value="ligas">Ligas</TabsTrigger>
                     <TabsTrigger value="licencias">Licencias</TabsTrigger>
                     <TabsTrigger value="documentos">Documentos</TabsTrigger>
                     <TabsTrigger value="estado">Estado</TabsTrigger>
@@ -277,6 +279,13 @@ export const FighterDetailModal = ({ fighterId, open, onClose }: FighterDetailMo
                         </CardContent>
                       </Card>
                     )}
+                  </TabsContent>
+
+                  <TabsContent value="ligas" className="space-y-4">
+                    <FighterLeaguesTab 
+                      fighterId={fighterId} 
+                      fighterWeightClass={data.profile?.weight_class}
+                    />
                   </TabsContent>
 
                   <TabsContent value="licencias" className="space-y-4">
