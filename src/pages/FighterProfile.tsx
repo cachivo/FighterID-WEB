@@ -66,7 +66,7 @@ export default function FighterProfile() {
               <Button asChild>
                 <Link to="/fighters">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Volver a Fighters
+                  Volver a Peleadores
                 </Link>
               </Button>
             </div>
@@ -90,7 +90,6 @@ export default function FighterProfile() {
   // Calculate record based on selected type
   const currentRecord = calculateCombinedRecord(recordType);
   const record = `${currentRecord.wins}-${currentRecord.losses}-${currentRecord.draws}`;
-  const winPercentage = currentRecord.winPercentage;
 
   // Record source indicator
   const getRecordSourceText = () => {
@@ -196,7 +195,7 @@ export default function FighterProfile() {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Trophy className="h-4 w-4 text-green-600" />
-                    {winPercentage}% Victorias
+                    {currentRecord.wins} Victoria{currentRecord.wins !== 1 ? 's' : ''}
                   </div>
                   {currentRecord.source && (
                     <div className="flex items-center gap-1">
@@ -238,7 +237,7 @@ export default function FighterProfile() {
             { label: 'Altura', value: fighter.height_cm ? `${fighter.height_cm} cm` : 'N/A', icon: BarChart3 },
             { label: 'Peso', value: fighter.weight_kg ? `${fighter.weight_kg} kg` : 'N/A', icon: BarChart3 },
             { label: 'Alcance', value: fighter.reach_cm ? `${fighter.reach_cm} cm` : 'N/A', icon: BarChart3 },
-            { label: 'Stance', value: fighter.stance || 'N/A', icon: Users }
+            { label: 'Guardia', value: fighter.stance || 'N/A', icon: Users }
           ].map((stat, index) => (
             <Card key={index}>
               <CardContent className="p-4 text-center">
@@ -375,9 +374,6 @@ export default function FighterProfile() {
                   <p className="text-sm text-muted-foreground">
                     {currentRecord.totalFights} peleas totales
                   </p>
-                  <div className="text-sm">
-                    <span className="text-green-600">{winPercentage}%</span> de victorias
-                  </div>
                 </div>
               </CardContent>
             </Card>

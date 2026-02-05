@@ -301,7 +301,7 @@ export default function AdminAnalytics() {
                   <p className="font-semibold text-green-600">{fighter.record_wins}-{fighter.record_losses}</p>
                   <p className="text-xs text-muted-foreground">
                     {fighter.record_wins + fighter.record_losses > 0 
-                      ? `${Math.round(fighter.record_wins / (fighter.record_wins + fighter.record_losses) * 100)}% win rate`
+                      ? `${fighter.record_wins + fighter.record_losses} peleas`
                       : 'Debut'
                     }
                   </p>

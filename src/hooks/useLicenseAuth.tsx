@@ -206,14 +206,14 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     let mounted = true;
     let realtimeChannel: any = null;
 
-    // Set a backup timeout to prevent infinite loading (reduced from 15s to 8s)
+    // Set a backup timeout to prevent infinite loading (12s for slow connections)
     const backupTimeout = setTimeout(() => {
       if (mounted) {
-        console.warn('[TIMEOUT] [LICENSE AUTH] Backup timeout triggered after 8s, stopping loading');
-        setLoadingMessage('Carga completada');
+        console.warn('[TIMEOUT] [LICENSE AUTH] Backup timeout triggered after 12s, stopping loading');
+        setLoadingMessage('La carga está tardando más de lo esperado...');
         setLoading(false);
       }
-    }, 8000);
+    }, 12000);
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

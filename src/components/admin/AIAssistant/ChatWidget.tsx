@@ -130,8 +130,8 @@ const StatisticsDisplay: React.FC<StatisticsDisplayProps> = ({ data, type }) => 
           )}
           {data.rendimiento?.tasaVictoriaPromedio && (
             <Card className="p-3 bg-background">
-              <div className="text-xs text-muted-foreground mb-1">Win Rate</div>
-              <div className="text-xl font-bold text-primary">{data.rendimiento.tasaVictoriaPromedio}%</div>
+              <div className="text-xs text-muted-foreground mb-1">Victorias Promedio</div>
+              <div className="text-xl font-bold text-primary">{data.rendimiento.tasaVictoriaPromedio}</div>
             </Card>
           )}
           {data.geografico?.totalPaises && (

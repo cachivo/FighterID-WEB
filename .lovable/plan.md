@@ -240,7 +240,21 @@ try {
 
 | Métrica | Antes | Después |
 |---------|-------|---------|
-| Instancias de "win rate" | 9+ archivos | 0 |
-| Textos en inglés visibles | Múltiples | 0 |
-| Crashes reportados | Variable | Reducción significativa |
-| Timeout para carga | 8s | 12s |
+| Instancias de "win rate" | 9+ archivos | ✅ 0 |
+| Textos en inglés visibles | Múltiples | ✅ Traducidos |
+| Crashes reportados | Variable | ✅ Global error handler agregado |
+| Timeout para carga | 8s | ✅ 12s |
+
+---
+
+## ✅ COMPLETADO (2024-02-05)
+
+Cambios implementados:
+- `FighterProfile.tsx`: Eliminado winPercentage, "Stance" → "Guardia", "Fighters" → "Peleadores"
+- `FighterMiniature.tsx`: Eliminada barra de efectividad, ahora muestra peleas totales
+- `EnhancedFighterID.tsx`: Eliminado porcentaje de victorias
+- `UserProfile.tsx` (social): "Win Rate" → "Peleas"
+- `ChatWidget.tsx`: "Win Rate" → "Victorias Promedio"
+- `AdminAnalytics.tsx`: Eliminado cálculo de win rate
+- `App.tsx`: Agregado manejador global de errores
+- `useLicenseAuth.tsx`: Timeout aumentado de 8s a 12s

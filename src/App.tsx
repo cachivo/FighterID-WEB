@@ -30,7 +30,7 @@ import ProfileChangeRequest from './pages/ProfileChangeRequest';
 import AIStrikeMonitor from './pages/admin/AIStrikeMonitor';
 import AIStrikeTestPanel from './pages/admin/AIStrikeTestPanel';
 import AIStrikeOverlay from './pages/AIStrikeOverlay';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import React from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { StationPinLogin } from '@/components/station/StationPinLogin';
@@ -113,7 +113,19 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
+const App = () => {
+  // Global error handler for unhandled promise rejections
+  useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('[GLOBAL ERROR] Unhandled promise rejection:', event.reason);
+      event.preventDefault();
+    };
+    
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
@@ -331,6 +343,7 @@ const App = () => (
       </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

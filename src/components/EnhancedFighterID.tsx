@@ -162,7 +162,7 @@ export function EnhancedFighterID({ profile, onEdit, onGenerateQR, showAdmin = f
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 lg:gap-6 text-sm text-professional-accent mb-3 md:mb-4">
             <span className="flex items-center gap-2">
               <Star className="h-4 w-4 text-hsl(142,76%,50%)" />
-              {calculateRecord(recordType).winPercentage}% Victorias
+              {calculateRecord(recordType).totalFights} Peleas Totales
             </span>
           </div>
 

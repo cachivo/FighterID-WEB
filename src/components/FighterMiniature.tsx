@@ -25,7 +25,6 @@ interface FighterMiniatureProps {
 
 export const FighterMiniature = ({ fighter }: FighterMiniatureProps) => {
   const totalFights = (fighter.record_wins || 0) + (fighter.record_losses || 0) + (fighter.record_draws || 0);
-  const winPercentage = totalFights > 0 ? Math.round(((fighter.record_wins || 0) / totalFights) * 100) : 0;
 
   return (
     <Card className="w-[420px] border-border/50 bg-gradient-to-br from-background to-background/95 shadow-lg hover:shadow-xl transition-all duration-300">
@@ -123,18 +122,8 @@ export const FighterMiniature = ({ fighter }: FighterMiniatureProps) => {
 
               {totalFights > 0 && (
                 <div className="mt-3 p-2 bg-card/30 rounded-lg">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground font-medium">Efectividad:</span>
-                    <span className="font-bold text-foreground">{winPercentage}%</span>
-                  </div>
-                  <div className="w-full bg-muted/30 rounded-full h-2 mt-1">
-                    <div 
-                      className="bg-gradient-to-r from-fighter-success to-fighter-success/80 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${winPercentage}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1 text-center">
-                    {totalFights} peleas totales
+                  <p className="text-sm text-center text-muted-foreground">
+                    <span className="font-bold text-foreground">{totalFights}</span> peleas totales
                   </p>
                 </div>
               )}

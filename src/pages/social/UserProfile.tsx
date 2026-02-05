@@ -165,7 +165,6 @@ const UserProfile = () => {
   };
 
   const totalFights = fighterProfile ? (fighterProfile.record_wins || 0) + (fighterProfile.record_losses || 0) + (fighterProfile.record_draws || 0) : 0;
-  const winRate = totalFights > 0 ? ((fighterProfile?.record_wins || 0) / totalFights * 100).toFixed(0) : '0';
 
   return (
     <div className="min-h-screen flex w-full bg-background">
@@ -314,11 +313,11 @@ const UserProfile = () => {
                         </div>
                         <div className="text-center p-3 bg-muted/50 rounded-lg">
                           <div className="text-3xl font-bold text-purple-neon-primary">
-                            {winRate}%
+                            {totalFights}
                           </div>
                           <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
                             <TrendingUp className="h-3 w-3" />
-                            Win Rate
+                            Peleas
                           </div>
                         </div>
                       </>
