@@ -50,6 +50,22 @@ export default function RankingsManagement() {
     100
   );
 
+  // Smart auto-select: choose level with most active fighters (avoid empty states)
+  useEffect(() => {
+    if (rankingData && rankingData.levels.length > 0 && selectedLevel === 'all') {
+      const levelCounts = rankingData.levelCounts;
+      
+      // Sort levels by fighter count (descending) and pick the one with most data
+      const sortedLevels = [...rankingData.levels].sort((a, b) => 
+        (levelCounts[b] || 0) - (levelCounts[a] || 0)
+      );
+      
+      if (sortedLevels[0]) {
+        setSelectedLevel(sortedLevels[0]);
+      }
+    }
+  }, [rankingData, selectedLevel]);
+
   const currentOrgs = organizations?.filter(org => org.discipline === selectedDiscipline) || [];
 
   const currentOrg = currentOrgs.find(o => o.code === selectedOrg);
