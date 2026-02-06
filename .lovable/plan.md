@@ -1,256 +1,117 @@
 
-# Plan de Coherencia de Datos - Formularios de Usuario y Administracion
 
-## Problema Identificado (Imagen del Usuario)
+# Plan: Apodos en Ranking + Fix Bug 110%
 
-La imagen muestra claramente "Strawweight" en el formulario de edicion del usuario en lugar de "Peso Paja (115 lbs)" como deberia aparecer. Esto causa:
+## Problema 1: Apodos Faltantes en el Ranking
 
-1. **Inconsistencia visual**: Usuario ve valores en ingles mientras el resto de la plataforma usa espanol
-2. **Datos corruptos en BD**: Se guardan valores mixtos (ingles/espanol)
-3. **Rankings desincronizados**: Los rankings esperan valores en espanol
+### Ubicacion
+`src/components/sections/Ranking.tsx` - Lineas 223-225
+
+### Estado Actual
+```tsx
+<h4 className="text-xs xs:text-sm sm:text-base font-bold text-white...">
+  {ranking.fighter.first_name} {ranking.fighter.last_name}
+</h4>
+```
+
+### Solucion
+Agregar el apodo debajo del nombre, consistente con el patron de `FighterCard.tsx`:
+
+```tsx
+<h4 className="text-xs xs:text-sm sm:text-base font-bold text-white...">
+  {ranking.fighter.first_name} {ranking.fighter.last_name}
+</h4>
+{ranking.fighter.nickname && (
+  <span className="text-[9px] xs:text-[10px] sm:text-xs text-purple-neon-primary/80 font-medium truncate">
+    "{ranking.fighter.nickname}"
+  </span>
+)}
+```
+
+### Optimizacion Movil
+- Texto ultra compacto: `text-[9px]` en movil
+- `truncate` para apodos largos
+- Comillas para diferenciar visualmente
 
 ---
 
-## Archivos con Problemas Criticos
+## Problema 2: Bug del 110% en Progreso de Perfil
 
-### 1. UserFighterProfileEditForm.tsx (FORMULARIO DE USUARIO)
+### Causa Raiz
+En `useProfileCompletion.tsx`, los puntos se asignan asi:
 
-**Problema A - Categorias de Peso (lineas 744-753):**
+| Campo | Puntos |
+|-------|--------|
+| Avatar | 15 |
+| Fecha nacimiento | 10 |
+| Genero | 10 |
+| Telefono | 10 |
+| Tipo sangre | 10 |
+| Contacto emergencia | 10 |
+| Altura | 5 |
+| Peso | 5 |
+| Alcance | 5 |
+| Bio | 10 |
+| Artes marciales | 10 |
+| **Subtotal** | **100** |
+| BoxRec (solo Boxeo) | **+10** |
+| **Total Boxeo** | **110** |
+
+Para boxeadores con perfil completo, el score llega a **110%** porque BoxRec suma 10 puntos adicionales sin ajustar el total.
+
+### Solucion
+Limitar el score a un maximo de 100 antes de retornarlo:
+
 ```tsx
-// ACTUAL (INCORRECTO - en ingles)
-<SelectItem value="Strawweight">Strawweight</SelectItem>
-<SelectItem value="Flyweight">Flyweight</SelectItem>
-<SelectItem value="Bantamweight">Bantamweight</SelectItem>
-...
+// Al final del calculo, ANTES de determinar level
+const cappedScore = Math.min(score, 100);
 ```
 
-**Problema B - Niveles (lineas 776-778):**
-```tsx
-// ACTUAL (INCORRECTO - mayusculas y formato incorrecto)
-<SelectItem value="AMATEUR">Amateur</SelectItem>
-<SelectItem value="SEMI_PRO">Semi-Profesional</SelectItem>
-<SelectItem value="PROFESSIONAL">Profesional</SelectItem>
-```
+Y usar `cappedScore` en lugar de `score` para el resto de la logica.
 
-**Problema C - Pais (linea 557):**
-```tsx
-// ACTUAL (INCORRECTO - Input libre)
-<Input {...field} placeholder="HN" />
-```
+### Ubicacion
+`src/hooks/useProfileCompletion.tsx` - Linea 164 (antes de determinar level)
 
 ---
 
-### 2. FightersProfilesInvite.tsx (ADMIN - INVITACIONES)
+## Archivos a Modificar
 
-**Problema - Constante local en ingles (lineas 12-23):**
-```tsx
-// ACTUAL (INCORRECTO)
-const WEIGHT_CLASSES = [
-  'Strawweight', 'Flyweight', 'Bantamweight'...
-];
-```
-
-**Problema - Valor por defecto (lineas 36, 73):**
-```tsx
-weightClass: 'Lightweight',  // INCORRECTO
-```
-
----
-
-### 3. EventosPelea.tsx (ADMIN - EVENTOS)
-
-**Problema - Valores en ingles pero labels en espanol (lineas 1259-1266):**
-```tsx
-// ACTUAL (INCORRECTO - value en ingles)
-<SelectItem value="Flyweight">Peso Mosca (125 lbs)</SelectItem>
-<SelectItem value="Bantamweight">Peso Gallo (135 lbs)</SelectItem>
-```
-Esto guarda "Flyweight" en la BD pero muestra "Peso Mosca" al usuario.
-
----
-
-### 4. Auth.tsx (REGISTRO)
-
-**Problema - Valores por defecto (lineas 251-252):**
-```tsx
-weight_class: invitation.weight_class || 'Lightweight',  // INCORRECTO
-country: 'HN',  // INCORRECTO - deberia ser 'Honduras'
-```
-
----
-
-## Plan de Correccion
-
-### Fase 1: Corregir UserFighterProfileEditForm.tsx
-
-**1.1 Agregar imports de constantes centralizadas:**
-```tsx
-import { 
-  WEIGHT_CLASSES, 
-  FIGHTER_LEVELS, 
-  COUNTRIES 
-} from '@/lib/constants/disciplines';
-```
-
-**1.2 Reemplazar select de Categoria de Peso (lineas 742-754):**
-```tsx
-<SelectContent>
-  <SelectItem value="__none__" className="text-muted-foreground">
-    -- Seleccionar --
-  </SelectItem>
-  {WEIGHT_CLASSES.map((wc) => (
-    <SelectItem key={wc.value} value={wc.value}>
-      {wc.label}
-    </SelectItem>
-  ))}
-</SelectContent>
-```
-
-**1.3 Reemplazar select de Nivel (lineas 774-779):**
-```tsx
-<SelectContent>
-  <SelectItem value="__none__" className="text-muted-foreground">
-    -- Seleccionar --
-  </SelectItem>
-  {FIGHTER_LEVELS.map((level) => (
-    <SelectItem key={level.value} value={level.value}>
-      {level.label}
-    </SelectItem>
-  ))}
-</SelectContent>
-```
-
-**1.4 Reemplazar input de Pais por Select (lineas 550-561):**
-```tsx
-<FormField
-  control={form.control}
-  name="country"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Pais</FormLabel>
-      <Select 
-        onValueChange={(value) => field.onChange(value === '__none__' ? '' : value)} 
-        value={field.value || '__none__'}
-      >
-        <FormControl>
-          <SelectTrigger className="min-h-[44px] touch-manipulation">
-            <SelectValue placeholder="Seleccionar pais" />
-          </SelectTrigger>
-        </FormControl>
-        <SelectContent>
-          <SelectItem value="__none__" className="text-muted-foreground">
-            -- Seleccionar --
-          </SelectItem>
-          {COUNTRIES.map((c) => (
-            <SelectItem key={c.value} value={c.value}>
-              {c.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-```
-
-**1.5 Actualizar valor por defecto de pais (linea 118):**
-```tsx
-country: profile.country || 'Honduras',  // en lugar de 'HN'
-```
-
----
-
-### Fase 2: Corregir FightersProfilesInvite.tsx
-
-**2.1 Eliminar constante local y agregar import:**
-```tsx
-// ELIMINAR lineas 12-23 (const WEIGHT_CLASSES local)
-
-// AGREGAR import
-import { WEIGHT_CLASSES } from '@/lib/constants/disciplines';
-```
-
-**2.2 Actualizar valor por defecto (lineas 36 y 73):**
-```tsx
-weightClass: 'Peso Ligero',  // en lugar de 'Lightweight'
-```
-
-**2.3 Actualizar Select para usar labels (lineas 180-184):**
-```tsx
-{WEIGHT_CLASSES.map((wc) => (
-  <SelectItem key={wc.value} value={wc.value}>
-    {wc.label}
-  </SelectItem>
-))}
-```
-
----
-
-### Fase 3: Corregir EventosPelea.tsx
-
-**3.1 Agregar import:**
-```tsx
-import { WEIGHT_CLASSES } from '@/lib/constants/disciplines';
-```
-
-**3.2 Reemplazar select de categorias (lineas 1258-1268):**
-```tsx
-<SelectContent>
-  {WEIGHT_CLASSES.map((wc) => (
-    <SelectItem key={wc.value} value={wc.value}>
-      {wc.label}
-    </SelectItem>
-  ))}
-</SelectContent>
-```
-
----
-
-### Fase 4: Corregir Auth.tsx
-
-**4.1 Actualizar valores por defecto (lineas 251-252):**
-```tsx
-weight_class: invitation.weight_class || 'Peso Ligero',
-country: 'Honduras',
-```
-
----
-
-## Resumen de Archivos a Modificar
-
-| Archivo | Cambios |
-|---------|---------|
-| `src/components/UserFighterProfileEditForm.tsx` | Import constantes + reemplazar 3 selects + valor por defecto |
-| `src/pages/admin/FightersProfilesInvite.tsx` | Eliminar constante local + import + valor por defecto |
-| `src/pages/admin/EventosPelea.tsx` | Import + reemplazar select |
-| `src/pages/Auth.tsx` | Corregir valores por defecto |
+| Archivo | Cambio |
+|---------|--------|
+| `src/components/sections/Ranking.tsx` | Agregar nickname debajo del nombre |
+| `src/hooks/useProfileCompletion.tsx` | Capear score a maximo 100 |
 
 ---
 
 ## Compatibilidad Movil
 
-Todos los nuevos `<Select>` mantendran:
-- `min-h-[44px]` para area de toque accesible
-- `touch-manipulation` para respuesta tactil rapida
-- Clases responsivas existentes (`xs:`, `sm:`, `md:`)
+**Ranking con apodos:**
+- Texto responsivo `text-[9px] xs:text-[10px] sm:text-xs`
+- `truncate` para prevenir overflow
+- Sin cambios en estructura de layout
+
+**Widget de progreso:**
+- Solo cambio logico en hook
+- Sin impacto visual mas alla de corregir el 110%
 
 ---
 
 ## Resultado Esperado
 
-Despues de implementar:
+**Antes:**
+```
+#1 Randy Tercero           18 pts
+   Peso Mosca (125 lbs)
+```
 
-1. **Usuario edita perfil** → Ve "Peso Ligero (155 lbs)" en lugar de "Lightweight"
-2. **Admin crea invitacion** → Selecciona de lista en espanol con libras
-3. **Admin crea pelea** → Categorias consistentes con el resto de la plataforma
-4. **Nuevo registro** → Valores por defecto correctos en espanol
+**Despues:**
+```
+#1 Randy Tercero           18 pts
+   "El Torito"
+   Peso Mosca (125 lbs)
+```
 
----
+**Progreso:**
+- Antes: `110% Completado`
+- Despues: `100% Completado`
 
-## Sincronizacion Automatica
-
-Al usar las mismas constantes centralizadas en todos los formularios:
-- Los datos guardados en BD seran coherentes
-- Los triggers de sincronizacion a rankings funcionaran correctamente
-- Los eventos de actualizacion en tiempo real propagaran los cambios a todos los modulos
