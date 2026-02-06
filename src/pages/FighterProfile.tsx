@@ -128,44 +128,44 @@ export default function FighterProfile() {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Fighter Header */}
         <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+          <CardContent className="p-4 sm:p-5 md:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-center">
               {/* Fighter Info */}
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge className={getStatusColor(fighter.license_status)}>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
+                  <Badge className={`${getStatusColor(fighter.license_status)} text-xs sm:text-sm`}>
                     {fighter.license_status === 'active' ? 'Activo' : fighter.license_status}
                   </Badge>
-                  <Badge variant="outline">{getWeightClassLabel(fighter.weight_class)}</Badge>
+                  <Badge variant="outline" className="text-xs sm:text-sm">{getWeightClassLabel(fighter.weight_class)}</Badge>
                 </div>
                 
                 {fighter.nickname && (
-                  <p className="text-lg font-medium text-muted-foreground">
+                  <p className="text-sm sm:text-base md:text-lg font-medium text-muted-foreground truncate">
                     "{fighter.nickname}"
                   </p>
                 )}
                 
                 <div>
-                  <h1 className="text-4xl lg:text-6xl font-bold text-foreground">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-foreground break-words">
                     {fighter.first_name} {fighter.last_name}
                   </h1>
                 </div>
                 
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  <span>{fighter.country}</span>
+                <div className="flex items-center gap-2 text-muted-foreground text-sm sm:text-base">
+                  <MapPin className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{fighter.country}</span>
                 </div>
 
                 {/* Disciplina de Competencia - Badge prominente */}
-                <div className="my-6">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
-                    <Swords className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Disciplina de Competencia</p>
-                      <p className="font-bold text-lg">{fighter.discipline || 'No definida'}</p>
+                <div className="my-4 sm:my-6">
+                  <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-primary/10 border border-primary/20">
+                    <Swords className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Disciplina</p>
+                      <p className="font-bold text-sm sm:text-base md:text-lg truncate">{fighter.discipline || 'No definida'}</p>
                     </div>
                     {fighter.level && (
-                      <Badge variant="secondary" className="ml-auto">
+                      <Badge variant="secondary" className="text-xs flex-shrink-0">
                         {fighter.level}
                       </Badge>
                     )}
@@ -173,24 +173,24 @@ export default function FighterProfile() {
                 </div>
 
                 {/* Fight Stats */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-green-600 mb-1">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                  <div className="text-center p-2 sm:p-3 rounded-lg bg-green-500/10">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600 mb-0.5 sm:mb-1">
                       {currentRecord.wins}
                     </div>
-                    <div className="text-sm text-muted-foreground">Victorias</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Victorias</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-red-600 mb-1">
+                  <div className="text-center p-2 sm:p-3 rounded-lg bg-red-500/10">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-red-600 mb-0.5 sm:mb-1">
                       {currentRecord.losses}
                     </div>
-                    <div className="text-sm text-muted-foreground">Derrotas</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Derrotas</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-muted-foreground mb-1">
+                  <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-muted-foreground mb-0.5 sm:mb-1">
                       {currentRecord.draws}
                     </div>
-                    <div className="text-sm text-muted-foreground">Empates</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Empates</div>
                   </div>
                 </div>
 
@@ -210,10 +210,10 @@ export default function FighterProfile() {
               </div>
 
               {/* Fighter Image */}
-              <div className="flex justify-center lg:justify-end">
+              <div className="flex justify-center lg:justify-end order-first lg:order-last">
                 <div className="relative">
                   {fighter.avatar_url ? (
-                    <div className="h-80 w-60 flex items-end justify-center overflow-hidden rounded-xl bg-muted">
+                    <div className="h-48 w-36 sm:h-64 sm:w-48 md:h-80 md:w-60 flex items-end justify-center overflow-hidden rounded-xl bg-muted">
                       <img 
                         src={fighter.avatar_url} 
                         alt={`${fighter.first_name} ${fighter.last_name}`}
@@ -221,8 +221,8 @@ export default function FighterProfile() {
                       />
                     </div>
                   ) : (
-                    <div className="h-80 w-60 bg-muted rounded-xl flex items-center justify-center">
-                      <div className="text-6xl font-bold text-muted-foreground">
+                    <div className="h-48 w-36 sm:h-64 sm:w-48 md:h-80 md:w-60 bg-muted rounded-xl flex items-center justify-center">
+                      <div className="text-4xl sm:text-5xl md:text-6xl font-bold text-muted-foreground">
                         {fighter.first_name?.charAt(0) || 'F'}
                         {fighter.last_name?.charAt(0) || 'F'}
                       </div>
@@ -235,7 +235,7 @@ export default function FighterProfile() {
         </Card>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           {[
             { label: 'Altura', value: fighter.height_cm ? `${fighter.height_cm} cm` : 'N/A', icon: BarChart3 },
             { label: 'Peso', value: fighter.weight_kg ? `${fighter.weight_kg} kg` : 'N/A', icon: BarChart3 },
@@ -243,12 +243,12 @@ export default function FighterProfile() {
             { label: 'Guardia', value: fighter.stance || 'N/A', icon: Users }
           ].map((stat, index) => (
             <Card key={index}>
-              <CardContent className="p-4 text-center">
-                <div className="p-2 rounded-full bg-primary/10 w-fit mx-auto mb-2">
-                  <stat.icon className="h-4 w-4 text-primary" />
+              <CardContent className="p-3 sm:p-4 text-center">
+                <div className="p-1.5 sm:p-2 rounded-full bg-primary/10 w-fit mx-auto mb-1 sm:mb-2">
+                  <stat.icon className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground uppercase mb-1">{stat.label}</p>
-                <p className="text-lg font-semibold">{stat.value}</p>
+                <p className="text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1 truncate">{stat.label}</p>
+                <p className="text-sm sm:text-base md:text-lg font-semibold truncate">{stat.value}</p>
               </CardContent>
             </Card>
           ))}
