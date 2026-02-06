@@ -271,12 +271,13 @@ export function UserFighterProfileEditForm({ profile, onSuccess, onCancel }: Use
         if (updates.record_losses) updates.record_losses = Number(updates.record_losses);
         if (updates.record_draws) updates.record_draws = Number(updates.record_draws);
 
-        const { error: updateError } = await supabase
-          .from('fighter_profiles')
-          .update(updates)
-          .eq('id', profileId);
+      // Usar RPC para sincronización automática a rankings
+      const { error: updateError } = await supabase.rpc('user_update_fighter_profile', {
+        p_fighter_id: profileId,
+        p_profile_data: updates
+      });
 
-        if (updateError) throw updateError;
+      if (updateError) throw updateError;
 
         // Actualizar teléfono en app_user si cambió
         if (data.phone !== profile.phone) {

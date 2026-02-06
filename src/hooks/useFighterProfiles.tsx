@@ -540,6 +540,50 @@ export function useFighterProfiles() {
   }, [fetchFighters]);
 
   /**
+   * User updates their own fighter profile with ranking sync
+   */
+  const userUpdateFighterProfile = async (fighterId: string, profileData: Partial<FighterProfileData>) => {
+    try {
+      const { error } = await supabase.rpc('user_update_fighter_profile', {
+        p_fighter_id: fighterId,
+        p_profile_data: profileData as any
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Éxito",
+        description: "Perfil actualizado correctamente.",
+      });
+
+      // Complete cache invalidation
+      queryClient.invalidateQueries({ queryKey: ['organization-ranking'] });
+      queryClient.invalidateQueries({ queryKey: ['fighter-active-leagues'] });
+      queryClient.invalidateQueries({ queryKey: ['ranking-data'] });
+      queryClient.invalidateQueries({ queryKey: ['fighters'] });
+      queryClient.invalidateQueries({ queryKey: ['fighter', fighterId] });
+      queryClient.invalidateQueries({ queryKey: ['fighter-profile', fighterId] });
+      queryClient.invalidateQueries({ queryKey: ['userFighterProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['license'] });
+
+      // Notify other components
+      window.dispatchEvent(new CustomEvent('fighter-profile-updated', {
+        detail: { fighterId, fields: Object.keys(profileData) }
+      }));
+
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar perfil';
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  /**
    * Admin creates a new fighter profile (no user_id required)
    */
   const adminCreateFighterProfile = async (profileData: Partial<FighterProfileData>): Promise<string | null> => {
@@ -580,6 +624,7 @@ export function useFighterProfiles() {
     fetchFightersWithReadyStatus,
     adminUpdateFighterProfile,
     adminCreateFighterProfile,
+    userUpdateFighterProfile,
     deleteLicense,
     deleteFighterProfile,
     refreshUserProfile

@@ -4933,6 +4933,10 @@ export type Database = {
         Args: { p_fight_type: string; p_fighter_id: string }
         Returns: undefined
       }
+      user_update_fighter_profile: {
+        Args: { p_fighter_id: string; p_profile_data: Json }
+        Returns: undefined
+      }
       validate_fighter_invitation: {
         Args: { p_token: string }
         Returns: {
