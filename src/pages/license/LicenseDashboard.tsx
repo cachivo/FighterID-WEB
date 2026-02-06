@@ -1,4 +1,5 @@
 import { Shield, Calendar, AlertTriangle, CheckCircle, Clock, QrCode, Edit, RefreshCw, MapPin, Dumbbell, Target, User, Zap, Heart, FileText, Activity } from 'lucide-react';
+import { getWeightClassLabel } from '@/lib/constants/disciplines';
 import { useLicenseAuth } from '@/hooks/useLicenseAuth';
 import { useLicenseData } from '@/hooks/useLicenseSystem';
 import { useFighterProfiles } from '@/hooks/useFighterProfiles';
@@ -292,7 +293,7 @@ export default function LicenseDashboard() {
                     )}
                     {fighterProfile?.weight_class && (
                       <Badge variant="outline">
-                        {fighterProfile.weight_class}
+                        {getWeightClassLabel(fighterProfile.weight_class)}
                       </Badge>
                     )}
                   </div>

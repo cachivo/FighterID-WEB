@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getWeightClassLabel } from '@/lib/constants/disciplines';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -148,7 +149,7 @@ export const FighterDetailModal = ({ fighterId, open, onClose }: FighterDetailMo
                             Récord: {getRecordDisplay(data.profile)}
                           </Badge>
                           <Badge variant="secondary">
-                            {data.profile?.weight_class}
+                            {getWeightClassLabel(data.profile?.weight_class)}
                           </Badge>
                           {data.profile?.discipline && (
                             <Badge variant="outline">

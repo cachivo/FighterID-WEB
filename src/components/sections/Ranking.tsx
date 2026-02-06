@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getWeightClassLabel } from "@/lib/constants/disciplines";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Users, Target, Award, TrendingUp, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -233,7 +234,7 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
                           
                           <div className="flex flex-wrap items-center gap-1 xs:gap-1.5 sm:gap-2">
                             <Badge variant="outline" className="text-[9px] xs:text-[10px] sm:text-xs border-purple-neon-primary/50 text-purple-neon-primary px-1 xs:px-1.5">
-                              {ranking.weight_class}
+                              {getWeightClassLabel(ranking.weight_class)}
                             </Badge>
                             {/* Fighter Record - Always visible */}
                             <span className="text-[9px] xs:text-[10px] sm:text-xs font-mono">

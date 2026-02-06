@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getWeightClassLabel } from '@/lib/constants/disciplines';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -90,7 +91,7 @@ export function EnhancedFighterID({ profile, onEdit, onGenerateQR, showAdmin = f
                     {profile.level || 'Amateur'}
                   </Badge>
                   <Badge variant="professional-outline">
-                    {profile.weight_class}
+                    {getWeightClassLabel(profile.weight_class)}
                   </Badge>
                 </div>
               </div>

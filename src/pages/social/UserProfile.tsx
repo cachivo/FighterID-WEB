@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getWeightClassLabel } from '@/lib/constants/disciplines';
 import { useParams, Link } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
 import { SocialSidebar } from '@/components/social/SocialSidebar';
@@ -267,7 +268,7 @@ const UserProfile = () => {
                             </Badge>
                           )}
                           {fighterProfile.weight_class && (
-                            <Badge variant="outline">{fighterProfile.weight_class}</Badge>
+                            <Badge variant="outline">{getWeightClassLabel(fighterProfile.weight_class)}</Badge>
                           )}
                           {fighterProfile.country && (
                             <Badge variant="outline" className="gap-1">
