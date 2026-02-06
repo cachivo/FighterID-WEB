@@ -23,56 +23,45 @@ export default function LicensePending() {
     }
   }, [licenseData?.status, navigate]);
 
-  // Direct license verification as fallback
+  // LAYER 3: Polling fallback - Direct license verification every 5 seconds
   useEffect(() => {
+    if (!user || hasActiveLicense || isRedirecting) return;
+
     const directLicenseCheck = async () => {
-      if (!user || hasActiveLicense) return;
+      if (hasActiveLicense || isRedirecting) return;
       
       try {
-        console.log('Direct license verification for user:', user.id);
+        console.log('[POLLING] Direct license verification for user:', user.id);
         
-        // Get user's app_user record
-        const { data: appUser } = await supabase
-          .from('app_user')
-          .select('id')
-          .eq('auth_user_id', user.id)
-          .single();
+        // Use RPC for faster single-query check
+        const { data, error } = await supabase.rpc('check_user_license_status', {
+          p_auth_user_id: user.id
+        });
 
-        if (!appUser) return;
+        if (error) {
+          console.error('[POLLING] RPC error:', error);
+          return;
+        }
 
-        // Check for active license directly (robust path without ambiguous embeds)
-        // 1) Find fighter profile id for this app user
-        const { data: profile } = await supabase
-          .from('fighter_profiles')
-          .select('id')
-          .eq('user_id', appUser.id)
-          .eq('active', true)
-          .maybeSingle();
-
-        if (!profile?.id) return;
-
-        // 2) Find primary ACTIVE license for that fighter profile
-        const { data: license } = await supabase
-          .from('fighter_licenses')
-          .select('id, status, license_number')
-          .eq('fighter_id', profile.id)
-          .eq('status', 'ACTIVE')
-          .eq('is_primary', true)
-          .maybeSingle();
-
-        if (license) {
-          console.log('Direct check found ACTIVE license, redirecting...');
+        const result = data as any;
+        if (result?.status === 'active_license') {
+          console.log('[POLLING] Found ACTIVE license! Redirecting...');
+          setIsRedirecting(true);
           navigate('/license/dashboard', { replace: true });
         }
       } catch (error) {
-        console.error('Direct license check failed:', error);
+        console.error('[POLLING] Direct license check failed:', error);
       }
     };
 
-    // Run direct check after a short delay if still on pending page
-    const timer = setTimeout(directLicenseCheck, 2000);
-    return () => clearTimeout(timer);
-  }, [user, hasActiveLicense, navigate]);
+    // Run immediately on mount
+    directLicenseCheck();
+    
+    // Then poll every 5 seconds as fallback
+    const interval = setInterval(directLicenseCheck, 5000);
+    
+    return () => clearInterval(interval);
+  }, [user, hasActiveLicense, isRedirecting, navigate]);
 
   const getStatusSteps = () => {
     const currentStatus = licenseData?.status;

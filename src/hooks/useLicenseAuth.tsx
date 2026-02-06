@@ -261,7 +261,9 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   useEffect(() => {
     console.log('[LICENSE AUTH] useEffect started - setting up auth listeners');
     let mounted = true;
-    let realtimeChannel: any = null;
+    let profileChannel: any = null;
+    let licenseChannel: any = null;
+    let broadcastChannel: any = null;
 
     // Extended timeout for slow mobile connections (25s instead of 12s)
     const backupTimeout = setTimeout(() => {
@@ -328,8 +330,9 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     });
 
+    // LAYER 1: Real-time subscription for fighter_profiles changes
     if (user) {
-      realtimeChannel = supabase
+      profileChannel = supabase
         .channel('fighter-profile-changes')
         .on(
           'postgres_changes',
@@ -339,7 +342,7 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
             table: 'fighter_profiles'
           },
           (payload) => {
-            console.log('Fighter profile updated, refreshing license data...');
+            console.log('[REALTIME] Fighter profile updated, refreshing license data...');
             if (mounted) {
               retryCountRef.current = 0;
               checkLicenseStatusOptimized(user.id);
@@ -349,16 +352,69 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .subscribe();
     }
 
+    // LAYER 2: Real-time subscription for fighter_licenses changes (NEW)
+    if (user && licenseData?.id) {
+      licenseChannel = supabase
+        .channel(`license-changes-${licenseData.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'fighter_licenses',
+            filter: `id=eq.${licenseData.id}`
+          },
+          (payload: any) => {
+            console.log('[REALTIME] License status changed via postgres_changes:', payload);
+            if (mounted && payload.new?.status === 'ACTIVE') {
+              console.log('[REALTIME] License approved! Updating state immediately...');
+              setHasActiveLicense(true);
+              setLicenseData((prev: any) => prev ? { ...prev, status: 'ACTIVE' } : prev);
+              // Auto-redirect from pending page
+              if (window.location.pathname === '/license/pending') {
+                window.location.href = '/license/dashboard';
+              }
+            } else if (mounted && payload.new?.status === 'SUSPENDED') {
+              setHasActiveLicense(false);
+              setLicenseData((prev: any) => prev ? { ...prev, status: 'SUSPENDED' } : prev);
+              if (window.location.pathname === '/license/dashboard') {
+                window.location.href = '/license/suspended';
+              }
+            }
+          }
+        )
+        .subscribe();
+    }
+
+    // LAYER 3: Broadcast listener for admin approval notifications (NEW)
+    broadcastChannel = supabase
+      .channel('license-approvals-broadcast')
+      .on('broadcast', { event: 'license-approved' }, (payload) => {
+        console.log('[BROADCAST] License approval notification received:', payload);
+        if (mounted && user && licenseData?.id && payload.payload?.licenseId === licenseData.id) {
+          console.log('[BROADCAST] This is our license! Refreshing status...');
+          retryCountRef.current = 0;
+          checkLicenseStatusOptimized(user.id);
+        }
+      })
+      .subscribe();
+
     return () => {
       mounted = false;
       clearTimeout(backupTimeout);
       clearInterval(progressInterval);
       subscription.unsubscribe();
-      if (realtimeChannel) {
-        supabase.removeChannel(realtimeChannel);
+      if (profileChannel) {
+        supabase.removeChannel(profileChannel);
+      }
+      if (licenseChannel) {
+        supabase.removeChannel(licenseChannel);
+      }
+      if (broadcastChannel) {
+        supabase.removeChannel(broadcastChannel);
       }
     };
-  }, []);
+  }, [user?.id, licenseData?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });

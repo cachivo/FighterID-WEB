@@ -120,9 +120,25 @@ export function useAdminLicenseActions() {
       });
       if (error) throw error;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
+      // Invalidate local caches
       qc.invalidateQueries({ queryKey: ['license', variables.licenseId] });
       qc.invalidateQueries({ queryKey: ['pending-licenses'] });
+      qc.invalidateQueries({ queryKey: ['admin_licenses'] });
+      
+      // BROADCAST: Notify the user that their license was approved (NEW)
+      // This allows instant UI updates without page refresh
+      try {
+        await supabase.channel('license-approvals-broadcast').send({
+          type: 'broadcast',
+          event: 'license-approved',
+          payload: { licenseId: variables.licenseId }
+        });
+        console.log('[BROADCAST] License approval notification sent for:', variables.licenseId);
+      } catch (broadcastError) {
+        console.warn('[BROADCAST] Failed to send approval notification:', broadcastError);
+        // Don't throw - this is a nice-to-have, not critical
+      }
     }
   });
 
