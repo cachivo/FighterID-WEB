@@ -129,10 +129,10 @@ export default function SocialProfile() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity min-h-[44px] touch-manipulation"
               >
                 <Camera className="h-4 w-4 mr-2" />
-                Cambiar portada
+                <span className="hidden sm:inline">Cambiar portada</span>
               </Button>
             </div>
             
@@ -152,7 +152,7 @@ export default function SocialProfile() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute bottom-0 right-0 h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity touch-manipulation"
                   >
                     <Camera className="h-4 w-4" />
                   </Button>

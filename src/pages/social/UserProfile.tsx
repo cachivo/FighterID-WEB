@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/page-header';
 import { SocialSidebar } from '@/components/social/SocialSidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserPlus, UserCheck, Users, Trophy, Target, TrendingUp, Calendar, MapPin, Shield, Sword, Heart, MessageCircle } from 'lucide-react';
+import { UserPlus, UserCheck, Users, Trophy, Target, TrendingUp, Calendar, MapPin, Shield, Sword, Heart, MessageCircle, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useFriends } from '@/hooks/useFriends';
 import PostCard from '@/components/social/PostCard';
@@ -219,12 +219,25 @@ const UserProfile = () => {
                         )}
                       </div>
                       
-                      {!isOwnProfile && (
+                      {isOwnProfile ? (
+                        <Button
+                          asChild
+                          variant="default"
+                          size="lg"
+                          className="min-h-[44px] touch-manipulation"
+                        >
+                          <Link to="/social/profile">
+                            <Edit className="w-5 h-5 mr-2" />
+                            Editar Perfil
+                          </Link>
+                        </Button>
+                      ) : (
                         <Button
                           variant={isFriend ? "secondary" : "default"}
                           onClick={handleFriendAction}
                           disabled={isPending}
                           size="lg"
+                          className="min-h-[44px] touch-manipulation"
                         >
                           {isFriend ? (
                             <>

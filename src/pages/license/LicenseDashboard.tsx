@@ -211,18 +211,16 @@ export default function LicenseDashboard() {
                 <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span className="hidden xs:inline">{isRefreshing ? 'Actualizando...' : 'Actualizar'}</span>
               </Button>
-              {missingFields.length > 0 && (
-                <Button 
-                  onClick={handleUpdateInfo}
-                  variant="professional"
-                  size="sm"
-                  className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3 min-h-[44px] touch-manipulation"
-                >
-                  <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  <span className="hidden xs:inline">Actualizar</span>
-                  <span className="xs:hidden">Editar</span>
-                </Button>
-              )}
+              <Button 
+                onClick={handleUpdateInfo}
+                variant="professional"
+                size="sm"
+                className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3 min-h-[44px] touch-manipulation"
+              >
+                <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                <span className="hidden xs:inline">{missingFields.length > 0 ? 'Completar Perfil' : 'Editar Perfil'}</span>
+                <span className="xs:hidden">Editar</span>
+              </Button>
               <div className="flex flex-wrap gap-1 shrink-0">
                 <Badge className={`${getStatusColor(licenseData.status)} text-[10px] xs:text-xs whitespace-nowrap`}>
                   {getStatusText(licenseData.status)}

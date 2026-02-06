@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Shield, Trophy, MapPin, Users, BarChart3, Info, Home, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Shield, Trophy, MapPin, Users, BarChart3, Info, Home, GraduationCap, Edit } from 'lucide-react';
 import { Crown, Award, Swords } from 'lucide-react';
 import FighterUpdatesFeed from '@/components/FighterUpdatesFeed';
 import Header from '@/components/Header';
@@ -16,6 +16,7 @@ import Footer from '@/components/Footer';
 import { getWeightClassLabel } from '@/lib/constants/disciplines';
 import { useFighterActiveLeagues } from '@/hooks/useFighterActiveLeagues';
 import { MARTIAL_ARTS_TRAINING } from '@/lib/constants/disciplines';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function FighterProfile() {
   const { id } = useParams<{ id: string }>();
@@ -24,9 +25,41 @@ export default function FighterProfile() {
   const { data: activeLeagues, isLoading: isLoadingLeagues } = useFighterActiveLeagues(id || null);
   const [fighter, setFighter] = useState<FighterProfileType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
   
   // Enable realtime updates for this fighter
   useRealtimeFighterUpdates(id);
+
+  // Check if current user is the owner of this fighter profile
+  useEffect(() => {
+    const checkOwnership = async () => {
+      if (!fighter?.user_id) {
+        setIsOwner(false);
+        return;
+      }
+      
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setIsOwner(false);
+          return;
+        }
+        
+        const { data: appUser } = await supabase
+          .from('app_user')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .single();
+        
+        setIsOwner(appUser?.id === fighter.user_id);
+      } catch (error) {
+        console.error('[FighterProfile] Error checking ownership:', error);
+        setIsOwner(false);
+      }
+    };
+    
+    checkOwnership();
+  }, [fighter?.user_id]);
 
   const fetchFighter = useCallback(async () => {
     if (id) {
@@ -130,19 +163,35 @@ export default function FighterProfile() {
       {/* Header */}
       <div className="border-b border-border pt-16">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4">
-          <div className="flex gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/">
-                <Home className="h-4 w-4 mr-2" />
-                Inicio
-              </Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/fighters">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Fighters
-              </Link>
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex gap-2">
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/">
+                  <Home className="h-4 w-4 mr-2" />
+                  Inicio
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/fighters">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Fighters
+                </Link>
+              </Button>
+            </div>
+            
+            {/* Edit button for profile owner */}
+            {isOwner && (
+              <Button 
+                asChild 
+                variant="default" 
+                className="min-h-[44px] touch-manipulation w-full sm:w-auto"
+              >
+                <Link to="/license/dashboard">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar Mi Perfil
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
