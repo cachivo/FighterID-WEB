@@ -8,10 +8,32 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Enhanced storage for PWA support - handles both localStorage and fallbacks
+const createStorageAdapter = () => {
+  // Test if localStorage is accessible (may be blocked in some contexts)
+  try {
+    const testKey = '__supabase_storage_test__';
+    localStorage.setItem(testKey, 'test');
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch {
+    // Fallback to memory storage for PWA contexts where localStorage fails
+    console.warn('[Supabase] localStorage not available, using memory storage');
+    const memoryStorage: Record<string, string> = {};
+    return {
+      getItem: (key: string) => memoryStorage[key] || null,
+      setItem: (key: string, value: string) => { memoryStorage[key] = value; },
+      removeItem: (key: string) => { delete memoryStorage[key]; },
+    };
+  }
+};
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    storage: createStorageAdapter(),
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true, // Important for handling OAuth redirects in PWA
+    flowType: 'pkce', // More secure, better for mobile/PWA
   }
 });

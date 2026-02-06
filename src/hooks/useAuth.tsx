@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,72 +16,152 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Detect if running as installed PWA
+const isPWA = () => {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true ||
+    document.referrer.includes('android-app://');
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const initializedRef = useRef(false);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    // Set up auth state listener
+    mountedRef.current = true;
+
+    // CRITICAL: Set up listener FIRST, BEFORE checking session
+    // This prevents race conditions on slow mobile connections
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+      (event, currentSession) => {
+        if (!mountedRef.current) return;
+
+        console.log('[AUTH] State changed:', event, currentSession?.user?.id);
+
+        // Update state synchronously
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        // Only set loading false AFTER initial check completes
+        // This prevents showing logged-out state before we know
+        if (initializedRef.current) {
+          setLoading(false);
+        }
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // THEN check for existing session
+    const initializeAuth = async () => {
+      try {
+        console.log('[AUTH] Initializing, checking session...');
+        
+        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[AUTH] Error getting session:', error);
+        }
 
-    return () => subscription.unsubscribe();
+        if (!mountedRef.current) return;
+
+        console.log('[AUTH] Existing session:', existingSession?.user?.id || 'none');
+
+        setSession(existingSession);
+        setUser(existingSession?.user ?? null);
+      } catch (e) {
+        console.error('[AUTH] Failed to get session:', e);
+      } finally {
+        if (mountedRef.current) {
+          initializedRef.current = true;
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      mountedRef.current = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      console.log('[AUTH] Signing in...');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('[AUTH] Sign in error:', error);
+        return { error };
+      }
+
+      // Manually update state for faster feedback on slow connections
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.user);
+      }
+
+      return { error: null };
+    } catch (e: any) {
+      console.error('[AUTH] Unexpected sign in error:', e);
+      return { error: { message: 'Error de conexión. Intenta de nuevo.' } };
+    }
   };
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/auth`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
-    });
-
-    if (error) {
-      // Handle rate limiting
-      if (error.message?.includes('For security purposes') || error.message?.includes('email_send_rate_limit')) {
-        return { error: { message: 'Has intentado registrarte varias veces. Por favor espera 60 segundos antes de intentar nuevamente.' } };
-      }
+    try {
+      // Use current origin for redirect, works for both web and PWA
+      const redirectUrl = `${window.location.origin}/license/auth`;
       
-      // Handle duplicate user
-      const message = /registered|exists|already/i.test(error.message)
-        ? 'Este correo ya está registrado. Intenta iniciar sesión o recupera tu contraseña.'
-        : error.message;
-      return { error: { message } };
-    }
+      console.log('[AUTH] Signing up with redirect:', redirectUrl);
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
 
-    return { error: null };
+      if (error) {
+        // Handle rate limiting
+        if (error.message?.includes('For security purposes') || error.message?.includes('email_send_rate_limit')) {
+          return { error: { message: 'Has intentado registrarte varias veces. Por favor espera 60 segundos antes de intentar nuevamente.' } };
+        }
+        
+        // Handle duplicate user
+        const message = /registered|exists|already/i.test(error.message)
+          ? 'Este correo ya está registrado. Intenta iniciar sesión o recupera tu contraseña.'
+          : error.message;
+        return { error: { message } };
+      }
+
+      return { error: null };
+    } catch (e: any) {
+      console.error('[AUTH] Unexpected sign up error:', e);
+      return { error: { message: 'Error de conexión. Intenta de nuevo.' } };
+    }
   };
 
   const signOut = async () => {
     try {
+      console.log('[AUTH] Signing out...');
+      
+      // Clear state first for immediate UI feedback
+      setSession(null);
+      setUser(null);
+      
       await supabase.auth.signOut({ scope: 'local' });
     } catch (e) {
-      console.error('Error al cerrar sesión local:', e);
+      console.error('[AUTH] Error signing out:', e);
     } finally {
+      // Ensure state is cleared even if signOut fails
       setSession(null);
       setUser(null);
       setLoading(false);
@@ -98,13 +178,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('Error sending recovery email:', error);
+        console.error('[AUTH] Error sending recovery email:', error);
         return { error: { message: error.message } };
       }
 
       return { error: null };
     } catch (e: any) {
-      console.error('Unexpected error in resetPassword:', e);
+      console.error('[AUTH] Unexpected error in resetPassword:', e);
       return { error: { message: 'Error al procesar la solicitud' } };
     }
   };
@@ -122,7 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth`
+          emailRedirectTo: `${window.location.origin}/license/auth`
         }
       });
       
