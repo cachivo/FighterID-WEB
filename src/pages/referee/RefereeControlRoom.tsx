@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getWeightClassLabel } from '@/lib/constants/disciplines';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -235,7 +236,7 @@ export default function RefereeControlRoom() {
               {fight.fighterA?.nickname && (
                 <p className="text-sm text-muted-foreground">"{fight.fighterA.nickname}"</p>
               )}
-              <Badge variant="outline">{fight.weight_class}</Badge>
+              <Badge variant="outline">{getWeightClassLabel(fight.weight_class)}</Badge>
             </div>
           </CardContent>
         </Card>
@@ -254,7 +255,7 @@ export default function RefereeControlRoom() {
               {fight.fighterB?.nickname && (
                 <p className="text-sm text-muted-foreground">"{fight.fighterB.nickname}"</p>
               )}
-              <Badge variant="outline">{fight.weight_class}</Badge>
+              <Badge variant="outline">{getWeightClassLabel(fight.weight_class)}</Badge>
             </div>
           </CardContent>
         </Card>

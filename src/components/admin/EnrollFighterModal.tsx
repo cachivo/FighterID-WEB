@@ -11,7 +11,7 @@
  import { useAdminFighters } from '@/hooks/useAdminFighters';
  import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership';
  import { RankingOrganization } from '@/hooks/useRankingOrganizations';
- import { WEIGHT_CLASSES } from '@/lib/constants/disciplines';
+ import { WEIGHT_CLASSES, getWeightClassLabel } from '@/lib/constants/disciplines';
  
  interface EnrollFighterModalProps {
    open: boolean;
@@ -145,12 +145,12 @@
                <p className="text-sm font-medium mb-1">
                  Seleccionado: {selectedFighterData.first_name} {selectedFighterData.last_name}
                </p>
-               <div className="flex gap-2">
-                 <Badge variant="outline">{selectedFighterData.weight_class}</Badge>
-                 {selectedFighterData.discipline && (
-                   <Badge variant="secondary">{selectedFighterData.discipline}</Badge>
-                 )}
-               </div>
+                <div className="flex gap-2">
+                  <Badge variant="outline">{getWeightClassLabel(selectedFighterData.weight_class)}</Badge>
+                  {selectedFighterData.discipline && (
+                    <Badge variant="secondary">{selectedFighterData.discipline}</Badge>
+                  )}
+                </div>
              </div>
            )}
  
