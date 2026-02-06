@@ -1,76 +1,115 @@
 
 
-# Plan: Apodos en Ranking + Fix Bug 110%
+# Plan: Corregir Récords Desactualizados en Rankings
 
-## Problema 1: Apodos Faltantes en el Ranking
+## Problema Detectado
 
-### Ubicacion
-`src/components/sections/Ranking.tsx` - Lineas 223-225
+El componente `Ranking.tsx` muestra récords incorrectos porque:
 
-### Estado Actual
-```tsx
-<h4 className="text-xs xs:text-sm sm:text-base font-bold text-white...">
-  {ranking.fighter.first_name} {ranking.fighter.last_name}
-</h4>
-```
+1. **Boxeadores**: Los campos `boxeo_record_*` están en `0-0-0` pero los datos reales están en `record_wins/losses/draws`
+2. **Algunos MMA**: Desincronización entre campos específicos y legacy
+3. **No hay fallback**: A diferencia de `FighterCard.tsx`, el ranking no usa campos legacy como respaldo
 
-### Solucion
-Agregar el apodo debajo del nombre, consistente con el patron de `FighterCard.tsx`:
+### Datos de Ejemplo
 
-```tsx
-<h4 className="text-xs xs:text-sm sm:text-base font-bold text-white...">
-  {ranking.fighter.first_name} {ranking.fighter.last_name}
-</h4>
-{ranking.fighter.nickname && (
-  <span className="text-[9px] xs:text-[10px] sm:text-xs text-purple-neon-primary/80 font-medium truncate">
-    "{ranking.fighter.nickname}"
-  </span>
-)}
-```
-
-### Optimizacion Movil
-- Texto ultra compacto: `text-[9px]` en movil
-- `truncate` para apodos largos
-- Comillas para diferenciar visualmente
+| Peleador | Disciplina | boxeo_record | record (legacy) | Muestra |
+|----------|------------|--------------|-----------------|---------|
+| Kevin Calona | Boxeo | 0-0-0 | 6-3-0 | 0-0-0 (incorrecto) |
+| Aaron Irias | Boxeo | 0-0-0 | 3-1-0 | 0-0-0 (incorrecto) |
+| Willis Yang | Boxeo | 0-0-0 | 1-1-1 | 0-0-0 (incorrecto) |
 
 ---
 
-## Problema 2: Bug del 110% en Progreso de Perfil
+## Solucion en 2 Fases
 
-### Causa Raiz
-En `useProfileCompletion.tsx`, los puntos se asignan asi:
+### Fase 1: Correccion Inmediata en Codigo
 
-| Campo | Puntos |
-|-------|--------|
-| Avatar | 15 |
-| Fecha nacimiento | 10 |
-| Genero | 10 |
-| Telefono | 10 |
-| Tipo sangre | 10 |
-| Contacto emergencia | 10 |
-| Altura | 5 |
-| Peso | 5 |
-| Alcance | 5 |
-| Bio | 10 |
-| Artes marciales | 10 |
-| **Subtotal** | **100** |
-| BoxRec (solo Boxeo) | **+10** |
-| **Total Boxeo** | **110** |
+**Archivo:** `src/hooks/useOrganizationRanking.tsx`
 
-Para boxeadores con perfil completo, el score llega a **110%** porque BoxRec suma 10 puntos adicionales sin ajustar el total.
-
-### Solucion
-Limitar el score a un maximo de 100 antes de retornarlo:
+Agregar campos legacy al query de Supabase para tener fallback:
 
 ```tsx
-// Al final del calculo, ANTES de determinar level
-const cappedScore = Math.min(score, 100);
+// Agregar a la consulta fighter_profiles
+fighter_profiles!inner (
+  first_name,
+  last_name,
+  nickname,
+  avatar_url,
+  country,
+  mma_record_wins,
+  mma_record_losses,
+  mma_record_draws,
+  boxeo_record_wins,
+  boxeo_record_losses,
+  boxeo_record_draws,
+  record_wins,      // NUEVO - legacy fallback
+  record_losses,    // NUEVO
+  record_draws      // NUEVO
+)
 ```
 
-Y usar `cappedScore` en lugar de `score` para el resto de la logica.
+**Archivo:** `src/components/sections/Ranking.tsx`
 
-### Ubicacion
-`src/hooks/useProfileCompletion.tsx` - Linea 164 (antes de determinar level)
+Implementar logica de fallback inteligente (mismo patron que FighterCard.tsx):
+
+```tsx
+// Lineas 188-197 - Logica actual SIN fallback
+const wins = rankingData?.discipline === 'MMA' 
+  ? ranking.fighter.mma_record_wins 
+  : ranking.fighter.boxeo_record_wins;
+
+// NUEVA LOGICA con fallback
+const getRecordWithFallback = (ranking, discipline) => {
+  if (discipline === 'MMA') {
+    const mmaWins = ranking.fighter.mma_record_wins || 0;
+    const mmaLosses = ranking.fighter.mma_record_losses || 0;
+    const mmaDraws = ranking.fighter.mma_record_draws || 0;
+    // Si MMA record esta vacio, usar legacy
+    if (mmaWins === 0 && mmaLosses === 0 && mmaDraws === 0) {
+      return {
+        wins: ranking.fighter.record_wins || 0,
+        losses: ranking.fighter.record_losses || 0,
+        draws: ranking.fighter.record_draws || 0
+      };
+    }
+    return { wins: mmaWins, losses: mmaLosses, draws: mmaDraws };
+  } else {
+    // Boxeo
+    const boxWins = ranking.fighter.boxeo_record_wins || 0;
+    const boxLosses = ranking.fighter.boxeo_record_losses || 0;
+    const boxDraws = ranking.fighter.boxeo_record_draws || 0;
+    // Si Boxeo record esta vacio, usar legacy
+    if (boxWins === 0 && boxLosses === 0 && boxDraws === 0) {
+      return {
+        wins: ranking.fighter.record_wins || 0,
+        losses: ranking.fighter.record_losses || 0,
+        draws: ranking.fighter.record_draws || 0
+      };
+    }
+    return { wins: boxWins, losses: boxLosses, draws: boxDraws };
+  }
+};
+```
+
+---
+
+### Fase 2: Migracion de Datos (Recomendada)
+
+Normalizar la base de datos para que los campos especificos contengan los datos correctos:
+
+```sql
+-- Migrar records de boxeadores a campos especificos
+UPDATE fighter_profiles
+SET 
+  boxeo_record_wins = COALESCE(record_wins, 0),
+  boxeo_record_losses = COALESCE(record_losses, 0),
+  boxeo_record_draws = COALESCE(record_draws, 0)
+WHERE discipline = 'Boxeo'
+  AND (boxeo_record_wins IS NULL OR boxeo_record_wins = 0)
+  AND (record_wins > 0 OR record_losses > 0 OR record_draws > 0);
+```
+
+Esta migracion es opcional si se implementa el fallback en codigo.
 
 ---
 
@@ -78,40 +117,92 @@ Y usar `cappedScore` en lugar de `score` para el resto de la logica.
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/sections/Ranking.tsx` | Agregar nickname debajo del nombre |
-| `src/hooks/useProfileCompletion.tsx` | Capear score a maximo 100 |
+| `src/hooks/useOrganizationRanking.tsx` | Agregar campos legacy al query + interface |
+| `src/components/sections/Ranking.tsx` | Implementar logica de fallback |
 
 ---
 
-## Compatibilidad Movil
+## Cambios Tecnicos Detallados
 
-**Ranking con apodos:**
-- Texto responsivo `text-[9px] xs:text-[10px] sm:text-xs`
-- `truncate` para prevenir overflow
-- Sin cambios en estructura de layout
+### useOrganizationRanking.tsx
 
-**Widget de progreso:**
-- Solo cambio logico en hook
-- Sin impacto visual mas alla de corregir el 110%
+**1. Actualizar interface RankingEntry (lineas 4-19):**
+```tsx
+export interface RankingEntry {
+  // ... campos existentes ...
+  fighter: {
+    // ... campos existentes ...
+    // Agregar campos legacy:
+    record_wins: number | null;
+    record_losses: number | null;
+    record_draws: number | null;
+  };
+}
+```
+
+**2. Actualizar query SQL (lineas 71-83):**
+Agregar `record_wins`, `record_losses`, `record_draws` a la seleccion de fighter_profiles.
+
+**3. Actualizar transformacion de datos (lineas 124-136):**
+Mapear los nuevos campos legacy en el objeto fighter.
+
+### Ranking.tsx
+
+**1. Crear helper function (antes de linea 184):**
+```tsx
+const getRecordWithFallback = (fighter: RankingEntry['fighter'], discipline: 'MMA' | 'Boxeo') => {
+  if (discipline === 'MMA') {
+    const hasSpecificRecord = (fighter.mma_record_wins || 0) + (fighter.mma_record_losses || 0) + (fighter.mma_record_draws || 0) > 0;
+    if (hasSpecificRecord) {
+      return { wins: fighter.mma_record_wins || 0, losses: fighter.mma_record_losses || 0, draws: fighter.mma_record_draws || 0 };
+    }
+  } else {
+    const hasSpecificRecord = (fighter.boxeo_record_wins || 0) + (fighter.boxeo_record_losses || 0) + (fighter.boxeo_record_draws || 0) > 0;
+    if (hasSpecificRecord) {
+      return { wins: fighter.boxeo_record_wins || 0, losses: fighter.boxeo_record_losses || 0, draws: fighter.boxeo_record_draws || 0 };
+    }
+  }
+  // Fallback a legacy
+  return { wins: fighter.record_wins || 0, losses: fighter.record_losses || 0, draws: fighter.record_draws || 0 };
+};
+```
+
+**2. Reemplazar logica actual (lineas 188-197):**
+```tsx
+const record = getRecordWithFallback(ranking.fighter, rankingData?.discipline || 'MMA');
+const { wins, losses, draws } = record;
+```
 
 ---
 
 ## Resultado Esperado
 
-**Antes:**
-```
-#1 Randy Tercero           18 pts
-   Peso Mosca (125 lbs)
-```
+### Antes (Actual)
+| Peleador | Muestra |
+|----------|---------|
+| Kevin Calona (Boxeo) | 0-0-0 |
+| Aaron Irias (Boxeo) | 0-0-0 |
 
-**Despues:**
-```
-#1 Randy Tercero           18 pts
-   "El Torito"
-   Peso Mosca (125 lbs)
-```
+### Despues (Corregido)
+| Peleador | Muestra |
+|----------|---------|
+| Kevin Calona (Boxeo) | 6-3-0 |
+| Aaron Irias (Boxeo) | 3-1-0 |
 
-**Progreso:**
-- Antes: `110% Completado`
-- Despues: `100% Completado`
+---
+
+## Compatibilidad Movil
+
+- Sin cambios visuales ni de layout
+- Solo logica de datos
+- Mantiene todas las clases responsivas existentes
+
+---
+
+## Beneficios
+
+1. **Inmediato**: Los records se muestran correctamente sin esperar migracion
+2. **Robusto**: Funciona con datos parcialmente migrados
+3. **Consistente**: Misma logica que FighterCard.tsx
+4. **Sin riesgo**: No modifica datos existentes en BD
 
