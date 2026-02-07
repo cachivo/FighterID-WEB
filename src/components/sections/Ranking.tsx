@@ -12,6 +12,7 @@ import { useRankingOrganizations } from "@/hooks/useRankingOrganizations";
 import { EnhancedSkeleton } from "@/components/ui/enhanced-skeleton";
 import { useNavigate } from "react-router-dom";
 import { InfiniteScrollContainer } from "@/components/InfiniteScrollContainer";
+import { useRealtimeFighterUpdates, useRealtimeRankingUpdates } from "@/hooks/useRealtimeFighterUpdates";
 
 interface RankingProps {
   organizationCode?: string;
@@ -23,6 +24,10 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
   const [selectedGender, setSelectedGender] = useState<string>('');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
+  
+  // Realtime subscriptions for automatic sync across modules
+  useRealtimeFighterUpdates();
+  useRealtimeRankingUpdates();
   
   const { data: organizations } = useRankingOrganizations();
   const { data: rankingData, isLoading } = useOrganizationRanking(

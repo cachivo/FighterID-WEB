@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { ENABLED_DISCIPLINES, MARTIAL_ARTS_TRAINING, WEIGHT_CLASSES as WEIGHT_CLASSES_CONST } from '@/lib/constants/disciplines';
+import { useRealtimeFighterUpdates } from '@/hooks/useRealtimeFighterUpdates';
 
 // Helper para mostrar valores descriptivos en los selectores
 const getFilterDisplayValue = (value: string): string => {
@@ -84,6 +85,9 @@ export default function Fighters() {
   const [userProfile, setUserProfile] = useState<FighterProfile | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
+  
+  // Realtime subscription for automatic sync when fighter levels change
+  useRealtimeFighterUpdates();
   
   const { fighters, loading, loadingUserProfile, getUserFighterProfile, fetchFighters, fetchFightersWithReadyStatus } = useFighterProfiles();
   const { user } = useAuth();
