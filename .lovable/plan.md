@@ -1,250 +1,272 @@
 
-# Auditoría Completa del Sistema Fighter ID
+
+# Auditoría Completa: Estructura de Edición y Creación de Perfiles
 
 ## Resumen Ejecutivo
 
-Se identificaron **6 problemas críticos** y **4 mejoras recomendadas** en el sistema de rankings, perfiles y sincronización de datos.
+Se identificaron **5 problemas críticos** que causan:
+- Fotos no guardadas al crear perfiles
+- Información incompleta 
+- Boxeadores profesionales que no aparecen en ranking
 
 ---
 
 ## Hallazgos Críticos
 
-### 1. Inconsistencia de Niveles (Mayúsculas/Minúsculas)
+### 1. Formulario de CREACIÓN sin capacidad de subir fotos
 
-**Problema**: Existen peleadores con nivel "AMATEUR" y otros con "Amateur", causando fragmentación de datos.
+**Archivo afectado**: `src/components/admin/AdminFighterForm.tsx`
 
-| Nivel | Cantidad |
-|-------|----------|
-| Amateur | 43 |
-| AMATEUR | 1 |
-| Profesional | 9 |
-| Semi-profesional | 9 |
+**Problema**: El formulario de creación (`mode='create'`) NO incluye el componente `FileUpload`. Solo el modal de edición (`FighterEditModal.tsx`) permite subir fotos.
 
-**Impacto**: Los filtros de ranking no agrupan correctamente a todos los peleadores del mismo nivel.
+**Evidencia**:
+- AdminFighterForm.tsx: 0 referencias a FileUpload
+- FighterEditModal.tsx: FileUpload presente en línea 480
 
-**Solución SQL**:
-```sql
-UPDATE fighter_profiles 
-SET level = 'Amateur' 
-WHERE level = 'AMATEUR';
+**Impacto**: Todo perfil creado desde cero queda SIN foto.
 
-UPDATE fighter_rankings 
-SET level = 'Amateur' 
-WHERE level = 'AMATEUR';
-```
+**Solución**: Agregar componente FileUpload al formulario de creación.
 
 ---
 
-### 2. No Hay Recalculación Automática de Puntos
+### 2. Selector de Ligas NO filtra por disciplina del peleador
 
-**Problema**: Cuando un administrador actualiza el récord de un peleador (mma_record_wins, boxeo_record_wins, etc.), los puntos en `fighter_rankings` NO se actualizan automáticamente.
+**Archivo afectado**: `src/components/admin/AdminFighterForm.tsx` (líneas 440-451)
 
-**Flujo actual**:
-```text
-Admin edita récord en FighterEditModal
-         ↓
-admin_update_fighter_profile() actualiza fighter_profiles
-         ↓
-sync_fighter_profile_to_rankings() sincroniza level/weight_class
-         ↓
-[FALTA] Trigger para recalcular puntos
-```
-
-**Solución**: Crear trigger que recalcule puntos cuando cambien los récords.
-
----
-
-### 3. BDG Pro Boxing Sin Puntos
-
-**Estado actual**:
-| Organización | Nivel | Peleadores | Con 0 pts | Promedio |
-|--------------|-------|------------|-----------|----------|
-| BDG_PRO | Semi-profesional | 1 | 1 | 0.0 |
-| HHF_AMATEUR | Amateur | 4 | 0 | 5.8 |
-| HHF_AMATEUR | AMATEUR | 1 | 0 | 8.0 |
-| UCC_MMA | Amateur | 39 | 9 | 3.5 |
-| UCC_MMA | Profesional | 9 | 2 | 12.7 |
-| UCC_MMA | Semi-profesional | 7 | 2 | 6.0 |
-
----
-
-### 4. 14 Rankings con 0 Puntos
-
-**Distribución**:
-- UCC_MMA Amateur: 9 peleadores
-- UCC_MMA Profesional: 2 peleadores  
-- UCC_MMA Semi-profesional: 2 peleadores
-- BDG_PRO: 1 peleador
-
-**Causa**: Peleadores sin récord registrado o récord solo en campos legacy.
-
----
-
-### 5. Sin Historial de Ajustes de Puntos
-
-La tabla `ranking_point_adjustments` está vacía (0 registros), lo que indica que:
-- El sistema de ajuste manual nunca ha sido utilizado
-- Los puntos actuales fueron migrados manualmente, no a través del flujo de auditoría
-
----
-
-### 6. Ausencia de Triggers en fights_history
-
-No hay triggers en la tabla `fights_history` para actualizar automáticamente récords y puntos cuando se registra una pelea.
-
----
-
-## Sistema de Puntos Verificado
-
-La fórmula de puntos está correctamente implementada:
+**Problema**: El selector de liga muestra TODAS las organizaciones sin filtrar por la disciplina seleccionada.
 
 ```text
-Puntos = (Victorias × 3) + (Empates × 1) - (Derrotas × 1)
+Código actual (línea 445):
+{organizations?.map((org) => ...)}  // Muestra TODAS
+
+Debería ser:
+{organizations?.filter(org => org.discipline === formData.discipline)...}
 ```
 
-**Verificación de muestra**:
-| Peleador | Récord | Puntos Actuales | Esperado |
-|----------|--------|-----------------|----------|
-| Kevin Calona | 6-3-0 | 15 | 15 |
-| Aaron Irias | 3-1-0 | 8 | 8 |
-| Walter Luna | 30-17-1 | 74 | 74 |
-| Exequiel Luna | 8-3-1 | 22 | 22 |
+**Escenario de fallo**:
+1. Admin crea boxeador profesional (discipline: Boxeo, level: Profesional)
+2. Selector muestra: UCC_MMA, BDG_PRO, HHF_AMATEUR
+3. Admin puede seleccionar HHF_AMATEUR que solo permite "Amateur"
+4. Inscripción falla silenciosamente o no se realiza
+
+**Datos actuales** (boxeadores Pro/Semi sin ranking):
+
+| Peleador | Nivel | Ranking | Foto |
+|----------|-------|---------|------|
+| Miguel Alberto Gonzales | Profesional | 0 ligas | No |
+| Jorge Luis Munguía | Profesional | 0 ligas | No |
+| Mateo Starozze | Semi-profesional | 0 ligas | Sí |
 
 ---
 
-## Funciones Críticas del Sistema
+### 3. No existe trigger de auto-inscripción por disciplina
 
-### Funciones Existentes (Operativas)
-
-| Función | Propósito | Estado |
-|---------|-----------|--------|
-| `admin_update_fighter_profile` | Actualiza perfil completo | OK |
-| `user_update_fighter_profile` | Usuario edita su perfil | OK |
-| `sync_fighter_profile_to_rankings` | Sincroniza level/weight_class | OK |
-| `adjust_ranking_points` | Ajuste manual de puntos | OK |
-| `enroll_fighter_in_ranking` | Inscribir en liga | OK |
-
-### Funciones Faltantes
-
-| Función | Propósito |
-|---------|-----------|
-| `recalculate_ranking_points` | Recalcular puntos desde récord |
-| `sync_record_to_rankings` | Trigger para sincronizar puntos |
-
----
-
-## Triggers Activos en fighter_profiles
+**Triggers actuales en fighter_profiles**:
 
 | Trigger | Función | Propósito |
 |---------|---------|-----------|
-| audit_fighter_profile_trigger | audit_fighter_profile_changes | Auditoría de cambios |
-| set_fighter_license_trigger | set_fighter_license | Auto-asignar licencia |
+| audit_fighter_profile_trigger | audit_fighter_profile_changes | Auditoría |
+| set_fighter_license_trigger | set_fighter_license | Auto-licencia |
 | sync_profile_to_rankings_trigger | sync_fighter_profile_to_rankings | Sync level/weight |
-| trigger_update_completion | update_profile_completion | Score de completitud |
+| trigger_update_completion | update_profile_completion | Completitud |
+
+**Falta**: Un trigger que auto-inscriba según disciplina + nivel:
+- Boxeo + Profesional/Semi → BDG_PRO
+- Boxeo + Amateur → HHF_AMATEUR  
+- MMA + cualquier nivel → UCC_MMA
 
 ---
 
-## Arquitectura de Datos
+### 4. Récords no sincronizados en creación
 
-```text
-┌─────────────────────┐      ┌────────────────────────┐
-│   fighter_profiles  │      │   ranking_organizations │
-│   ───────────────── │      │   ────────────────────  │
-│   id                │      │   id                    │
-│   discipline        │─────▶│   discipline            │
-│   level             │      │   allowed_levels[]      │
-│   weight_class      │      │   code (UCC_MMA, etc)   │
-│   mma_record_*      │      └────────────────────────┘
-│   boxeo_record_*    │               │
-│   record_*  (legacy)│               │
-└─────────────────────┘               │
-         │                            │
-         │      ┌─────────────────────┘
-         │      │
-         ▼      ▼
-┌─────────────────────────────────────────┐
-│           fighter_rankings              │
-│   ─────────────────────────────────     │
-│   fighter_id  →  fighter_profiles.id    │
-│   organization_id  →  ranking_orgs.id   │
-│   level                                 │
-│   weight_class                          │
-│   points  ← [NECESITA AUTO-SYNC]        │
-│   is_active                             │
-└─────────────────────────────────────────┘
-```
+**Problema**: Al crear un perfil, los récords específicos por disciplina (`boxeo_record_*`, `mma_record_*`) inician en 0 y no se populan desde los campos legacy.
+
+**Evidencia**:
+
+| Peleador | boxeo_record_wins | boxeo_record_losses | record_wins (legacy) |
+|----------|-------------------|---------------------|----------------------|
+| Miguel Alberto | 0 | 0 | 0 |
+| Jorge Luis | 0 | 0 | 0 |
+
+---
+
+### 5. Organizaciones de Boxeo disponibles pero desconectadas
+
+**Organizaciones activas**:
+
+| Código | Nombre | Niveles Permitidos |
+|--------|--------|-------------------|
+| BDG_PRO | BDG Pro Boxing | Profesional, Semi-profesional |
+| HHF_AMATEUR | Honduras Hood Fights | Amateur |
+| UCC_MMA | UCC Honduras | Profesional, Semi-profesional, Amateur |
+
+El selector de niveles SÍ filtra correctamente según la organización seleccionada, pero el selector de organizaciones no filtra por disciplina.
 
 ---
 
 ## Plan de Correcciones
 
-### Fase 1: Correcciones Inmediatas (SQL Manual)
+### Fase 1: Corrección de UI (Código Frontend)
 
-1. **Normalizar niveles**:
-```sql
-UPDATE fighter_profiles SET level = 'Amateur' WHERE level = 'AMATEUR';
-UPDATE fighter_rankings SET level = 'Amateur' WHERE level = 'AMATEUR';
+**1.1 Agregar FileUpload a AdminFighterForm.tsx**
+
+Ubicación sugerida: Tab "Personal", junto a los datos básicos
+
+```text
+<Card>
+  <CardHeader>
+    <CardTitle>Foto de Perfil</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <FileUpload
+      accept="image/*"
+      onFileSelect={(file) => handleChange('_avatarFile', file)}
+      maxSize={5 * 1024 * 1024}
+    />
+  </CardContent>
+</Card>
 ```
 
-2. **Recalcular puntos BDG_PRO**:
-```sql
-UPDATE fighter_rankings fr
-SET points = (COALESCE(fp.boxeo_record_wins, 0) * 3) 
-           + (COALESCE(fp.boxeo_record_draws, 0) * 1) 
-           - (COALESCE(fp.boxeo_record_losses, 0) * 1)
-FROM fighter_profiles fp, ranking_organizations ro
-WHERE fr.fighter_id = fp.id 
-  AND fr.organization_id = ro.id
-  AND ro.code = 'BDG_PRO'
-  AND fr.is_active = true;
+**1.2 Filtrar organizaciones por disciplina en AdminFighterForm.tsx**
+
+Cambio en línea 445:
+
+```text
+// Antes:
+{organizations?.map((org) => ...)}
+
+// Después:
+{organizations
+  ?.filter(org => !formData.discipline || org.discipline === formData.discipline)
+  .map((org) => ...)}
 ```
 
-### Fase 2: Automatización (Migración)
+**1.3 Procesar archivo de avatar en handleSubmit**
 
-Crear trigger para recalcular puntos automáticamente cuando se actualiza el récord de un peleador.
-
-### Fase 3: Validación
-
-- Agregar check constraint para normalizar niveles
-- Implementar logging de cambios de puntos
+Agregar lógica similar a FighterEditModal para subir la foto después de crear el perfil.
 
 ---
 
-## Resumen de Integridad de Datos
+### Fase 2: Automatización Backend (Migración SQL)
 
-| Métrica | Valor |
-|---------|-------|
-| Peleadores activos | 62 |
-| Rankings activos | 61 |
-| Rankings con 0 puntos | 14 (23%) |
-| Ajustes de puntos registrados | 0 |
-| Peleadores Boxeo | 7 |
-| Peleadores MMA | 55 |
+**2.1 Trigger de auto-inscripción por disciplina**
+
+```sql
+CREATE OR REPLACE FUNCTION auto_enroll_fighter_by_discipline()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_org_code TEXT;
+BEGIN
+  -- Determinar organización según disciplina y nivel
+  IF NEW.discipline = 'Boxeo' THEN
+    IF NEW.level IN ('Profesional', 'Semi-profesional') THEN
+      v_org_code := 'BDG_PRO';
+    ELSIF NEW.level = 'Amateur' THEN
+      v_org_code := 'HHF_AMATEUR';
+    END IF;
+  ELSIF NEW.discipline = 'MMA' THEN
+    v_org_code := 'UCC_MMA';
+  END IF;
+
+  -- Inscribir si determinamos organización
+  IF v_org_code IS NOT NULL THEN
+    PERFORM enroll_fighter_in_ranking(
+      NEW.id, 
+      v_org_code, 
+      NEW.level, 
+      NEW.weight_class
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER auto_enroll_on_create
+AFTER INSERT ON fighter_profiles
+FOR EACH ROW
+WHEN (NEW.discipline IS NOT NULL AND NEW.level IS NOT NULL)
+EXECUTE FUNCTION auto_enroll_fighter_by_discipline();
+```
 
 ---
 
-## Secciones Técnicas
+### Fase 3: Corrección de Datos Existentes (SQL Manual)
 
-### RPC admin_update_fighter_profile
+**3.1 Inscribir boxeadores profesionales existentes en BDG_PRO**
 
-La función actualiza campos en `fighter_profiles` y sincroniza `level` y `weight_class` a `fighter_rankings`, pero **NO sincroniza puntos**.
-
-### Campos de Récord por Disciplina
-
-- `mma_record_wins/losses/draws` - Para peleadores MMA
-- `boxeo_record_wins/losses/draws` - Para peleadores Boxeo
-- `record_wins/losses/draws` - Legacy (deprecado)
-
-### Hook useOrganizationRanking
-
-Correctamente implementado con fallback de récord:
-1. Intenta usar campos específicos (mma_record_*, boxeo_record_*)
-2. Si están vacíos, usa campos legacy (record_*)
+```sql
+-- Boxeadores profesionales sin ranking
+INSERT INTO fighter_rankings (fighter_id, organization_id, level, weight_class, points, is_active)
+SELECT 
+  fp.id,
+  (SELECT id FROM ranking_organizations WHERE code = 'BDG_PRO'),
+  fp.level,
+  fp.weight_class,
+  (COALESCE(fp.boxeo_record_wins, 0) * 3) + 
+  (COALESCE(fp.boxeo_record_draws, 0) * 1) - 
+  (COALESCE(fp.boxeo_record_losses, 0) * 1),
+  true
+FROM fighter_profiles fp
+WHERE fp.discipline = 'Boxeo'
+  AND fp.level IN ('Profesional', 'Semi-profesional')
+  AND fp.active = true
+  AND NOT EXISTS (
+    SELECT 1 FROM fighter_rankings fr 
+    WHERE fr.fighter_id = fp.id AND fr.is_active = true
+  );
+```
 
 ---
 
-## Acciones Requeridas del Usuario
+## Arquitectura Corregida
 
-1. Ejecutar SQL de normalización de niveles
-2. Ejecutar SQL de recálculo de puntos para BDG_PRO
-3. Aprobar migración para crear trigger de sincronización automática
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                    Flujo de Creación de Perfil                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  AdminFighterForm                                               │
+│  ┌─────────────────┐                                            │
+│  │ 1. Datos básicos│                                            │
+│  │ 2. Foto         │ ← [NUEVO] FileUpload                       │
+│  │ 3. Disciplina   │                                            │
+│  │ 4. Liga inicial │ ← [FIX] Filtrar por disciplina             │
+│  └────────┬────────┘                                            │
+│           │                                                     │
+│           ▼                                                     │
+│  ┌─────────────────┐                                            │
+│  │ handleSubmit()  │                                            │
+│  │ 1. Create profile                                            │
+│  │ 2. Upload avatar│ ← [NUEVO]                                  │
+│  │ 3. Enroll league│                                            │
+│  └────────┬────────┘                                            │
+│           │                                                     │
+│           ▼                                                     │
+│  ┌─────────────────┐                                            │
+│  │ DB Trigger      │                                            │
+│  │ auto_enroll     │ ← [NUEVO] Backup si no se selecciona liga  │
+│  └─────────────────┘                                            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Prioridad de Implementación
+
+| # | Tarea | Impacto | Esfuerzo |
+|---|-------|---------|----------|
+| 1 | Filtrar organizaciones por disciplina | Alto | Bajo |
+| 2 | Agregar FileUpload a creación | Alto | Medio |
+| 3 | SQL: Inscribir boxeadores existentes | Alto | Bajo |
+| 4 | Trigger de auto-inscripción | Medio | Medio |
+
+---
+
+## Acciones Inmediatas Requeridas
+
+1. **Aprobar este plan** para implementar las correcciones de código
+2. **Ejecutar SQL manual** para inscribir los 3 boxeadores profesionales en BDG_PRO
+3. **Verificar** que los perfiles aparezcan en el ranking después de la corrección
+
