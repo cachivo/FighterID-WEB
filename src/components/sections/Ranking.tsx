@@ -45,18 +45,28 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
   const availableLevels = currentOrg?.allowed_levels || [];
   const availableWeightClasses = rankingData?.weightClasses || [];
 
-  // Default to "Profesional" level if available, otherwise first level
+  // Smart default level selection: prioritize levels with data
   useEffect(() => {
     if (availableLevels.length > 0 && !selectedLevel) {
-      if (availableLevels.includes('Profesional')) {
+      const levelCounts = rankingData?.levelCounts || {};
+      
+      // Prioridad: Profesional > Semi-profesional > Amateur, pero solo si tienen datos
+      if (availableLevels.includes('Profesional') && (levelCounts['Profesional'] || 0) > 0) {
         setSelectedLevel('Profesional');
-      } else if (availableLevels.includes('Semi-profesional')) {
+      } else if (availableLevels.includes('Semi-profesional') && (levelCounts['Semi-profesional'] || 0) > 0) {
         setSelectedLevel('Semi-profesional');
+      } else if (availableLevels.includes('Amateur') && (levelCounts['Amateur'] || 0) > 0) {
+        setSelectedLevel('Amateur');
       } else {
-        setSelectedLevel(availableLevels[0]);
+        // Fallback: nivel con más peleadores
+        const bestLevel = Object.entries(levelCounts)
+          .filter(([level]) => availableLevels.includes(level))
+          .sort(([, a], [, b]) => (b as number) - (a as number))[0]?.[0];
+        
+        setSelectedLevel(bestLevel || availableLevels[0]);
       }
     }
-  }, [availableLevels, selectedLevel]);
+  }, [availableLevels, selectedLevel, rankingData?.levelCounts]);
 
   // Reset page and filters when org changes
   useEffect(() => {
@@ -230,7 +240,8 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
             </Select>
           </div>
           
-          {isLoading && page === 1 ? (
+          {/* Show skeleton while loading OR while initializing level selection */}
+          {(isLoading && page === 1) || (!selectedLevel && availableLevels.length > 0) ? (
             <div className="space-y-3 sm:space-y-4">
               {Array.from({ length: 5 }).map((_, index) => (
                 <Card key={index} className="bg-black/40 border-purple-neon-primary/20 backdrop-blur-sm">
@@ -338,7 +349,20 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
           ) : (
             <Card className="bg-black/40 border-purple-neon-primary/20 backdrop-blur-sm">
               <CardContent className="p-4 xs:p-6 sm:p-8 text-center">
-                <p className="text-gray-400 text-xs xs:text-sm sm:text-base">No hay suficientes peleadores con el mínimo de peleas requeridas</p>
+                <Users className="h-10 w-10 xs:h-12 xs:w-12 mx-auto mb-3 text-gray-500" />
+                <p className="text-gray-400 text-xs xs:text-sm sm:text-base mb-3">
+                  No hay peleadores registrados en {selectedLevel || 'esta categoría'}
+                </p>
+                {selectedLevel && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedLevel('')}
+                    className="border-purple-neon-primary/50 text-purple-neon-primary hover:bg-purple-neon-primary/10"
+                  >
+                    Ver todos los niveles
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}
