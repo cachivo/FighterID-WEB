@@ -75,9 +75,12 @@ export default function FighterSegmentSelector({
   }, [fighters, selectedDisciplines, selectedLevels]);
 
   // Notify parent of count changes
+  // Note: intentionally omitting onCountUpdate from deps to avoid infinite loops
+  // when parent doesn't memoize the callback
   useEffect(() => {
     onCountUpdate(filteredCount);
-  }, [filteredCount, onCountUpdate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredCount]);
 
   const toggleDiscipline = (discipline: string) => {
     if (selectedDisciplines.includes(discipline)) {
