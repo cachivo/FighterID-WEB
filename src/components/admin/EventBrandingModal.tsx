@@ -31,8 +31,8 @@ const BRAND_LOGOS: Record<string, { logo: string; watermark: string }> = {
     watermark: '/lovable-uploads/ucc-logo-transparent.png'
   },
   hoodfights: {
-    logo: '/lovable-uploads/fighter-id-logo-transparent.png', // Placeholder - user should upload
-    watermark: '/lovable-uploads/fighter-id-logo-transparent.png'
+    logo: '/lovable-uploads/honduras-hoodfights-logo.png',
+    watermark: '/lovable-uploads/honduras-hoodfights-logo.png'
   }
 };
 

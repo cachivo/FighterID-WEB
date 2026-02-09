@@ -209,7 +209,8 @@ export default function EventosPelea() {
      discipline: 'MMA',
      venue: '',
      start_time: '',
-     end_time: ''
+     end_time: '',
+     branding: 'ucc' as 'ucc' | 'hoodfights' | 'custom'
    });
  
    const [fightData, setFightData] = useState({
@@ -259,15 +260,35 @@ export default function EventosPelea() {
        });
        return;
      }
- 
+
      try {
+       // Build branding meta based on selection
+       const brandingLogos: Record<string, { logo: string; watermark: string }> = {
+         ucc: {
+           logo: '/lovable-uploads/ucc-logo-transparent.png',
+           watermark: '/lovable-uploads/ucc-logo-transparent.png'
+         },
+         hoodfights: {
+           logo: '/lovable-uploads/honduras-hoodfights-logo.png',
+           watermark: '/lovable-uploads/honduras-hoodfights-logo.png'
+         }
+       };
+
+       const branding = {
+         key: formData.branding,
+         logo_url: brandingLogos[formData.branding]?.logo || '',
+         watermark_url: brandingLogos[formData.branding]?.watermark || '',
+         require_billboard_images: formData.branding === 'hoodfights'
+       };
+
        const eventData = {
          name: formData.name,
          description: formData.description,
          discipline: formData.discipline,
          venue: formData.venue,
          start_time: formData.start_time,
-         end_time: formData.end_time
+         end_time: formData.end_time,
+         meta: { branding }
        };
        
        await createEvent(eventData);
@@ -278,7 +299,8 @@ export default function EventosPelea() {
          discipline: 'MMA',
          venue: '',
          start_time: '',
-         end_time: ''
+         end_time: '',
+         branding: 'ucc'
        });
        
        toast({
@@ -866,15 +888,46 @@ export default function EventosPelea() {
                        onChange={(e) => setFormData(prev => ({...prev, end_time: e.target.value}))}
                      />
                    </div>
-                 </div>
-               </div>
-               
-               <DialogFooter>
-                 <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                   Cancelar
-                 </Button>
-                 <Button onClick={handleCreateEvent}>Crear Evento</Button>
-               </DialogFooter>
+                  </div>
+
+                  {/* Branding Selection */}
+                  <div>
+                    <Label htmlFor="branding-empty" className="flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Marca/Branding del Evento *
+                    </Label>
+                    <Select 
+                      value={formData.branding} 
+                      onValueChange={(value: 'ucc' | 'hoodfights' | 'custom') => setFormData(prev => ({...prev, branding: value}))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ucc">UCC (Urban Combat Championship)</SelectItem>
+                        <SelectItem value="hoodfights">
+                          <div className="flex items-center gap-2">
+                            <span>Honduras Hoodfights</span>
+                            <Badge variant="secondary" className="text-xs">Requiere imágenes</Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="custom">Personalizado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {formData.branding === 'hoodfights' && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Este evento requerirá imágenes de cartelera sin fondo para cada peleador
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleCreateEvent}>Crear Evento</Button>
+                </DialogFooter>
              </DialogContent>
            </Dialog>
          </div>
@@ -983,26 +1036,61 @@ export default function EventosPelea() {
                      onChange={(e) => setFormData(prev => ({...prev, end_time: e.target.value}))}
                    />
                  </div>
-               </div>
-             </div>
-             
-             <DialogFooter>
-               <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                 Cancelar
-               </Button>
-               <Button onClick={handleCreateEvent}>Crear Evento</Button>
-             </DialogFooter>
-           </DialogContent>
-         </Dialog>
-       </div>
- 
-       <Card>
-         <CardHeader>
-           <CardTitle>Eventos de Combate</CardTitle>
-           <CardDescription>
-             {events.length} eventos creados
-           </CardDescription>
-         </CardHeader>
+                </div>
+
+                {/* Branding Selection */}
+                <div>
+                  <Label htmlFor="branding" className="flex items-center gap-2">
+                    <Palette className="h-4 w-4" />
+                    Marca/Branding del Evento *
+                  </Label>
+                  <Select 
+                    value={formData.branding} 
+                    onValueChange={(value: 'ucc' | 'hoodfights' | 'custom') => setFormData(prev => ({...prev, branding: value}))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ucc">
+                        <div className="flex items-center gap-2">
+                          <span>UCC (Urban Combat Championship)</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="hoodfights">
+                        <div className="flex items-center gap-2">
+                          <span>Honduras Hoodfights</span>
+                          <Badge variant="secondary" className="text-xs">Requiere imágenes</Badge>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="custom">Personalizado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formData.branding === 'hoodfights' && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Este evento requerirá imágenes de cartelera sin fondo para cada peleador
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreateEvent}>Crear Evento</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Eventos de Combate</CardTitle>
+            <CardDescription>
+              {events.length} eventos creados
+            </CardDescription>
+          </CardHeader>
          <CardContent>
            <Table>
              <TableHeader>

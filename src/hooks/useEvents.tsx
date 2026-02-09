@@ -81,6 +81,7 @@ export function useEvents() {
     venue?: string;
     start_time?: string;
     end_time?: string;
+    meta?: any;
   }) => {
     if (!user) throw new Error('Usuario no autenticado');
 
@@ -93,7 +94,8 @@ export function useEvents() {
         venue: eventData.venue || null,
         start_time: eventData.start_time ? new Date(eventData.start_time).toISOString() : null,
         end_time: eventData.end_time ? new Date(eventData.end_time).toISOString() : null,
-        created_by: user.id // Use auth.uid() directly for RLS policy
+        created_by: user.id,
+        meta: eventData.meta || null
       };
 
       const { data, error } = await supabase
