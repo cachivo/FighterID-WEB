@@ -1,246 +1,236 @@
 
-# Plan: Segmentación de Campañas de Email por Disciplina y Nivel
 
-## Resumen
+# Plan: Remoción Automática de Fondo para Fotos de Peleadores
 
-Agregar filtros avanzados al editor de campañas de email para poder enviar correos segmentados por:
-- **Disciplina**: MMA o Boxeo (o ambas)
-- **Nivel**: Profesional, Semi-profesional, Amateur (uno o varios)
+## Problema Identificado
 
-Además, clasificar automáticamente las campañas para facilitar su organización y análisis.
+Las fotos de perfil de los peleadores tienen fondos negros/oscuros que aparecen en la cartelera del evento, afectando la presentación visual. Esto ocurre porque:
+- Las fotos de perfil (`avatar_url`) se suben sin procesamiento de fondo
+- Cuando no hay imagen específica del evento (`fighter_a_event_image_url`), se usa la foto de perfil
+- El CSS `mix-blend-lighten` no funciona bien con fondos oscuros
 
----
+## Solución Propuesta
 
-## Población Actual de Peleadores
-
-| Disciplina | Profesional | Semi-profesional | Amateur | Total |
-|------------|-------------|------------------|---------|-------|
-| MMA        | 9           | 7                | 39      | 55    |
-| Boxeo      | 2           | 1                | 6       | 9     |
-| **Total**  | 11          | 8                | 45      | 64    |
+Implementar un servicio de remoción de fondo usando la **API de Lovable (Nano banana)** que puede editar imágenes mediante IA. Este proceso se aplicará automáticamente al subir fotos de peleadores.
 
 ---
 
-## Cambios en la Interfaz
-
-### Editor de Campañas (`EmailCampaignEditor.tsx`)
-
-Agregar nueva opción en el selector de destinatarios:
+## Arquitectura de la Solución
 
 ```text
-Para: [Dropdown]
-├── Todos los usuarios
-├── Solo peleadores
-├── Solo administradores  
-├── Selección Manual
-└── Peleadores por Segmento  ← NUEVO
+┌─────────────────────────────────────────────────────────────────────┐
+│ FLUJO DE SUBIDA DE IMAGEN DE PELEADOR                               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  1. Usuario sube foto ──► 2. Mostrar preview ──► 3. Click "Guardar"│
+│                                                                     │
+│  4. ¿Remover fondo?                                                 │
+│     ├── Checkbox activado ──► 5. Llamar Edge Function               │
+│     │                              │                                │
+│     │                              ▼                                │
+│     │                         Lovable AI API                        │
+│     │                    (google/gemini-2.5-flash-image)            │
+│     │                              │                                │
+│     │                              ▼                                │
+│     │                    6. Imagen sin fondo (PNG)                  │
+│     │                              │                                │
+│     └── Checkbox desactivado ──────┼────────────────────────────────│
+│                                    │                                │
+│                                    ▼                                │
+│                         7. Subir a Supabase Storage                 │
+│                         8. Actualizar avatar_url                    │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
 ```
-
-Al seleccionar "Peleadores por Segmento", aparecerán filtros adicionales:
-
-```text
-┌─────────────────────────────────────────────────────┐
-│ SEGMENTACIÓN                                        │
-├─────────────────────────────────────────────────────┤
-│ Disciplina:                                         │
-│   ☑ MMA (55 peleadores)                            │
-│   ☐ Boxeo (9 peleadores)                           │
-│                                                     │
-│ Nivel:                                              │
-│   ☐ Profesional (11)                               │
-│   ☐ Semi-profesional (8)                           │
-│   ☑ Amateur (45)                                   │
-│                                                     │
-│ ─────────────────────────────────────────────────  │
-│ Vista previa: 39 destinatarios (MMA Amateur)       │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-## Lógica de Segmentación
-
-### Reglas de Combinación
-
-1. **Disciplina**: Si se selecciona MMA + Boxeo = incluir ambas
-2. **Nivel**: Si se seleccionan múltiples niveles = OR (unión)
-3. **Combinación**: Disciplina AND Nivel
-
-Ejemplos:
-- MMA + Amateur = 39 peleadores
-- Boxeo + (Profesional OR Amateur) = 2 + 6 = 8 peleadores
-- (MMA + Boxeo) + Profesional = 9 + 2 = 11 peleadores
 
 ---
 
 ## Cambios Técnicos
 
-### 1. Frontend (`EmailCampaignEditor.tsx`)
+### 1. Nueva Edge Function: `remove-image-background`
 
-**Nuevos estados:**
-```tsx
-const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
-const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
-const [segmentCount, setSegmentCount] = useState<number>(0);
-```
+Crear función que use la API de Lovable para remover fondos:
 
-**Nuevo filtro en selector:**
-```tsx
-<SelectItem value="fighters_segment">Peleadores por Segmento</SelectItem>
-```
+```typescript
+// supabase/functions/remove-image-background/index.ts
 
-**Componente de segmentación:**
-```tsx
-{recipientFilter === "fighters_segment" && (
-  <FighterSegmentSelector
-    selectedDisciplines={selectedDisciplines}
-    onDisciplinesChange={setSelectedDisciplines}
-    selectedLevels={selectedLevels}
-    onLevelsChange={setSelectedLevels}
-    onCountUpdate={setSegmentCount}
-  />
-)}
-```
-
-### 2. Nuevo Componente (`FighterSegmentSelector.tsx`)
-
-```tsx
-// Checkboxes para disciplinas y niveles
-// Query en tiempo real para mostrar conteo:
-const { data: counts } = useQuery({
-  queryKey: ['fighter-segment-counts', disciplines, levels],
-  queryFn: async () => {
-    let query = supabase
-      .from('fighter_profiles')
-      .select('id, discipline, level', { count: 'exact' })
-      .eq('active', true);
-    
-    if (disciplines.length > 0) {
-      query = query.in('discipline', disciplines);
-    }
-    if (levels.length > 0) {
-      query = query.in('level', levels);
-    }
-    
-    return query;
-  }
+Deno.serve(async (req) => {
+  const { imageBase64 } = await req.json();
+  
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash-image",
+      messages: [{
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "Remove the background from this image completely. Keep only the person/subject. Make the background fully transparent. Output as PNG."
+          },
+          {
+            type: "image_url",
+            image_url: { url: imageBase64 }
+          }
+        ]
+      }],
+      modalities: ["image", "text"]
+    })
+  });
+  
+  const data = await response.json();
+  const processedImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+  
+  return new Response(JSON.stringify({ processedImage }));
 });
 ```
 
-### 3. Edge Function (`send-mass-email/index.ts`)
+### 2. Nuevo Utilitario: `src/lib/backgroundRemovalAI.ts`
 
-**Nuevo tipo de request:**
+Función para llamar a la Edge Function:
+
 ```typescript
-interface MassEmailRequest {
-  // ... campos existentes
-  recipient_filter?: 'all' | 'fighters_only' | 'admins_only' | 'custom' | 'fighters_segment';
-  segment_disciplines?: string[];  // ['MMA', 'Boxeo']
-  segment_levels?: string[];       // ['Profesional', 'Amateur']
+export async function removeBackgroundAI(file: File): Promise<Blob> {
+  // Convertir archivo a base64
+  const base64 = await fileToBase64(file);
+  
+  // Llamar edge function
+  const { data, error } = await supabase.functions.invoke('remove-image-background', {
+    body: { imageBase64: base64 }
+  });
+  
+  if (error) throw error;
+  
+  // Convertir respuesta a Blob
+  return base64ToBlob(data.processedImage);
 }
 ```
 
-**Nueva lógica de query:**
-```typescript
-case 'fighters_segment':
-  query = supabase
-    .from('fighter_profiles')
-    .select('user_id')
-    .eq('active', true);
-  
-  if (requestData.segment_disciplines?.length > 0) {
-    query = query.in('discipline', requestData.segment_disciplines);
-  }
-  if (requestData.segment_levels?.length > 0) {
-    query = query.in('level', requestData.segment_levels);
-  }
-  
-  // Luego obtener emails de app_user
-  break;
-```
+### 3. Modificar: `src/lib/photoUtils.ts`
 
-### 4. Clasificación Automática de Campañas
+Agregar opción de remover fondo antes de subir:
 
-**Actualizar metadata en `email_campaign_log`:**
 ```typescript
-metadata: {
-  // ... campos existentes
-  segment: {
-    disciplines: requestData.segment_disciplines,
-    levels: requestData.segment_levels,
-    description: "MMA - Amateur" // Auto-generado
+export async function uploadFighterAvatar(
+  file: File, 
+  userId: string,
+  fighterProfileId: string,
+  currentAvatarUrl?: string,
+  removeBackground: boolean = false  // ← Nuevo parámetro
+): Promise<string | null> {
+  
+  let processedFile = file;
+  
+  // Remover fondo si se solicita
+  if (removeBackground && file.type.startsWith('image/')) {
+    toast.info('Removiendo fondo con IA...');
+    const { removeBackgroundAI } = await import('./backgroundRemovalAI');
+    const noBgBlob = await removeBackgroundAI(file);
+    processedFile = new File([noBgBlob], 'avatar.png', { type: 'image/png' });
+    toast.success('Fondo removido correctamente');
   }
+  
+  // Continuar con el flujo normal...
 }
 ```
 
-### 5. Mostrar Segmento en Lista de Campañas (`EmailCampaigns.tsx`)
+### 4. Actualizar UI de Subida de Fotos
+
+Agregar checkbox/toggle en los formularios de edición:
+
+**Archivo:** `src/components/admin/FighterEditModal.tsx`
 
 ```tsx
-// En la lista de campañas
-const getFilterLabel = (campaign) => {
-  if (campaign.recipient_filter === 'fighters_segment') {
-    const segment = campaign.metadata?.segment;
-    return `${segment?.disciplines?.join(', ')} - ${segment?.levels?.join(', ')}`;
-  }
-  // ... lógica existente
-};
+<div className="flex items-center space-x-2">
+  <Switch
+    id="remove-bg"
+    checked={removeBackground}
+    onCheckedChange={setRemoveBackground}
+  />
+  <Label htmlFor="remove-bg" className="flex items-center gap-2">
+    <Wand2 className="w-4 h-4" />
+    Remover fondo automáticamente (IA)
+  </Label>
+</div>
+```
+
+**Archivo:** `src/components/UserFighterProfileEditForm.tsx`
+- Mismo toggle para usuarios normales
+
+**Archivo:** `src/components/admin/AdminFighterForm.tsx`
+- Toggle al crear nuevo peleador
+
+### 5. Actualizar Formulario de Peleas (EventosPelea.tsx)
+
+Para imágenes específicas del evento:
+
+```tsx
+<div className="space-y-2">
+  <Label>Imagen Cartelera (Esquina Roja)</Label>
+  <Input
+    type="file"
+    accept="image/png,image/jpeg,image/webp"
+    onChange={handleImageA}
+  />
+  <div className="flex items-center gap-2 text-sm">
+    <Switch checked={removeBackgroundA} onCheckedChange={setRemoveBackgroundA} />
+    <span>Remover fondo automáticamente</span>
+  </div>
+</div>
 ```
 
 ---
 
-## Flujo de Usuario
+## Archivos a Crear/Modificar
 
-1. Admin abre Editor de Campañas
-2. Selecciona "Peleadores por Segmento"
-3. Marca las disciplinas deseadas (MMA, Boxeo o ambas)
-4. Marca los niveles deseados (Profesional, Semi, Amateur)
-5. Ve en tiempo real cuántos destinatarios coinciden
-6. Compone el mensaje y envía
-7. La campaña se guarda con los metadatos del segmento
-8. En la lista de campañas, aparece etiquetada automáticamente
+| Archivo | Acción | Descripción |
+|---------|--------|-------------|
+| `supabase/functions/remove-image-background/index.ts` | Crear | Edge Function para IA de remoción de fondo |
+| `src/lib/backgroundRemovalAI.ts` | Crear | Utilitario para llamar la edge function |
+| `src/lib/photoUtils.ts` | Modificar | Agregar parámetro `removeBackground` |
+| `src/components/admin/FighterEditModal.tsx` | Modificar | Agregar toggle de remover fondo |
+| `src/components/admin/AdminFighterForm.tsx` | Modificar | Agregar toggle de remover fondo |
+| `src/components/UserFighterProfileEditForm.tsx` | Modificar | Agregar toggle de remover fondo |
+| `src/pages/admin/EventosPelea.tsx` | Modificar | Agregar toggle para imágenes de cartelera |
 
 ---
 
-## Archivos a Modificar/Crear
+## Experiencia de Usuario
 
-| Archivo | Acción | Cambios |
-|---------|--------|---------|
-| `src/pages/admin/EmailCampaignEditor.tsx` | Modificar | Agregar opción de segmento, estados, envío de parámetros |
-| `src/components/admin/FighterSegmentSelector.tsx` | Crear | Componente con checkboxes y conteo en tiempo real |
-| `supabase/functions/send-mass-email/index.ts` | Modificar | Nueva lógica para filtrar por disciplina/nivel |
-| `src/pages/admin/EmailCampaigns.tsx` | Modificar | Mostrar etiqueta de segmento en campañas |
+1. **Admin edita peleador:**
+   - Sube nueva foto
+   - Ve toggle "Remover fondo automáticamente (IA)"
+   - Si activa el toggle, la foto se procesa antes de guardar
+   - Mensaje: "Removiendo fondo..." → "¡Listo! Fondo removido"
+
+2. **Peleador edita su perfil:**
+   - Mismo flujo con toggle opcional
+
+3. **Creación de pelea:**
+   - Al subir imagen de cartelera
+   - Toggle para remover fondo
+   - Útil si el administrador recibe fotos con fondo
+
+---
+
+## Consideraciones Técnicas
+
+1. **Límite de tamaño:** Máximo 5MB por imagen para procesar
+2. **Tiempo de procesamiento:** 3-8 segundos dependiendo del tamaño
+3. **Formato de salida:** Siempre PNG para preservar transparencia
+4. **Fallback:** Si falla la IA, usar imagen original y notificar al usuario
+5. **Costo:** La API de Lovable tiene límites, pero es gratuita para uso moderado
 
 ---
 
 ## Validaciones
 
-1. **Al menos una disciplina** si se elige segmento
-2. **Al menos un nivel** si se elige segmento  
-3. **Conteo > 0** antes de permitir envío
-4. **Confirmar** con resumen claro: "¿Enviar a 39 peleadores de MMA Amateur?"
+1. Solo procesar imágenes (no otros tipos de archivo)
+2. Validar tamaño antes de enviar a la IA
+3. Mostrar preview del resultado antes de confirmar (opcional futuro)
+4. Timeout de 30 segundos para la llamada a la IA
 
----
-
-## Vista Final del Editor
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│ Para: [Peleadores por Segmento ▼]                          │
-├─────────────────────────────────────────────────────────────┤
-│   Disciplina                    Nivel                       │
-│   ☑ MMA (55)                   ☐ Profesional (11)          │
-│   ☐ Boxeo (9)                  ☐ Semi-profesional (8)      │
-│                                ☑ Amateur (45)               │
-│   ─────────────────────────────────────────────────────────│
-│   📊 39 peleadores serán contactados                       │
-├─────────────────────────────────────────────────────────────┤
-│ Asunto: [ Torneo Amateur MMA - Inscripciones Abiertas    ] │
-├─────────────────────────────────────────────────────────────┤
-│ [B] [I] [U] [Lista] [Imagen] [Adjuntar]                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  Escribe tu mensaje aquí...                                │
-│                                                             │
-├─────────────────────────────────────────────────────────────┤
-│ ☑ Modo Prueba [correo@test.com     ]    [ Enviar Prueba ] │
-└─────────────────────────────────────────────────────────────┘
-```
