@@ -76,12 +76,15 @@ export default function EventosPelea() {
     // Branding modal state
     const [showBrandingModal, setShowBrandingModal] = useState(false);
     const [brandingEvent, setBrandingEvent] = useState<BdgEvent | null>(null);
-   console.log('[EventosPelea] loading:', loading, 'events:', events?.length);
    
    const [showCreateDialog, setShowCreateDialog] = useState(false);
    const [showFightersDialog, setShowFightersDialog] = useState(false);
    const [showFightsDialog, setShowFightsDialog] = useState(false);
    const [selectedEvent, setSelectedEvent] = useState<BdgEvent | null>(null);
+   
+   // *** NEW: State to track which event's fights to load ***
+   const [fightsEventId, setFightsEventId] = useState<string | null>(null);
+   const { fights, loading: fightsLoading, refreshFights } = useFights(fightsEventId || undefined);
    const [fighters, setFighters] = useState<FighterProfile[]>([]);
    const [availableFighters, setAvailableFighters] = useState<FighterProfile[]>([]);
    const [eventFighters, setEventFighters] = useState<string[]>([]);
@@ -590,24 +593,25 @@ export default function EventosPelea() {
            }
          }
  
-         toast({
-           title: '✅ Éxito',
-           description: `Pelea #${data.fight_number} creada con ${desiredRounds} rounds`,
-         });
-       }
+          toast({
+            title: '✅ Éxito',
+            description: `Pelea #${data.fight_number} creada con ${desiredRounds} rounds`,
+          });
+        }
+
+        // *** NEW: Refresh the fights list and reset form, but don't close dialog ***
+        refreshFights();
+        resetFightForm();
  
-       resetFightForm();
-       setShowFightsDialog(false);
- 
-     } catch (error: any) {
-       console.error('Fight save error:', error);
-       toast({
-         title: 'Error',
-         description: error.message || 'No se pudo guardar la pelea',
-         variant: 'destructive',
-       });
-     }
-   };
+      } catch (error: any) {
+        console.error('Fight save error:', error);
+        toast({
+          title: 'Error',
+          description: error.message || 'No se pudo guardar la pelea',
+          variant: 'destructive',
+        });
+      }
+    };
  
    const resetFightForm = () => {
      setFightData({
@@ -719,21 +723,55 @@ export default function EventosPelea() {
      }
    };
  
-   const handleDeleteEvent = async (eventId: string) => {
-     try {
-       await deleteEvent(eventId);
-       toast({
-         title: 'Éxito',
-         description: 'Evento eliminado correctamente',
-       });
-     } catch (error) {
-       toast({
-         title: 'Error',
-         description: 'No se pudo eliminar el evento',
-         variant: 'destructive',
-       });
-     }
-   };
+  const handleDeleteEvent = async (eventId: string) => {
+      try {
+        await deleteEvent(eventId);
+        toast({
+          title: 'Éxito',
+          description: 'Evento eliminado correctamente',
+        });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'No se pudo eliminar el evento',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    // *** NEW: Handle deleting a fight ***
+    const handleDeleteFight = async (fightId: string) => {
+      try {
+        const { error } = await supabase
+          .from('fights')
+          .delete()
+          .eq('id', fightId);
+        
+        if (error) throw error;
+        
+        toast({ description: 'Pelea eliminada correctamente' });
+        refreshFights();
+      } catch (error) {
+        console.error('Error deleting fight:', error);
+        toast({
+          description: 'Error al eliminar la pelea',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    // *** HELPER: Get fighter display name ***
+    const getFighterName = (fight: any, corner: 'A' | 'B') => {
+      const fighter = corner === 'A' ? fight.fighter_a : fight.fighter_b;
+      const externalFighter = corner === 'A' ? fight.fighter_a_external : fight.fighter_b_external;
+      
+      if (fighter) {
+        return `${fighter.first_name} ${fighter.last_name}`;
+      } else if (externalFighter) {
+        return externalFighter.name;
+      }
+      return 'TBD';
+    };
  
    const handleTogglePublish = async (eventId: string, currentPublished: boolean) => {
      try {
@@ -1192,6 +1230,7 @@ export default function EventosPelea() {
                           size="sm"
                           onClick={() => {
                             setSelectedEvent(event);
+                            setFightsEventId(event.id); // Trigger useFights to load fights
                             resetFightForm();
                             setShowFightsDialog(true);
                           }}
@@ -1336,13 +1375,100 @@ export default function EventosPelea() {
        {/* Simplified Fights Dialog */}
        <Dialog open={showFightsDialog} onOpenChange={setShowFightsDialog}>
          <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
-           <DialogHeader>
-             <DialogTitle>
-               {editingFight ? 'Editar Pelea' : 'Crear Pelea'} - {selectedEvent?.name}
-             </DialogTitle>
-           </DialogHeader>
-           
-           <div className="space-y-4">
+            <DialogHeader>
+              <DialogTitle>
+                Peleas - {selectedEvent?.name}
+              </DialogTitle>
+              <DialogDescription>
+                {fights.length > 0 ? `${fights.length} peleas creadas` : 'Crea las peleas del evento'}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {/* *** EXISTING FIGHTS LIST *** */}
+            {fightsLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : fights.length > 0 ? (
+              <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
+                <h4 className="font-medium mb-2 text-sm flex items-center gap-2">
+                  📋 Peleas Existentes ({fights.length})
+                </h4>
+                <div className="space-y-2">
+                  {fights.map((fight) => (
+                    <div 
+                      key={fight.id} 
+                      className="flex items-center justify-between p-2 bg-background rounded border"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <Badge variant="outline" className="shrink-0">#{fight.fight_number}</Badge>
+                        <div className="truncate text-sm">
+                          <span className="font-medium">{getFighterName(fight, 'A')}</span>
+                          <span className="text-muted-foreground mx-2">vs</span>
+                          <span className="font-medium">{getFighterName(fight, 'B')}</span>
+                        </div>
+                        <Badge variant="secondary" className="shrink-0 text-xs">{fight.weight_class}</Badge>
+                        <Badge 
+                          variant={fight.status === 'scheduled' ? 'outline' : fight.status === 'live' ? 'destructive' : 'default'}
+                          className="shrink-0 text-xs"
+                        >
+                          {fight.status === 'scheduled' ? 'Programada' : fight.status === 'live' ? 'EN VIVO' : fight.status}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEditFight(fight)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Eliminar pelea #{fight.fight_number}?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta acción eliminará la pelea "{getFighterName(fight, 'A')} vs {getFighterName(fight, 'B')}" y sus rounds asociados.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteFight(fight.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            
+            {/* Section divider */}
+            <div className="flex items-center gap-3 py-2">
+              <div className="h-px flex-1 bg-border"></div>
+              <span className="text-xs text-muted-foreground font-medium">
+                {editingFight ? '✏️ Editando Pelea' : '➕ Nueva Pelea'}
+              </span>
+              <div className="h-px flex-1 bg-border"></div>
+            </div>
+            
+            <div className="space-y-4">
              <div className="grid grid-cols-3 gap-4">
                <div>
                  <Label>Número de Pelea</Label>
