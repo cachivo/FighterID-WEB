@@ -4,9 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Phone, Pencil, Trash2, LayoutDashboard, Users } from 'lucide-react';
+import { MapPin, Phone, Pencil, Trash2, LayoutDashboard, Users, UserPlus, Swords } from 'lucide-react';
 import { GymEditModal } from './GymEditModal';
 import { DeleteGymDialog } from './DeleteGymDialog';
+import { AssignFighterToGymModal } from './AssignFighterToGymModal';
 import { supabase } from '@/integrations/supabase/client';
 import type { Gym } from '@/types/gyms';
 
@@ -17,6 +18,7 @@ interface AdminGymCardProps {
 export function AdminGymCard({ gym }: AdminGymCardProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const navigate = useNavigate();
 
   const { data: staffCount } = useQuery({
@@ -27,6 +29,20 @@ export function AdminGymCard({ gym }: AdminGymCardProps) {
         .select('*', { count: 'exact', head: true })
         .eq('gym_id', gym.id)
         .eq('active', true);
+      if (error) throw error;
+      return count || 0;
+    },
+    staleTime: 60_000,
+  });
+
+  const { data: fighterCount } = useQuery({
+    queryKey: ['gym-fighter-count', gym.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('fighter_gym_memberships')
+        .select('*', { count: 'exact', head: true })
+        .eq('gym_id', gym.id)
+        .eq('status', 'ACTIVE');
       if (error) throw error;
       return count || 0;
     },
@@ -60,12 +76,20 @@ export function AdminGymCard({ gym }: AdminGymCardProps) {
                 </p>
               )}
             </div>
-            {typeof staffCount === 'number' && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                {staffCount}
-              </Badge>
-            )}
+            <div className="flex items-center gap-1">
+              {typeof fighterCount === 'number' && (
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <Swords className="h-3 w-3" />
+                  {fighterCount}
+                </Badge>
+              )}
+              {typeof staffCount === 'number' && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  {staffCount}
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
 
@@ -102,6 +126,9 @@ export function AdminGymCard({ gym }: AdminGymCardProps) {
               <LayoutDashboard className="h-4 w-4 mr-1" />
               Dashboard
             </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowAssignModal(true)}>
+              <UserPlus className="h-4 w-4" />
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)}>
               <Pencil className="h-4 w-4" />
             </Button>
@@ -119,6 +146,12 @@ export function AdminGymCard({ gym }: AdminGymCardProps) {
 
       <GymEditModal gym={gym} open={showEditModal} onOpenChange={setShowEditModal} />
       <DeleteGymDialog gym={gym} open={showDeleteDialog} onOpenChange={setShowDeleteDialog} />
+      <AssignFighterToGymModal
+        open={showAssignModal}
+        onClose={() => setShowAssignModal(false)}
+        gymId={gym.id}
+        gymName={gym.nombre}
+      />
     </>
   );
 }
