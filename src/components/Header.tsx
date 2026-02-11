@@ -18,6 +18,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Menu, Trophy, Calendar, Home, Users, DollarSign, Shield, LogOut, User, CreditCard, Compass, Bell } from "lucide-react";
+import { useSystemAssets } from "@/hooks/useSystemAssets";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -25,6 +26,7 @@ const Header = () => {
   const { user, signOut } = useAuth();
   const { getUserFighterProfile } = useFighterProfiles();
   const { unreadCount } = useNotifications();
+  const { logoUrl } = useSystemAssets();
 
   const handleLogout = async () => {
     await signOut();
@@ -65,7 +67,7 @@ const Header = () => {
         <div className="flex items-center gap-2 sm:gap-3">
           <Link to="/" className="hover:scale-105 hover:opacity-90 transition-all duration-300 ease-out drop-shadow-lg touch-manipulation cursor-pointer min-h-[44px] flex items-center">
             <img 
-              src="/lovable-uploads/7570ef51-ab69-44ed-8ffd-ce52f760de49.png" 
+              src={logoUrl} 
               alt="Fighter ID" 
               className="h-7 sm:h-8 md:h-9 w-auto"
             />
@@ -182,7 +184,7 @@ const Header = () => {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <img 
-                      src="/lovable-uploads/7570ef51-ab69-44ed-8ffd-ce52f760de49.png" 
+                      src={logoUrl} 
                       alt="Fighter ID" 
                       className="h-8 sm:h-10 w-auto"
                     />

@@ -17,8 +17,9 @@ import {
   Activity,
   TestTube2,
   Mail,
-   Send,
-   Medal
+  Send,
+  Medal,
+  ImageIcon
 } from 'lucide-react';
 import {
   Sidebar,
@@ -35,6 +36,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 
 const adminItems = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
@@ -42,7 +44,7 @@ const adminItems = [
   { title: 'Eventos de Pelea', url: '/admin/eventos-pelea', icon: Calendar },
   { title: 'Aliados Estratégicos', url: '/admin/aliados-estrategicos', icon: HandHeart },
   { title: 'Perfiles de Peleadores', url: '/admin/fighters-profiles', icon: Users },
-   { title: 'Gestión de Rankings', url: '/admin/rankings', icon: Medal },
+  { title: 'Gestión de Rankings', url: '/admin/rankings', icon: Medal },
   { title: 'Gimnasios / Escuelas', url: '/admin/gimnasios', icon: Briefcase },
   { title: 'Entrenadores', url: '/admin/entrenadores', icon: Users },
   { title: 'Licencias Fighter ID', url: '/admin/licencias', icon: Shield },
@@ -50,8 +52,12 @@ const adminItems = [
   { title: 'Monitor de Emails', url: '/admin/email-monitoring', icon: Mail },
   { title: 'Campañas de Email', url: '/admin/email-campaigns', icon: Mail },
   { title: 'Editor de Emails', url: '/admin/email-campaigns/editor', icon: Send },
-  { title: 'Gestión de Roles', url: '/admin/user-roles', icon: Shield },
   { title: 'Comunidad', url: '/admin/comunidad', icon: Users },
+];
+
+const superAdminItems = [
+  { title: 'Assets del Sistema', url: '/admin/system-assets', icon: ImageIcon },
+  { title: 'Gestión de Roles', url: '/admin/user-roles', icon: Shield },
   { title: 'Configuración', url: '/admin/configuracion', icon: Settings },
 ];
 
@@ -68,6 +74,7 @@ export function AdminSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { signOut, user } = useAuth();
+  const { isSuperAdmin } = useSuperAdmin();
   const currentPath = location.pathname;
   const collapsed = state === 'collapsed';
 
@@ -134,6 +141,29 @@ export function AdminSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isSuperAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Cuenta Maestra</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {superAdminItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink 
+                        to={item.url} 
+                        className={getNavCls(item.url)}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-4">

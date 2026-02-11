@@ -28,6 +28,7 @@ import LiveEventsControl from './pages/admin/LiveEventsControl';
 import PendingChangesHub from './pages/admin/PendingChangesHub';
 import ProfileChangeRequest from './pages/ProfileChangeRequest';
 import AIStrikeMonitor from './pages/admin/AIStrikeMonitor';
+import SuperAdminRoute from './components/SuperAdminRoute';
 import AIStrikeTestPanel from './pages/admin/AIStrikeTestPanel';
 import AIStrikeOverlay from './pages/AIStrikeOverlay';
 import { lazy, Suspense, useEffect } from 'react';
@@ -97,6 +98,7 @@ import EntrenadoresAdmin from "./pages/admin/EntrenadoresAdmin";
 
 // Lazy load RankingsManagement
 const RankingsManagement = lazy(() => import("./pages/admin/RankingsManagement"));
+const SystemAssets = lazy(() => import("./pages/admin/SystemAssets"));
 
 // Lazy load ContactInbox
 const ContactInbox = lazy(() => import("./pages/admin/ContactInbox"));
@@ -301,13 +303,24 @@ const App = () => {
                         </Suspense>
                       } />
                       <Route path="/comunidad" element={<Comunidad />} />
-                      <Route path="/configuracion" element={<Configuracion />} />
+                      <Route path="/configuracion" element={
+                        <SuperAdminRoute><Configuracion /></SuperAdminRoute>
+                      } />
                       <Route path="/licencias" element={<ValidacionLicencias />} />
                       {/* Ruta /profile-requests eliminada - consolidada en /pending-changes */}
                       <Route path="/user-roles" element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <UserRoles />
-                        </Suspense>
+                        <SuperAdminRoute>
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <UserRoles />
+                          </Suspense>
+                        </SuperAdminRoute>
+                      } />
+                      <Route path="/system-assets" element={
+                        <SuperAdminRoute>
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <SystemAssets />
+                          </Suspense>
+                        </SuperAdminRoute>
                       } />
                       <Route path="/ai-strike-monitor" element={<AIStrikeMonitor />} />
                       <Route path="/ai-strike-test" element={<AIStrikeTestPanel />} />

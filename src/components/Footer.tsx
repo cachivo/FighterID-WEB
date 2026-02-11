@@ -1,4 +1,7 @@
+import { useSystemAssets } from "@/hooks/useSystemAssets";
+
 const Footer = () => {
+  const { logoUrl } = useSystemAssets();
   return (
     <footer className="bg-primary text-primary-foreground py-6 sm:py-8 md:py-10 px-4">
       <div className="max-w-6xl mx-auto">
@@ -6,7 +9,7 @@ const Footer = () => {
           <div className="sm:col-span-2 md:col-span-2">
             <div className="mb-4">
               <img 
-                src="/lovable-uploads/7570ef51-ab69-44ed-8ffd-ce52f760de49.png" 
+                src={logoUrl} 
                 alt="Fighter ID" 
                 className="h-6 sm:h-8 w-auto"
               />

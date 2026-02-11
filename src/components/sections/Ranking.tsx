@@ -13,6 +13,7 @@ import { EnhancedSkeleton } from "@/components/ui/enhanced-skeleton";
 import { useNavigate } from "react-router-dom";
 import { InfiniteScrollContainer } from "@/components/InfiniteScrollContainer";
 import { useRealtimeFighterUpdates, useRealtimeRankingUpdates } from "@/hooks/useRealtimeFighterUpdates";
+import { useSystemAssets } from "@/hooks/useSystemAssets";
 
 interface RankingProps {
   organizationCode?: string;
@@ -28,6 +29,7 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
   // Realtime subscriptions for automatic sync across modules
   useRealtimeFighterUpdates();
   useRealtimeRankingUpdates();
+  const { rankingBgUrl } = useSystemAssets();
   
   const { data: organizations } = useRankingOrganizations();
   const { data: rankingData, isLoading } = useOrganizationRanking(
@@ -134,7 +136,7 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
     <section id="ranking" className="py-4 xs:py-6 sm:py-8 md:py-12 lg:py-16 relative overflow-hidden">
       <div 
         className="absolute inset-0 bg-cover bg-center bg-fixed opacity-80"
-        style={{ backgroundImage: 'url(/lovable-uploads/17f6dde8-5a0e-4986-a833-30fc435b156c.png)' }}
+        style={{ backgroundImage: `url(${rankingBgUrl})` }}
       />
       <div className="absolute inset-0 bg-black/20" />
       
