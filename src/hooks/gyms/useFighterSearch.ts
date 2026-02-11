@@ -6,6 +6,7 @@ interface FighterSearchParams {
   discipline: string;
   level: string;
   weightClass: string;
+  gymId?: string;
   limit?: number;
   offset?: number;
   enabled?: boolean;
@@ -38,12 +39,13 @@ export function useFighterSearch({
   discipline,
   level,
   weightClass,
+  gymId,
   limit = 15,
   offset = 0,
   enabled = true,
 }: FighterSearchParams) {
   return useQuery({
-    queryKey: ['fighter-search', { search, discipline, level, weightClass, limit, offset }],
+    queryKey: ['fighter-search', { search, discipline, level, weightClass, gymId, limit, offset }],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('search_fighters_for_gym', {
         p_search: search || null,
@@ -52,6 +54,7 @@ export function useFighterSearch({
         p_weight_class: weightClass === '__none__' ? null : weightClass || null,
         p_limit: limit,
         p_offset: offset,
+        p_gym_id: gymId || null,
       });
 
       if (error) throw error;

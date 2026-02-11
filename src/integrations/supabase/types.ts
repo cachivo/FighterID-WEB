@@ -5109,37 +5109,70 @@ export type Database = {
         }
         Returns: Json
       }
-      search_fighters_for_gym: {
-        Args: {
-          p_discipline?: string
-          p_level?: string
-          p_limit?: number
-          p_offset?: number
-          p_search?: string
-          p_weight_class?: string
-        }
-        Returns: {
-          active_gym_id: string
-          active_gym_name: string
-          avatar_url: string
-          boxeo_record_draws: number
-          boxeo_record_losses: number
-          boxeo_record_wins: number
-          discipline: Database["public"]["Enums"]["discipline"]
-          first_name: string
-          id: string
-          last_name: string
-          level: string
-          mma_record_draws: number
-          mma_record_losses: number
-          mma_record_wins: number
-          nickname: string
-          record_draws: number
-          record_losses: number
-          record_wins: number
-          weight_class: string
-        }[]
-      }
+      search_fighters_for_gym:
+        | {
+            Args: {
+              p_discipline?: string
+              p_level?: string
+              p_limit?: number
+              p_offset?: number
+              p_search?: string
+              p_weight_class?: string
+            }
+            Returns: {
+              active_gym_id: string
+              active_gym_name: string
+              avatar_url: string
+              boxeo_record_draws: number
+              boxeo_record_losses: number
+              boxeo_record_wins: number
+              discipline: Database["public"]["Enums"]["discipline"]
+              first_name: string
+              id: string
+              last_name: string
+              level: string
+              mma_record_draws: number
+              mma_record_losses: number
+              mma_record_wins: number
+              nickname: string
+              record_draws: number
+              record_losses: number
+              record_wins: number
+              weight_class: string
+            }[]
+          }
+        | {
+            Args: {
+              p_discipline?: string
+              p_gym_id?: string
+              p_level?: string
+              p_limit?: number
+              p_offset?: number
+              p_search?: string
+              p_weight_class?: string
+            }
+            Returns: {
+              active_gym_id: string
+              active_gym_name: string
+              avatar_url: string
+              boxeo_record_draws: number
+              boxeo_record_losses: number
+              boxeo_record_wins: number
+              discipline: Database["public"]["Enums"]["discipline"]
+              first_name: string
+              id: string
+              last_name: string
+              level: string
+              mma_record_draws: number
+              mma_record_losses: number
+              mma_record_wins: number
+              nickname: string
+              record_draws: number
+              record_losses: number
+              record_wins: number
+              weight_class: string
+            }[]
+          }
       settle_market_payouts: {
         Args: { p_market_id: string; p_winning_outcome_id: string }
         Returns: undefined

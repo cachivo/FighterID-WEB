@@ -46,6 +46,7 @@ export function AssignFighterToGymModal({ open, onClose, gymId, gymName }: Assig
     discipline: filterDiscipline,
     level: filterLevel,
     weightClass: filterWeight,
+    gymId,
     limit: 30,
     enabled: open,
   });

@@ -8,16 +8,22 @@ interface GymFighterCardProps {
 }
 
 const levelLabels: Record<string, string> = {
-  amateur: 'Amateur',
-  'semi-pro': 'Semi-Pro',
-  professional: 'Profesional',
+  Amateur: 'Amateur',
+  'Semi-profesional': 'Semi-Pro',
+  Profesional: 'Profesional',
 };
 
 export function GymFighterCard({ fighter }: GymFighterCardProps) {
   const navigate = useNavigate();
   const f = fighter.fighter;
   const name = [f.first_name, f.last_name].filter(Boolean).join(' ') || 'Sin nombre';
-  const record = `${f.mma_record_wins}-${f.mma_record_losses}-${f.mma_record_draws}`;
+
+  // Show record based on discipline
+  const isBoxeo = f.discipline === 'Boxeo';
+  const wins = isBoxeo ? f.boxeo_record_wins : f.mma_record_wins;
+  const losses = isBoxeo ? f.boxeo_record_losses : f.mma_record_losses;
+  const draws = isBoxeo ? f.boxeo_record_draws : f.mma_record_draws;
+  const record = `${wins || 0}-${losses || 0}-${draws || 0}`;
 
   return (
     <button
@@ -40,6 +46,9 @@ export function GymFighterCard({ fighter }: GymFighterCardProps) {
         </div>
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
           <span className="text-sm font-mono font-bold">{record}</span>
+          {f.discipline && (
+            <Badge variant="secondary" className="text-xs px-1.5 py-0">{f.discipline}</Badge>
+          )}
           {f.weight_class && (
             <span className="text-xs text-muted-foreground">• {f.weight_class}</span>
           )}

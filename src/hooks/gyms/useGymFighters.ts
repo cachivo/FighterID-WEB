@@ -16,9 +16,13 @@ export interface GymFighter {
     avatar_url: string | null;
     weight_class: string | null;
     level: string | null;
+    discipline: string | null;
     mma_record_wins: number;
     mma_record_losses: number;
     mma_record_draws: number;
+    boxeo_record_wins: number;
+    boxeo_record_losses: number;
+    boxeo_record_draws: number;
   };
 }
 
@@ -44,8 +48,9 @@ export function useGymFighters(gymId: string, options: UseGymFightersOptions = {
           coach_user_id,
           fighter_profiles!inner(
             id, first_name, last_name, nickname, avatar_url,
-            weight_class, level,
-            mma_record_wins, mma_record_losses, mma_record_draws
+            weight_class, level, discipline,
+            mma_record_wins, mma_record_losses, mma_record_draws,
+            boxeo_record_wins, boxeo_record_losses, boxeo_record_draws
           )
         `, { count: 'exact' })
         .eq('gym_id', gymId)

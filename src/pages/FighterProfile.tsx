@@ -424,10 +424,20 @@ export default function FighterProfile() {
                 )}
 
                 {/* Gym */}
-                {fighter.gym_name && (
+                {(fighter.gym_id || fighter.gym_name) && (
                   <div>
                     <h4 className="font-semibold mb-2">Gimnasio</h4>
-                    <p className="text-muted-foreground">{fighter.gym_name}</p>
+                    {fighter.gym_id ? (
+                      <Link
+                        to={`/gym/${fighter.gym_id}/dashboard`}
+                        className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
+                      >
+                        {fighter.gym_name || 'Ver gimnasio'}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    ) : (
+                      <p className="text-muted-foreground">{fighter.gym_name}</p>
+                    )}
                   </div>
                 )}
 
