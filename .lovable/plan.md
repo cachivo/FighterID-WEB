@@ -1,130 +1,78 @@
 
 
-# Fase 2: Roles del Sistema, Menu "Mi Gimnasio" y Correccion de Datos Stale
+# Restriccion de Acceso + Asignacion de Administrador de Gimnasio
 
-## Principio Clave: Una Sola Fuente de Verdad
+## Estado Actual
 
-**No se duplicaran roles.** La tabla `gym_staff` con su enum `gym_staff_role` (OWNER, HEAD_COACH, ASSISTANT_COACH) ya es la fuente de verdad para permisos de gimnasio. NO se agregaran valores al enum `app_role` - eso seria redundancia. El acceso al gimnasio se determina exclusivamente consultando `gym_staff`.
+- `cachivo@gmail.com` ya tiene rol `super_admin` en `user_roles` (unico usuario con este rol)
+- El panel admin esta protegido por `AdminProtectedRoute` que verifica rol `admin` (6 usuarios lo tienen)
+- `gym_staff` tiene roles OWNER, HEAD_COACH, ASSISTANT_COACH pero NO tiene restriccion de un solo OWNER por gimnasio
+- `useMyGymStaff` ya detecta staff activo y muestra "Mi Gimnasio" en el Header
+- `GymDashboard` ya verifica permisos via `useGymStaffRole` (OWNER/HEAD_COACH pueden gestionar peleadores)
 
----
+## Cambios Necesarios
 
-## Problema 1: Datos No Se Actualizan Tras Vincular Peleador
+### 1. Migracion SQL: Un solo OWNER por gimnasio
 
-### Causa Raiz
-
-Despues de vincular un peleador, `useAddMembership` invalida `gym-fighters` y `gym-dashboard`, pero:
-- NO invalida `gym-fighter-count` (badge en AdminGymCard queda desactualizado)
-- El `AssignFighterToGymModal` no fuerza refetch del dashboard si el usuario esta viendolo simultaneamente
-- `staleTime` de 60 segundos en `useGymDashboard` previene que los datos se refresquen
-
-### Solucion
-
-**Archivo: `src/hooks/gyms/useGymMembership.ts`**
-
-Agregar invalidacion de `gym-fighter-count` en `onSuccess` de ambas mutaciones (`useAddMembership` y `useTransferFighter`):
+Crear indice parcial unico que impida mas de un OWNER activo por gimnasio:
 
 ```text
-onSuccess: (_, vars) => {
-  queryClient.invalidateQueries({ queryKey: ['gym-membership', vars.fighterId] });
-  queryClient.invalidateQueries({ queryKey: ['gym-fighters', vars.gymId] });
-  queryClient.invalidateQueries({ queryKey: ['gym-fighter-count', vars.gymId] });
-  queryClient.invalidateQueries({ queryKey: ['gym-dashboard', vars.gymId] });
-}
+CREATE UNIQUE INDEX unique_active_gym_owner 
+ON gym_staff (gym_id) 
+WHERE role = 'OWNER' AND active = true;
 ```
 
-Para `useTransferFighter`, invalidar tambien el gimnasio de origen:
+Esto garantiza a nivel de base de datos que solo puede existir un administrador activo por gimnasio.
 
+### 2. Restringir edicion de gimnasios a super_admin
+
+**Archivo: `src/pages/admin/GimnasiosAdmin.tsx`**
+
+Agregar `useSuperAdmin()` hook. Si el usuario NO es super_admin:
+- Ocultar boton "Crear Gimnasio"
+- Las tarjetas de gimnasio mostraran solo informacion (sin botones de editar/eliminar/asignar)
+
+**Archivo: `src/components/admin/AdminGymCard.tsx`**
+
+Agregar prop `readOnly?: boolean`. Cuando es `true`, ocultar los botones de edicion, eliminacion y asignacion de peleadores. Solo mostrar el boton "Dashboard" para navegar.
+
+### 3. Funcionalidad "Asignar Administrador de Gimnasio"
+
+**Archivo: `src/components/admin/AdminGymCard.tsx`**
+
+Agregar boton "Asignar Admin" (icono Crown) junto a los botones existentes, visible solo cuando `readOnly` es `false`.
+
+**Nuevo archivo: `src/components/admin/AssignGymOwnerModal.tsx`**
+
+Modal que permite buscar perfiles de Fighter ID y asignar como OWNER del gimnasio:
+
+- Campo de busqueda que consulta `app_user` (nombre, email)
+- Muestra si el usuario ya tiene perfil de peleador (consulta `fighter_profiles`)
+- Muestra si ya es staff de otro gimnasio (consulta `gym_staff`)
+- Al seleccionar: inserta en `gym_staff` con role = 'OWNER'
+- Si el gimnasio ya tiene OWNER activo, muestra advertencia y permite reemplazar (desactiva el anterior)
+- Invalida cache de `gym-staff`, `gym-dashboard`, `my-gym-staff`
+
+Flujo del modal:
 ```text
-queryClient.invalidateQueries({ queryKey: ['gym-fighter-count', vars.fromGymId] });
-queryClient.invalidateQueries({ queryKey: ['gym-fighters', vars.fromGymId] });
-queryClient.invalidateQueries({ queryKey: ['gym-dashboard', vars.fromGymId] });
+1. Admin busca usuario por nombre o email
+2. Lista muestra: avatar, nombre, email, badge "Peleador" si tiene fighter_profiles
+3. Admin selecciona usuario
+4. Sistema verifica: ya hay OWNER activo en este gimnasio?
+   SI -> Confirmar reemplazo (desactivar anterior)
+   NO -> Insertar directamente
+5. Resultado: usuario ahora ve "Mi Gimnasio" en su celular
 ```
 
----
+### 4. Permisos de eliminacion de peleadores para HEAD_COACH
 
-## Problema 2: Menu "Mi Gimnasio" para Staff
+**Archivo: `src/pages/gym/GymFighters.tsx`**
 
-### Nuevo Hook: `useMyGymStaff`
+Verificar que HEAD_COACH pueda eliminar (desvincular) peleadores del gimnasio. Actualmente `canManageFighters` ya incluye HEAD_COACH, asi que solo hay que asegurar que el boton de remover este visible.
 
-**Nuevo archivo: `src/hooks/gyms/useMyGymStaff.ts`**
+### 5. Dashboard visible en pagina principal movil
 
-Consulta `gym_staff` para el usuario autenticado actual. Usa `app_user.auth_user_id` para mapear `auth.uid()` al `app_user.id` que es la FK en `gym_staff`.
-
-```text
-Flujo:
-1. Obtener auth.uid() del usuario logueado
-2. Buscar app_user.id donde auth_user_id = auth.uid()
-3. Buscar gym_staff donde user_id = app_user.id AND active = true
-4. Retornar { gymId, gymName, role } o null
-```
-
-Cache: `staleTime: 5 * 60 * 1000` (5 min) - no cambia frecuentemente.
-
-### Modificar Header: Agregar "Mi Gimnasio"
-
-**Archivo: `src/components/Header.tsx`**
-
-En la seccion de navegacion movil (Sheet), despues del bloque "Navegacion", agregar condicionalmente:
-
-```text
-SI useMyGymStaff() retorna un gimnasio activo:
-  Mostrar seccion "Mi Gimnasio" con:
-  - Icono Dumbbell
-  - Nombre del gimnasio
-  - Link a /gym/{gymId}/dashboard
-```
-
-Tambien en el dropdown de desktop (dentro del DropdownMenu de la cuenta).
-
----
-
-## Problema 3: Permisos en el Dashboard
-
-### Modificar GymDashboard para verificar permisos
-
-**Archivo: `src/pages/gym/GymDashboard.tsx`**
-
-Usar `useMyGymStaff()` o consultar `gym_staff` para el gymId actual:
-- Si el usuario es OWNER o HEAD_COACH: mostrar boton "Agregar Peleador"
-- Si es ASSISTANT_COACH: solo lectura (sin boton de agregar)
-- Si no es staff: redirigir a pagina de acceso denegado
-
-### Agregar ruta mobile para agregar peleador
-
-**Nuevo archivo: `src/pages/gym/GymAddFighter.tsx`**
-
-Ruta: `/gym/:gymId/add-fighter`
-
-Pantalla mobile-first que reutiliza la logica de `AssignFighterToGymModal` pero en formato de pagina completa:
-- Input de busqueda grande (h-12)
-- Filtros como chips horizontales scrolleables
-- Cards verticales de resultados
-- Boton "Agregar" en cada card
-- Validaciones pre-asignacion (membership activa, fighter activo)
-
-**Archivo: `src/App.tsx`** - Agregar ruta nueva
-
----
-
-## Fase 4: Optimizacion Mobile del Dashboard
-
-### `GymDashboardHeader.tsx`
-- Avatar: `h-16 w-16 sm:h-20 sm:w-20`
-- Nombre: `text-balance`
-- Badge owner: `max-w-full truncate`
-
-### `GymStatsCards.tsx`
-- Agregar `snap-x snap-mandatory` al scroll container
-- Reducir `min-w-[120px]` a `min-w-[100px]`
-- Agregar `snap-start` a cada card
-
-### `GymFighterCard.tsx`
-- Agregar `active:scale-[0.98]` para feedback tactil
-- Mostrar badge de disciplina junto al nivel
-
-### `GymDashboard.tsx`
-- Agregar `pb-20` para safe-area movil
-- Boton "Agregar Peleador" prominente (condicional por permisos)
+Ya implementado: `useMyGymStaff()` en el Header detecta al usuario como staff activo y muestra el enlace "Mi Gimnasio" que lleva a `/gym/{gymId}/dashboard`. No se requieren cambios adicionales.
 
 ---
 
@@ -132,21 +80,14 @@ Pantalla mobile-first que reutiliza la logica de `AssignFighterToGymModal` pero 
 
 | Archivo | Accion |
 |---------|--------|
-| `src/hooks/gyms/useGymMembership.ts` | Corregir invalidaciones de cache faltantes |
-| `src/hooks/gyms/useMyGymStaff.ts` | **Nuevo** - Detectar si usuario es staff de algun gimnasio |
-| `src/hooks/gyms/index.ts` | Exportar `useMyGymStaff` |
-| `src/components/Header.tsx` | Agregar item "Mi Gimnasio" condicional |
-| `src/pages/gym/GymDashboard.tsx` | Permisos + safe-area + boton agregar |
-| `src/pages/gym/GymAddFighter.tsx` | **Nuevo** - Pantalla mobile agregar peleador |
-| `src/App.tsx` | Agregar ruta `/gym/:gymId/add-fighter` |
-| `src/components/gym/GymDashboardHeader.tsx` | Avatar responsive + truncate |
-| `src/components/gym/GymStatsCards.tsx` | Snap scroll mobile |
-| `src/components/gym/GymFighterCard.tsx` | Feedback tactil + disciplina badge |
+| Migracion SQL | Indice unico parcial: un OWNER activo por gimnasio |
+| `src/pages/admin/GimnasiosAdmin.tsx` | Verificar super_admin para mostrar/ocultar acciones de edicion |
+| `src/components/admin/AdminGymCard.tsx` | Agregar prop `readOnly`, agregar boton "Asignar Admin" |
+| `src/components/admin/AssignGymOwnerModal.tsx` | **Nuevo** - Modal para buscar y asignar OWNER |
 
-## Lo que NO se hace (evitar duplicacion)
+## Lo que NO se modifica (ya funciona)
 
-- **NO** se agregan roles al enum `app_role` - `gym_staff` ya maneja esto
-- **NO** se crea tabla nueva de permisos - `gym_staff.role` + `gym_staff.active` es suficiente
-- **NO** se duplica informacion de peleador en `fighter_gym_memberships` - solo FKs
-- **NO** se crea RPC nuevo para busqueda (Fase 3 futura) - por ahora filtro client-side optimizado
-
+- Header con "Mi Gimnasio" condicional (ya implementado)
+- GymDashboard con permisos por rol (ya implementado)
+- HEAD_COACH con capacidad de gestionar peleadores (ya implementado)
+- No se duplican roles en `app_role` (gym_staff es la unica fuente de verdad)
