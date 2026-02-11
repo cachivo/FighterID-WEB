@@ -1,96 +1,96 @@
 
-# Herramientas de Asignacion de Peleadores a Gimnasios desde Admin
 
-## Contexto
+# Agregar Peleadores a Gimnasios desde el Modulo de Gimnasios
 
-Actualmente el sistema tiene las tablas `fighter_gym_memberships` y `gym_staff` listas, pero **no existe UI en el panel de admin** para vincular peleadores a gimnasios. El usuario necesita poder clasificar y organizar a todos los peleadores existentes asignandolos a sus respectivos gimnasios.
+## Resumen
 
-## Quien puede editar los dashboards de gimnasios
-
-- **Admins** (rol `admin` en `user_roles`): acceso total a todo, incluyendo dashboards de cualquier gimnasio
-- **Staff del gimnasio** (registrados en `gym_staff`): solo pueden ver/editar el dashboard de SU gimnasio
-- **Usuarios normales**: solo acceso de lectura a datos publicos del gimnasio
-
-Las politicas RLS ya implementadas garantizan esto: lectura publica para todos, escritura solo para staff activo del gimnasio.
+Crear un modal de busqueda y asignacion de peleadores que se abre directamente desde cada tarjeta de gimnasio en el panel de admin. El patron ya existe en `EnrollFighterModal` (usado en Rankings) y se reutilizara la misma estructura visual: buscador de texto, lista scrollable de peleadores con avatar, seleccion y confirmacion.
 
 ---
 
 ## Cambios a Implementar
 
-### 1. Nuevo tab "Gimnasio" en el modal de detalle del peleador (`FighterDetailModal`)
+### 1. Nuevo componente: `AssignFighterToGymModal`
 
-Agregar un 8vo tab llamado "Gimnasio" entre "Deportivo" y "Ligas" que muestre:
-- **Membresia activa**: nombre del gimnasio, fecha de ingreso, entrenador asignado
-- **Historial**: membresias anteriores (TRANSFERRED, INACTIVE)
-- **Acciones**: boton "Vincular a Gimnasio" o "Transferir" si ya tiene uno
+Archivo: `src/components/admin/AssignFighterToGymModal.tsx`
 
-### 2. Nuevo componente `FighterGymTab` (`src/components/admin/FighterGymTab.tsx`)
+Un dialog que recibe el `gymId` y `gymName`, y permite:
+- Buscar peleadores por nombre/apodo con un input de texto
+- Mostrar lista filtrada con avatar, nombre, apodo, peso (misma estructura que `EnrollFighterModal`)
+- Seleccionar un peleador (highlight + check)
+- Opcionalmente asignar un entrenador del staff del gimnasio
+- Boton "Vincular" que llama a `useAddMembership`
+- Si el peleador ya tiene gimnasio activo, mostrar advertencia y ofrecer "Transferir" en vez de "Vincular"
 
-Componente dedicado que contiene:
-- Vista de membresia actual (si existe) con opcion de desvincular
-- Selector de gimnasio (dropdown con todos los gimnasios activos)
-- Selector opcional de entrenador (staff del gimnasio seleccionado con rol HEAD_COACH o ASSISTANT_COACH)
-- Boton "Vincular" que usa `useAddMembership`
-- Boton "Transferir" que usa `useTransferFighter` (si ya tiene gimnasio)
-- Historial de membresias anteriores
+Usa hooks existentes:
+- `useAdminFighters` para la lista completa de peleadores
+- `useAddMembership` y `useTransferFighter` de `@/hooks/gyms`
+- `useGymStaff` para listar entrenadores disponibles del gimnasio
 
-### 3. Accion rapida en la lista de peleadores (`FightersProfiles`)
+### 2. Modificar `AdminGymCard` para agregar boton "Agregar Peleador"
 
-Agregar un boton de icono (Building/Dumbbell) en cada card de peleador para asignar gimnasio rapidamente sin abrir el modal completo. Esto abre un mini-dialog con:
-- Selector de gimnasio
-- Boton confirmar
+Archivo: `src/components/admin/AdminGymCard.tsx`
 
-### 4. Filtro por gimnasio en la lista de peleadores
+- Agregar un boton con icono `UserPlus` en la fila de acciones existente (junto a Dashboard, Editar, Eliminar)
+- Al hacer click abre el `AssignFighterToGymModal` pasando `gym.id` y `gym.nombre`
 
-Agregar un dropdown "Gimnasio" en los filtros existentes de `FightersProfiles` para poder ver:
-- "Sin gimnasio" (peleadores no asignados)
-- Gimnasio especifico
+### 3. Agregar conteo de peleadores en `AdminGymCard`
 
-Esto requiere un join ligero a `fighter_gym_memberships` al cargar los peleadores.
+- Ademas del badge de staff count existente, agregar un segundo badge mostrando la cantidad de peleadores activos (query a `fighter_gym_memberships` filtrado por `gym_id` y `status = 'ACTIVE'`)
 
 ---
 
-## Archivos a Modificar
+## Archivos a Crear/Modificar
 
-| Archivo | Cambio |
+| Archivo | Accion |
 |---------|--------|
-| `src/components/admin/FighterDetailModal.tsx` | Agregar tab "Gimnasio" (8 tabs total) |
-| `src/components/admin/FighterGymTab.tsx` | **Nuevo** - Componente del tab de gimnasio |
-| `src/pages/admin/FightersProfiles.tsx` | Agregar boton rapido de asignacion + filtro por gimnasio |
-| `src/hooks/gyms/index.ts` | Verificar exports necesarios |
+| `src/components/admin/AssignFighterToGymModal.tsx` | Nuevo - Modal de busqueda y asignacion |
+| `src/components/admin/AdminGymCard.tsx` | Agregar boton "Agregar Peleador" + badge de fighter count |
+
+---
 
 ## Detalles Tecnicos
 
-### FighterGymTab - Logica principal
+### AssignFighterToGymModal - Estructura
 
 ```typescript
-// Usa hooks existentes
-import { useGymMembership, useAddMembership, useTransferFighter } from '@/hooks/gyms';
-import { useGyms } from '@/hooks/useGyms';
-import { useGymStaff } from '@/hooks/gyms';
-
-// 1. Consulta membresia activa del peleador
-const { data: membership } = useGymMembership(fighterId);
-
-// 2. Lista de gimnasios para el selector
-const { data: gyms } = useGyms();
-
-// 3. Si selecciona gimnasio, carga staff para asignar coach
-const { data: staff } = useGymStaff(selectedGymId);
-
-// 4. Mutations
-const addMembership = useAddMembership();
-const transferFighter = useTransferFighter();
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  gymId: string;
+  gymName: string;
+}
 ```
 
-### Filtro "Sin Gimnasio" en FightersProfiles
+Flujo interno:
+1. Carga `useAdminFighters()` para tener la lista completa
+2. Filtra client-side por texto de busqueda (nombre, apellido, apodo)
+3. Al seleccionar un peleador, consulta `useGymMembership(fighterId)` para ver si ya tiene gimnasio
+4. Si no tiene: boton "Vincular" con `useAddMembership`
+5. Si ya tiene: muestra nombre del gimnasio actual y boton "Transferir" con `useTransferFighter`
+6. Selector opcional de entrenador usando `useGymStaff(gymId)`
 
-Se consultara `fighter_gym_memberships` con una query ligera para obtener los `fighter_id` con membresia activa, y se filtrara client-side contra la lista de peleadores existente. No requiere cambio en el hook `useAdminFighters`.
+### AdminGymCard - Cambios
 
-### Tab layout actualizado
-
-```text
-Personal | Deportivo | Gimnasio | Ligas | Licencias | Documentos | Estado | Cambios
+Agregar query de fighter count:
+```typescript
+const { data: fighterCount } = useQuery({
+  queryKey: ['gym-fighter-count', gym.id],
+  queryFn: async () => {
+    const { count } = await supabase
+      .from('fighter_gym_memberships')
+      .select('*', { count: 'exact', head: true })
+      .eq('gym_id', gym.id)
+      .eq('status', 'ACTIVE');
+    return count || 0;
+  },
+});
 ```
 
-El grid del TabsList pasara de `grid-cols-7` a `grid-cols-8`.
+Agregar boton en la fila de acciones:
+```typescript
+<Button variant="outline" size="sm" onClick={() => setShowAssignModal(true)}>
+  <UserPlus className="h-4 w-4" />
+</Button>
+```
+
