@@ -8,11 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { OptimizedImage } from '@/components/ui/optimized-image';
-import { Search, User, Loader2, Check, AlertTriangle, ArrowRightLeft } from 'lucide-react';
+import { Search, User, Loader2, Check, AlertTriangle, ArrowRightLeft, X } from 'lucide-react';
 import { useAdminFighters } from '@/hooks/useAdminFighters';
 import { useAddMembership, useTransferFighter, useGymStaff } from '@/hooks/gyms';
 import { supabase } from '@/integrations/supabase/client';
-import { getWeightClassLabel } from '@/lib/constants/disciplines';
+import { ENABLED_DISCIPLINES, FIGHTER_LEVELS, WEIGHT_CLASSES, getWeightClassLabel } from '@/lib/constants/disciplines';
 
 interface AssignFighterToGymModalProps {
   open: boolean;
@@ -30,6 +30,9 @@ export function AssignFighterToGymModal({ open, onClose, gymId, gymName }: Assig
   const [search, setSearch] = useState('');
   const [selectedFighter, setSelectedFighter] = useState<string | null>(null);
   const [selectedCoach, setSelectedCoach] = useState<string>('none');
+  const [filterDiscipline, setFilterDiscipline] = useState('__none__');
+  const [filterLevel, setFilterLevel] = useState('__none__');
+  const [filterWeight, setFilterWeight] = useState('__none__');
 
   // Check if selected fighter already has an active gym
   const { data: existingMembership, isLoading: checkingMembership } = useQuery({
@@ -53,13 +56,30 @@ export function AssignFighterToGymModal({ open, onClose, gymId, gymName }: Assig
     return staff.filter(s => s.role === 'HEAD_COACH' || s.role === 'ASSISTANT_COACH' || s.role === 'OWNER');
   }, [staff]);
 
+  const hasActiveFilters = filterDiscipline !== '__none__' || filterLevel !== '__none__' || filterWeight !== '__none__';
+
   const filteredFighters = useMemo(() => {
-    if (!search.trim()) return fighters.slice(0, 10);
-    const q = search.toLowerCase();
-    return fighters.filter(f =>
-      `${f.first_name} ${f.last_name} ${f.nickname || ''}`.toLowerCase().includes(q)
-    ).slice(0, 20);
-  }, [fighters, search]);
+    let result = fighters;
+
+    if (filterDiscipline !== '__none__') {
+      result = result.filter(f => f.discipline === filterDiscipline);
+    }
+    if (filterLevel !== '__none__') {
+      result = result.filter(f => f.level === filterLevel);
+    }
+    if (filterWeight !== '__none__') {
+      result = result.filter(f => f.weight_class === filterWeight);
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(f =>
+        `${f.first_name} ${f.last_name} ${f.nickname || ''}`.toLowerCase().includes(q)
+      );
+    }
+
+    return result.slice(0, 30);
+  }, [fighters, search, filterDiscipline, filterLevel, filterWeight]);
 
   const selectedFighterData = fighters.find(f => f.id === selectedFighter);
 
@@ -92,14 +112,23 @@ export function AssignFighterToGymModal({ open, onClose, gymId, gymName }: Assig
     setSelectedFighter(null);
     setSearch('');
     setSelectedCoach('none');
+    setFilterDiscipline('__none__');
+    setFilterLevel('__none__');
+    setFilterWeight('__none__');
     onClose();
+  };
+
+  const clearFilters = () => {
+    setFilterDiscipline('__none__');
+    setFilterLevel('__none__');
+    setFilterWeight('__none__');
   };
 
   const isMutating = addMembership.isPending || transferFighter.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Agregar Peleador a {gymName}</DialogTitle>
         </DialogHeader>
@@ -119,14 +148,63 @@ export function AssignFighterToGymModal({ open, onClose, gymId, gymName }: Assig
             </div>
           </div>
 
+          {/* Filters */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Filtros</Label>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-6 px-2 text-xs">
+                  <X className="h-3 w-3 mr-1" /> Limpiar
+                </Button>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <Select value={filterDiscipline} onValueChange={setFilterDiscipline}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Disciplina" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Todas</SelectItem>
+                  {ENABLED_DISCIPLINES.map(d => (
+                    <SelectItem key={d.value} value={d.value}>{d.value}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filterLevel} onValueChange={setFilterLevel}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Nivel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Todos</SelectItem>
+                  {FIGHTER_LEVELS.map(l => (
+                    <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filterWeight} onValueChange={setFilterWeight}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Peso" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Todos</SelectItem>
+                  {WEIGHT_CLASSES.map(w => (
+                    <SelectItem key={w.value} value={w.value}>{w.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {/* Fighter list */}
-          <ScrollArea className="h-48 border rounded-lg">
+          <ScrollArea className="h-56 border rounded-lg">
             {loadingFighters ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : filteredFighters.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-muted-foreground text-sm">
                 No se encontraron peleadores
               </div>
             ) : (
@@ -152,18 +230,32 @@ export function AssignFighterToGymModal({ open, onClose, gymId, gymName }: Assig
                       }
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
+                      <p className="font-medium truncate text-sm">
                         {fighter.first_name} {fighter.last_name}
                       </p>
-                      {fighter.nickname && (
-                        <p className="text-xs text-muted-foreground truncate">"{fighter.nickname}"</p>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {fighter.nickname && (
+                          <span className="text-xs text-muted-foreground">"{fighter.nickname}"</span>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {fighter.mma_record_wins ?? fighter.record_wins ?? 0}-
+                          {fighter.mma_record_losses ?? fighter.record_losses ?? 0}-
+                          {fighter.mma_record_draws ?? fighter.record_draws ?? 0}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {fighter.discipline && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          {fighter.discipline}
+                        </Badge>
+                      )}
+                      {fighter.level && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          {fighter.level}
+                        </Badge>
                       )}
                     </div>
-                    {fighter.weight_class && (
-                      <Badge variant="outline" className="text-xs shrink-0">
-                        {getWeightClassLabel(fighter.weight_class)}
-                      </Badge>
-                    )}
                     {selectedFighter === fighter.id && (
                       <Check className="h-5 w-5 text-primary shrink-0" />
                     )}
