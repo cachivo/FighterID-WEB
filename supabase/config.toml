@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.remove-image-background]
 verify_jwt = false
+
+[functions.check-email-exists]
+verify_jwt = false
