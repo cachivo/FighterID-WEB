@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Phone, Pencil, Trash2, LayoutDashboard, Users, UserPlus, Swords, Crown } from 'lucide-react';
+import { MapPin, Phone, Pencil, Trash2, LayoutDashboard, Users, UserPlus, Swords, Crown, AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { GymEditModal } from './GymEditModal';
 import { DeleteGymDialog } from './DeleteGymDialog';
 import { AssignFighterToGymModal } from './AssignFighterToGymModal';
@@ -51,6 +52,24 @@ export function AdminGymCard({ gym, readOnly = false }: AdminGymCardProps) {
     },
     staleTime: 60_000,
   });
+
+  // Completeness calculation
+  const completeness = (() => {
+    let filled = 0;
+    const total = 7;
+    if (gym.descripcion) filled++;
+    if (gym.ciudad) filled++;
+    if (gym.telefono || gym.whatsapp) filled++;
+    if (gym.disciplinas && gym.disciplinas.length > 0) filled++;
+    if (gym.logo_url) filled++;
+    if (gym.owner_id) filled++;
+    if (gym.email) filled++;
+    return Math.round((filled / total) * 100);
+  })();
+
+  const completenessLabel = completeness < 50 ? 'Incompleto' : completeness < 86 ? 'Completar info' : 'Completo';
+  const completenessColor = completeness < 50 ? 'text-destructive' : completeness < 86 ? 'text-yellow-500' : 'text-green-500';
+  const CompletenessIcon = completeness < 50 ? AlertCircle : completeness < 86 ? Info : CheckCircle2;
 
   return (
     <>
@@ -118,6 +137,18 @@ export function AdminGymCard({ gym, readOnly = false }: AdminGymCardProps) {
               {gym.telefono}
             </p>
           )}
+
+          {/* Completeness indicator */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className={`flex items-center gap-1 font-medium ${completenessColor}`}>
+                <CompletenessIcon className="h-3 w-3" />
+                {completenessLabel}
+              </span>
+              <span className="text-muted-foreground">{completeness}%</span>
+            </div>
+            <Progress value={completeness} className="h-1.5" />
+          </div>
 
           <div className="flex gap-2 pt-2 border-t">
             <Button

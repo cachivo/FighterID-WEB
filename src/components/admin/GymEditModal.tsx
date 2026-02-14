@@ -5,7 +5,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useUpdateGym } from '@/hooks/useGyms';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
+import { useUpdateGym, useCheckGymDuplicate } from '@/hooks/useGyms';
 import { useAllDisciplines, useGymDisciplines, useUpdateGymDisciplines } from '@/hooks/gyms';
 import type { Gym } from '@/types/gyms';
 
@@ -35,6 +37,8 @@ export function GymEditModal({ gym, open, onOpenChange }: GymEditModalProps) {
     facebook: gym.facebook || '',
     website: gym.website || '',
   });
+
+  const { isDuplicate, existingGym } = useCheckGymDuplicate(formData.nombre, gym.id);
 
   useEffect(() => {
     setFormData({
@@ -102,6 +106,14 @@ export function GymEditModal({ gym, open, onOpenChange }: GymEditModalProps) {
           <div>
             <Label htmlFor="nombre">Nombre *</Label>
             <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} required />
+            {isDuplicate && existingGym && (
+              <Alert variant="destructive" className="mt-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Ya existe: <strong>{existingGym.nombre}</strong>{existingGym.ciudad ? ` — ${existingGym.ciudad}` : ''}.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           <div>
@@ -173,7 +185,7 @@ export function GymEditModal({ gym, open, onOpenChange }: GymEditModalProps) {
 
           <div className="flex gap-3 justify-end pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={updateGym.isPending || updateDisciplines.isPending}>
+            <Button type="submit" disabled={updateGym.isPending || updateDisciplines.isPending || isDuplicate}>
               {updateGym.isPending ? 'Guardando...' : 'Guardar Cambios'}
             </Button>
           </div>

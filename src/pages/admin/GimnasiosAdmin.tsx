@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useGyms, useCreateGym } from '@/hooks/useGyms';
+import { useState, useEffect } from 'react';
+import { useGyms, useCreateGym, useCheckGymDuplicate } from '@/hooks/useGyms';
 import { useAllDisciplines } from '@/hooks/gyms';
 import { AdminGymCard } from '@/components/admin/AdminGymCard';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Building2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Plus, Building2, AlertTriangle } from 'lucide-react';
+import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -21,7 +22,10 @@ export default function GimnasiosAdmin() {
   const { isSuperAdmin } = useSuperAdmin();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm();
+  
+  const watchedNombre = useWatch({ control, name: 'nombre', defaultValue: '' });
+  const { isDuplicate, existingGym, isChecking } = useCheckGymDuplicate(watchedNombre || '');
 
   const toggleDiscipline = (id: string) => {
     setSelectedDisciplines(prev =>
@@ -91,6 +95,14 @@ export default function GimnasiosAdmin() {
                   placeholder="Alfa Omega MMA"
                 />
                 {errors.nombre && <p className="text-sm text-destructive mt-1">{errors.nombre.message as string}</p>}
+                {isDuplicate && existingGym && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      Ya existe: <strong>{existingGym.nombre}</strong>{existingGym.ciudad ? ` — ${existingGym.ciudad}` : ''}. Puedes editarlo desde su tarjeta.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
 
               <div>
@@ -144,7 +156,7 @@ export default function GimnasiosAdmin() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={createGym.isPending}>
+                <Button type="submit" disabled={createGym.isPending || isDuplicate}>
                   {createGym.isPending ? 'Creando...' : 'Crear Gimnasio'}
                 </Button>
               </div>

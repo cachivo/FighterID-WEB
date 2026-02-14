@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
 import type { Gym, GymWithCoaches } from '@/types/gyms';
 
 export function useGyms() {
@@ -118,4 +119,41 @@ export function useDeleteGym() {
       toast.error('Error al eliminar: ' + error.message);
     },
   });
+}
+
+export function useCheckGymDuplicate(nombre: string, excludeId?: string) {
+  const [debouncedName, setDebouncedName] = useState(nombre);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedName(nombre), 300);
+    return () => clearTimeout(timer);
+  }, [nombre]);
+
+  const query = useQuery({
+    queryKey: ['gym-duplicate-check', debouncedName.toLowerCase().trim(), excludeId],
+    queryFn: async () => {
+      const normalized = debouncedName.toLowerCase().trim();
+      let q = supabase
+        .from('gyms')
+        .select('id, nombre, ciudad')
+        .eq('activo', true)
+        .ilike('nombre', normalized);
+
+      if (excludeId) {
+        q = q.neq('id', excludeId);
+      }
+
+      const { data, error } = await q.limit(1);
+      if (error) throw error;
+      return data && data.length > 0 ? data[0] : null;
+    },
+    enabled: debouncedName.trim().length >= 3,
+    staleTime: 10_000,
+  });
+
+  return {
+    isDuplicate: !!query.data,
+    existingGym: query.data as { id: string; nombre: string; ciudad: string | null } | null,
+    isChecking: query.isLoading,
+  };
 }
