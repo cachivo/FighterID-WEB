@@ -1,59 +1,70 @@
 
-
-# Mejoras a la Pantalla de Inicio de Sesion
+# Mejoras al Flujo de Recuperacion de Contrasena
 
 ## Problema
-1. La pagina de autenticacion no tiene el logo de Fighter ID, lo que le resta identidad de marca.
-2. El enlace de "Olvidaste tu contrasena" existe pero no ofrece contexto ni instrucciones al usuario sobre que esperar del proceso de recuperacion.
+1. La opcion "Olvidaste tu contrasena?" solo es visible en el paso de login. Si el usuario no llega a ese paso (por ejemplo, si la verificacion de email falla o usa un email incorrecto), nunca ve la opcion de recuperacion.
+2. Las paginas de "Recuperar Contrasena" (`/auth/forgot-password`) y "Nueva Contrasena" (`/auth/reset-password`) no tienen el logo de Fighter ID, rompiendo la consistencia visual.
 
 ## Cambios Propuestos
 
-### 1. Agregar Logo de Fighter ID
-- Copiar la imagen subida (`Fighter_ID_Logo-3.PNG`) a `src/assets/fighter-id-logo-auth.png`
-- Mostrar el logo centrado encima del titulo "Acceso a Fighter ID" dentro del `CardHeader`
-- Tamano aproximado: `w-32` (128px), centrado con `mx-auto`
+### 1. Agregar enlace de recuperacion al paso de Email (paso 1)
+En `src/pages/Auth.tsx`, agregar un enlace discreto debajo del boton "Continuar" en el paso de email:
+- Texto: "Olvidaste tu contrasena?" con icono `HelpCircle`
+- Enlace directo a `/auth/forgot-password`
+- Estilo sutil (`text-sm text-muted-foreground`) para no distraer del flujo principal
 
-### 2. Mejorar la seccion "Olvidaste tu contrasena"
-En el paso de login (step === 'login'), reemplazar el enlace simple por una seccion mas informativa:
+### 2. Agregar logo de Fighter ID a ForgotPassword
+En `src/pages/auth/ForgotPassword.tsx`:
+- Importar `fighterIdLogo from '@/assets/fighter-id-logo-auth.png'`
+- Agregar `<img>` centrado en el `CardHeader` antes del titulo "Recuperar Contrasena"
 
-- Mantener el boton "Olvidaste tu contrasena?" pero agregar debajo un texto explicativo breve:
-  - "Te enviaremos un correo con un enlace seguro para crear una nueva contrasena. El enlace es valido por 24 horas."
-- Esto se mostrara como un pequeno bloque informativo (`text-xs text-muted-foreground`) justo debajo del boton de recuperacion, antes del boton "Usar otro email"
+### 3. Agregar logo de Fighter ID a ResetPassword
+En `src/pages/auth/ResetPassword.tsx`:
+- Importar `fighterIdLogo from '@/assets/fighter-id-logo-auth.png'`
+- Agregar `<img>` centrado en el `CardHeader` antes del titulo "Nueva Contrasena"
+- Tambien agregar el logo en la pantalla de "Verificando enlace..." (estado de carga)
 
 ## Resultado Visual Esperado
 
+### Paso de Email (Auth.tsx)
 ```text
 +------------------------------------------+
 |          [FIGHTER ID LOGO]               |
-|                                          |
 |       Acceso a Fighter ID               |
-|   Ingresa tu contrasena para acceder     |
+|   Ingresa tu email para continuar        |
 |                                          |
-|  Email:                                  |
-|  usuario@email.com                       |
+|  Email: [________________]               |
+|  [       Continuar       ]               |
 |                                          |
-|  Contrasena: [________]                  |
-|                                          |
-|  [    Iniciar Sesion    ]                |
-|  ─────────────────────────               |
 |  ? Olvidaste tu contrasena?              |
-|  Te enviaremos un correo con un enlace   |
-|  seguro para crear una nueva contrasena. |
++------------------------------------------+
+```
+
+### Pagina Forgot Password
+```text
++------------------------------------------+
+|          [FIGHTER ID LOGO]               |
+|       Recuperar Contrasena               |
+|  Ingresa tu email y te enviaremos un     |
+|  enlace para restablecer tu contrasena   |
 |                                          |
-|  <- Usar otro email                      |
+|  Email: [________________]               |
+|  [  Enviar enlace de recuperacion  ]     |
+|                                          |
+|  <- Volver al inicio de sesion           |
 +------------------------------------------+
 ```
 
 ## Seccion Tecnica
 
-### Archivos modificados
+### Archivo: `src/pages/Auth.tsx`
+- En el paso `email` (despues del boton "Continuar", alrededor de la linea 251), agregar un `Button variant="link"` con enlace a `/auth/forgot-password`
 
-**`src/pages/Auth.tsx`**
-1. Copiar imagen del usuario a `src/assets/fighter-id-logo-auth.png`
-2. Importar la imagen: `import fighterIdLogo from '@/assets/fighter-id-logo-auth.png'`
-3. En el `CardHeader` (linea ~226), agregar `<img>` del logo centrado antes del `CardTitle`
-4. En la seccion de login (lineas 284-303), agregar un parrafo explicativo debajo del boton de "Olvidaste tu contrasena" con instrucciones claras sobre el proceso de recuperacion
+### Archivo: `src/pages/auth/ForgotPassword.tsx`
+- Importar el logo: `import fighterIdLogo from '@/assets/fighter-id-logo-auth.png'`
+- En el `CardHeader` (linea 97-101), agregar `<img src={fighterIdLogo} alt="Fighter ID Logo" className="w-32 mx-auto mb-2" />` antes del `CardTitle`
 
-### Sin otros archivos afectados
-La pagina de `ForgotPassword.tsx` ya tiene buenas instrucciones y feedback, no requiere cambios.
-
+### Archivo: `src/pages/auth/ResetPassword.tsx`
+- Importar el logo: `import fighterIdLogo from '@/assets/fighter-id-logo-auth.png'`
+- En el `CardHeader` (linea 156-160), agregar la misma imagen del logo
+- En el estado de carga/verificacion (linea 141-150), agregar el logo tambien
