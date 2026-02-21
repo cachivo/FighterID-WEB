@@ -335,6 +335,10 @@ export type Database = {
       }
       bdg_event: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
+          city: string | null
+          country: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -343,14 +347,23 @@ export type Database = {
           id: string
           meta: Json | null
           name: string
+          organization_id: string | null
+          poster_url: string | null
           published: boolean | null
+          rules_document_url: string | null
           source_event_id: string | null
           start_time: string | null
           state: string
+          total_attendees: number | null
+          total_fights: number | null
           updated_at: string | null
           venue: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -359,14 +372,23 @@ export type Database = {
           id?: string
           meta?: Json | null
           name: string
+          organization_id?: string | null
+          poster_url?: string | null
           published?: boolean | null
+          rules_document_url?: string | null
           source_event_id?: string | null
           start_time?: string | null
           state?: string
+          total_attendees?: number | null
+          total_fights?: number | null
           updated_at?: string | null
           venue?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -375,14 +397,26 @@ export type Database = {
           id?: string
           meta?: Json | null
           name?: string
+          organization_id?: string | null
+          poster_url?: string | null
           published?: boolean | null
+          rules_document_url?: string | null
           source_event_id?: string | null
           start_time?: string | null
           state?: string
+          total_attendees?: number | null
+          total_fights?: number | null
           updated_at?: string | null
           venue?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bdg_event_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "ranking_organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bdg_event_source_event_id_fkey"
             columns: ["source_event_id"]
@@ -1127,6 +1161,57 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      event_officials: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          confirmed: boolean | null
+          confirmed_at: string | null
+          event_id: string
+          id: string
+          notes: string | null
+          official_id: string
+          role: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          confirmed?: boolean | null
+          confirmed_at?: string | null
+          event_id: string
+          id?: string
+          notes?: string | null
+          official_id: string
+          role: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          confirmed?: boolean | null
+          confirmed_at?: string | null
+          event_id?: string
+          id?: string
+          notes?: string | null
+          official_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_officials_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "bdg_event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_officials_official_id_fkey"
+            columns: ["official_id"]
+            isOneToOne: false
+            referencedRelation: "officials"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
@@ -4170,7 +4255,13 @@ export type Database = {
       ranking_organizations: {
         Row: {
           allowed_levels: string[]
+          can_create_events: boolean
+          can_sanction_fights: boolean
           code: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          country: string | null
           created_at: string | null
           description: string | null
           discipline: string
@@ -4179,11 +4270,20 @@ export type Database = {
           logo_url: string | null
           name: string
           short_name: string
+          slug: string | null
           updated_at: string | null
+          verified: boolean
+          website: string | null
         }
         Insert: {
           allowed_levels: string[]
+          can_create_events?: boolean
+          can_sanction_fights?: boolean
           code: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
           created_at?: string | null
           description?: string | null
           discipline: string
@@ -4192,11 +4292,20 @@ export type Database = {
           logo_url?: string | null
           name: string
           short_name: string
+          slug?: string | null
           updated_at?: string | null
+          verified?: boolean
+          website?: string | null
         }
         Update: {
           allowed_levels?: string[]
+          can_create_events?: boolean
+          can_sanction_fights?: boolean
           code?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
           created_at?: string | null
           description?: string | null
           discipline?: string
@@ -4205,7 +4314,10 @@ export type Database = {
           logo_url?: string | null
           name?: string
           short_name?: string
+          slug?: string | null
           updated_at?: string | null
+          verified?: boolean
+          website?: string | null
         }
         Relationships: []
       }

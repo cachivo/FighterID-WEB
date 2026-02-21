@@ -16,6 +16,15 @@ export interface BdgEvent {
   updated_at: string;
   created_by?: string;
   meta: any;
+  organization_id?: string;
+  city?: string;
+  country?: string;
+  poster_url?: string;
+  rules_document_url?: string;
+  approved_by?: string;
+  approved_at?: string;
+  total_fights?: number;
+  total_attendees?: number;
 }
 
 export interface Fight {
@@ -82,6 +91,11 @@ export function useEvents() {
     start_time?: string;
     end_time?: string;
     meta?: any;
+    organization_id?: string;
+    city?: string;
+    country?: string;
+    poster_url?: string;
+    rules_document_url?: string;
   }) => {
     if (!user) throw new Error('Usuario no autenticado');
 
@@ -95,7 +109,12 @@ export function useEvents() {
         start_time: eventData.start_time ? new Date(eventData.start_time).toISOString() : null,
         end_time: eventData.end_time ? new Date(eventData.end_time).toISOString() : null,
         created_by: user.id,
-        meta: eventData.meta || null
+        meta: eventData.meta || null,
+        organization_id: eventData.organization_id || null,
+        city: eventData.city || null,
+        country: eventData.country || null,
+        poster_url: eventData.poster_url || null,
+        rules_document_url: eventData.rules_document_url || null,
       };
 
       const { data, error } = await supabase

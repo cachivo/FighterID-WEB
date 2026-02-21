@@ -106,6 +106,7 @@ const GymAddFighter = lazy(() => import("./pages/gym/GymAddFighter"));
 const RankingsManagement = lazy(() => import("./pages/admin/RankingsManagement"));
 const SystemAssets = lazy(() => import("./pages/admin/SystemAssets"));
 const OfficialsManagement = lazy(() => import("./pages/admin/OfficialsManagement"));
+const OrganizationsManagement = lazy(() => import("./pages/admin/OrganizationsManagement"));
 
 // Lazy load ContactInbox
 const ContactInbox = lazy(() => import("./pages/admin/ContactInbox"));
@@ -372,6 +373,11 @@ const App = () => {
                        <Route path="/officials" element={
                          <Suspense fallback={<LoadingSpinner />}>
                            <OfficialsManagement />
+                         </Suspense>
+                       } />
+                       <Route path="/organizations" element={
+                         <Suspense fallback={<LoadingSpinner />}>
+                           <OrganizationsManagement />
                          </Suspense>
                        } />
                     </Routes>
