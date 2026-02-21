@@ -48,7 +48,7 @@ const RefereeControlRoom = lazy(() => import('./pages/referee/RefereeControlRoom
 const UserRoles = lazy(() => import('./pages/admin/UserRoles'));
 const JudgeScoringPanel = lazy(() => import('./pages/judge/JudgeScoringPanel'));
 const JudgeStationsSetup = lazy(() => import('./pages/admin/JudgeStationsSetup'));
-import LicenseAuth from './pages/license/LicenseAuth';
+// LicenseAuth removed - unified into Auth.tsx
 import LicenseDashboard from './pages/license/LicenseDashboard';
 import LicensePending from './pages/license/LicensePending';
 import LicenseSuspended from './pages/license/LicenseSuspended';
@@ -101,6 +101,8 @@ const GymDashboard = lazy(() => import("./pages/gym/GymDashboard"));
 const GymFightersPage = lazy(() => import("./pages/gym/GymFighters"));
 const GymStaffManagement = lazy(() => import("./pages/gym/GymStaffManagement"));
 const GymAddFighter = lazy(() => import("./pages/gym/GymAddFighter"));
+const GymOnboarding = lazy(() => import("./pages/gym/GymOnboarding"));
+const JudgeOnboarding = lazy(() => import("./pages/judge/JudgeOnboarding"));
 
 // Lazy load RankingsManagement
 const RankingsManagement = lazy(() => import("./pages/admin/RankingsManagement"));
@@ -224,6 +226,22 @@ const App = () => {
 
               <Route path="/entrenadores" element={<Entrenadores />} />
               <Route path="/entrenadores/:slug" element={<EntrenadorDetalle />} />
+
+              {/* Gym & Judge Onboarding */}
+              <Route path="/gym/onboarding" element={
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <GymOnboarding />
+                  </Suspense>
+                </ProtectedRoute>
+              } />
+              <Route path="/judge/onboarding" element={
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <JudgeOnboarding />
+                  </Suspense>
+                </ProtectedRoute>
+              } />
               
               {/* HUD Público de Scoring en Vivo */}
               <Route path="/hud/fight/:fightId" element={<HudPublicDisplay />} />
@@ -240,8 +258,8 @@ const App = () => {
               <Route path="/estacion/3/control/:fightId" element={<Station3RoundControl />} />
 
               {/* Fighter License Portal Routes */}
-              <Route path="/license/welcome" element={<Navigate to="/license/auth?mode=signup" replace />} />
-              <Route path="/license/auth" element={<LicenseAuth />} />
+              <Route path="/license/welcome" element={<Navigate to="/auth?role=fighter" replace />} />
+              <Route path="/license/auth" element={<Navigate to="/auth?role=fighter" replace />} />
               {/* Redirect old license request route to unified onboarding */}
               <Route path="/license/request" element={<Navigate to="/license/onboarding" replace />} />
               <Route path="/license/forgot-password" element={<LicenseForgotPassword />} />
