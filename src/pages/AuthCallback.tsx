@@ -64,6 +64,24 @@ export default function AuthCallback() {
         setMessage('¡Cuenta verificada! Redirigiendo...');
         window.history.replaceState({}, '', '/auth/callback');
 
+        // Check for gym invitation token
+        const gymInviteToken = localStorage.getItem('fighter_id_invite_gym');
+        if (gymInviteToken) {
+          localStorage.removeItem('fighter_id_invite_gym');
+          try {
+            const { data: result, error: rpcError } = await supabase.rpc('accept_gym_invitation', { p_token: gymInviteToken });
+            if (rpcError) throw rpcError;
+            const parsed = typeof result === 'string' ? JSON.parse(result) : result;
+            if (parsed?.success && parsed?.gym_id) {
+              setMessage(`¡Vinculado a ${parsed.gym_name || 'tu gimnasio'}!`);
+              setTimeout(() => navigate(`/gym/${parsed.gym_id}/dashboard`, { replace: true }), 1500);
+              return;
+            }
+          } catch (err) {
+            console.error('[AuthCallback] Error accepting gym invitation:', err);
+          }
+        }
+
         const destination = await determineUserDestination(session.user.id);
         setTimeout(() => navigate(destination, { replace: true }), 1500);
       } catch (err: any) {

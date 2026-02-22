@@ -3311,6 +3311,60 @@ export type Database = {
           },
         ]
       }
+      gym_invitations: {
+        Row: {
+          accepted_at: string | null
+          coach_name: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          gym_id: string
+          id: string
+          invited_by: string | null
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          coach_name?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          gym_id: string
+          id?: string
+          invited_by?: string | null
+          status?: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          coach_name?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          gym_id?: string
+          id?: string
+          invited_by?: string | null
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_invitations_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gym_invitations_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "v_gym_statistics"
+            referencedColumns: ["gym_id"]
+          },
+        ]
+      }
       gym_staff: {
         Row: {
           active: boolean
@@ -5864,6 +5918,7 @@ export type Database = {
         Args: { p_fighter_profile_id: string; p_token: string }
         Returns: boolean
       }
+      accept_gym_invitation: { Args: { p_token: string }; Returns: Json }
       adjust_ranking_points: {
         Args: {
           p_fight_id?: string

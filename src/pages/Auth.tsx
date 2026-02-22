@@ -28,6 +28,7 @@ export default function Auth() {
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('invite');
+  const inviteGymToken = searchParams.get('invite_gym');
   const preselectedRole = searchParams.get('role') as UserType | null;
   const { validateToken } = useFighterInvitations();
   const [invitation, setInvitation] = useState<any>(null);
@@ -54,7 +55,10 @@ export default function Auth() {
     if (selectedRole) {
       localStorage.setItem('fighter_id_selected_role', selectedRole);
     }
-  }, [selectedRole]);
+    if (inviteGymToken) {
+      localStorage.setItem('fighter_id_invite_gym', inviteGymToken);
+    }
+  }, [selectedRole, inviteGymToken]);
 
   // Validate invitation token
   useEffect(() => {

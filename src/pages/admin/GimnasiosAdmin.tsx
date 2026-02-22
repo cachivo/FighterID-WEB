@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Plus, Building2, AlertTriangle } from 'lucide-react';
+import { Plus, Building2, AlertTriangle, Mail, Loader2 } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +22,7 @@ export default function GimnasiosAdmin() {
   const { isSuperAdmin } = useSuperAdmin();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
+  const [sendingInvitation, setSendingInvitation] = useState(false);
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm();
   
   const watchedNombre = useWatch({ control, name: 'nombre', defaultValue: '' });
@@ -55,6 +56,23 @@ export default function GimnasiosAdmin() {
         await supabase.from('gym_disciplines').insert(
           selectedDisciplines.map(id => ({ gym_id: newGym.id, discipline_id: id }))
         );
+      }
+
+      // Send gym invitation to coach
+      if (data.coach_email && newGym?.id) {
+        setSendingInvitation(true);
+        try {
+          const { data: invResult, error: invError } = await supabase.functions.invoke('send-gym-invitation', {
+            body: { gymId: newGym.id, email: data.coach_email, coachName: data.coach_name || undefined },
+          });
+          if (invError) throw invError;
+          toast.success(`Invitación enviada a ${data.coach_email}`);
+        } catch (invErr: any) {
+          console.error('Error sending gym invitation:', invErr);
+          toast.error('Gimnasio creado, pero falló el envío de invitación: ' + (invErr.message || 'Error desconocido'));
+        } finally {
+          setSendingInvitation(false);
+        }
       }
 
       reset();
@@ -103,6 +121,27 @@ export default function GimnasiosAdmin() {
                     </AlertDescription>
                   </Alert>
                 )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="coach_email">Email Entrenador Principal *</Label>
+                  <Input 
+                    id="coach_email" 
+                    type="email"
+                    {...register('coach_email', { required: 'El email del entrenador es requerido' })}
+                    placeholder="coach@email.com"
+                  />
+                  {errors.coach_email && <p className="text-sm text-destructive mt-1">{errors.coach_email.message as string}</p>}
+                </div>
+                <div>
+                  <Label htmlFor="coach_name">Nombre del Entrenador</Label>
+                  <Input 
+                    id="coach_name" 
+                    {...register('coach_name')}
+                    placeholder="Juan Pérez"
+                  />
+                </div>
               </div>
 
               <div>
@@ -156,8 +195,12 @@ export default function GimnasiosAdmin() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={createGym.isPending || isDuplicate}>
-                  {createGym.isPending ? 'Creando...' : 'Crear Gimnasio'}
+                <Button type="submit" disabled={createGym.isPending || isDuplicate || sendingInvitation}>
+                  {(createGym.isPending || sendingInvitation) ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{sendingInvitation ? 'Enviando invitación...' : 'Creando...'}</>
+                  ) : (
+                    <><Mail className="mr-2 h-4 w-4" />Crear y Enviar Invitación</>
+                  )}
                 </Button>
               </div>
             </form>
