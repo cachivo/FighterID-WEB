@@ -11,6 +11,7 @@ import LeagueSelector from "@/components/sections/LeagueSelector";
 
 // Lazy load non-critical below-fold components
 const StrategicAllies = lazy(() => import("@/components/StrategicAllies"));
+const GymShowcase = lazy(() => import("@/components/sections/GymShowcase"));
 const Footer = lazy(() => import("@/components/Footer"));
 const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt"));
 const FighterIDCallToAction = lazy(() => import("@/components/FighterIDCallToAction").then(m => ({ default: m.FighterIDCallToAction })));
@@ -84,6 +85,7 @@ const Index = () => {
       <LeagueSelector value={selectedOrg} onChange={handleOrgChange} />
       <Ranking organizationCode={selectedOrg} />
       <Suspense fallback={null}>
+        <GymShowcase />
         <StrategicAllies />
         <Footer />
         <PWAInstallPrompt />

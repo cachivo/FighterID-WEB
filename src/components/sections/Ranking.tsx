@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getWeightClassLabel, GENDERS, WEIGHT_CLASSES } from "@/lib/constants/disciplines";
 import { Card, CardContent } from "@/components/ui/card";
-import { Trophy, Users, Target, Award, TrendingUp, Crown } from "lucide-react";
+import { Trophy, Users, Target, Award, TrendingUp, Crown, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -321,22 +321,24 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
                               </span>
                             )}
                           </div>
-                          {/* Line 3: Division + Gym + Record */}
+                          {/* Line 3: Division + Record */}
                           <div className="flex items-center gap-1.5">
                             <Badge variant="outline" className="text-[9px] xs:text-[10px] sm:text-xs border-purple-neon-primary/50 text-purple-neon-primary px-1 xs:px-1.5 shrink-0">
                               {getWeightClassLabel(ranking.weight_class)}
                             </Badge>
-                            {ranking.fighter.gym_name && (
-                              <span className="text-[9px] xs:text-[10px] sm:text-xs text-gray-400 truncate flex-1 min-w-0">
-                                {ranking.fighter.gym_name}
-                              </span>
-                            )}
                             <span className="text-[9px] xs:text-[10px] sm:text-xs font-mono shrink-0 ml-auto">
                               <span className="text-green-400">{wins || 0}</span>
                               <span className="text-gray-500">-</span>
                               <span className="text-red-400">{losses || 0}</span>
                               <span className="text-gray-500">-</span>
                               <span className="text-gray-400">{draws || 0}</span>
+                            </span>
+                          </div>
+                          {/* Line 4: Gym */}
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <Building2 className="h-2.5 w-2.5 text-gray-500 shrink-0" />
+                            <span className="text-[9px] xs:text-[10px] sm:text-xs text-gray-400 truncate">
+                              {ranking.fighter.gym_name || 'Independiente'}
                             </span>
                           </div>
                         </div>
