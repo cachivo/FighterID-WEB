@@ -1,69 +1,81 @@
 
+# Correccion de Logica de Redireccion Post-Login por Modulo Seleccionado
 
-# Auditoria de Idioma y Coherencia del Sistema
+## Problema Identificado
 
-## Problemas Encontrados
+Actualmente, cuando un usuario inicia sesion, el sistema usa una logica de **prioridad de roles** que ignora completamente la seleccion que hizo en la pantalla inicial:
 
-Se identificaron inconsistencias de idioma (texto en ingles dentro de la interfaz en espanol) y una etiqueta incorrecta en el flujo de licencias.
+```
+1. Si tiene rol admin/super_admin → SIEMPRE va a /admin/dashboard
+2. Si tiene rol gym_owner/gym_coach → SIEMPRE va a gym dashboard
+3. Si tiene rol judge → SIEMPRE va a /
+4. Si no tiene roles especiales → verifica licencia de peleador
+```
 
-### 1. Texto en Ingles que debe traducirse al Espanol
+Esto significa que si `cachivo@gmail.com` (super_admin) selecciona "Gimnasio" en la pantalla de rol, el sistema lo ignora y lo manda a `/admin/dashboard`.
 
-| Archivo | Linea | Actual (Ingles) | Correccion (Espanol) |
-|---------|-------|-----------------|----------------------|
-| `src/components/FighterCard.tsx` | 128 | `Record` | `Record` (aceptable como termino deportivo) o `Palmarés` |
-| `src/components/gym/GymDashboardHeader.tsx` | 24 | `OWNER: 'Main Coach'` | `OWNER: 'Entrenador Principal'` |
-| `src/components/gym/GymStaffCard.tsx` | 14 | `OWNER: 'Main Coach'` | `OWNER: 'Entrenador Principal'` |
-| `src/components/admin/FighterDetailModal.tsx` | 244 | `label="Stance"` | `label="Guardia"` |
-| `src/pages/license/LicenseOnboarding.tsx` | 542 | `Label: "Stance"` | `Label: "Guardia"` |
-| `src/pages/license/LicenseOnboarding.tsx` | 548 | `placeholder="Selecciona tu stance"` | `placeholder="Selecciona tu guardia"` |
+El valor de `localStorage('fighter_id_selected_role')` solo se lee cuando el usuario NO tiene `app_user` (usuario completamente nuevo). Para usuarios existentes con multiples roles, se ignora por completo.
 
-### 2. Inconsistencia en la etiqueta "Guardia" / "Postura" / "Stance"
+## Solucion
 
-El mismo campo `stance` tiene 3 nombres diferentes segun el formulario:
+Cambiar la logica en 2 archivos para que el **modulo seleccionado** tenga prioridad sobre los roles de la base de datos:
 
-| Archivo | Etiqueta Actual |
-|---------|----------------|
-| `AdminFighterForm.tsx` | "Guardia" (correcto) |
-| `FighterEditModal.tsx` | "Postura" |
-| `UserFighterProfileEditForm.tsx` | "Postura" |
-| `ProfileChangeRequest.tsx` | "Guardia" (correcto) |
-| `LicenseOnboarding.tsx` | "Stance" (ingles) |
-| `FighterDetailModal.tsx` | "Stance" (ingles) |
+### Archivo 1: `src/pages/Auth.tsx` - funcion `routeAuthenticatedUser()`
 
-**Decision:** Unificar todo a **"Guardia"** que es el termino correcto en espanol para deportes de combate.
+Antes de verificar roles en la BD, leer `fighter_id_selected_role` de localStorage. Si existe un valor seleccionado, enrutar directamente al modulo correspondiente:
 
-### 3. Rol "HEAD_COACH" duplica "Entrenador Principal" con OWNER
+- `'admin'` → verificar que tenga rol admin, luego ir a `/admin/dashboard`
+- `'gym'` → buscar su gym_staff, ir a `/gym/:id/dashboard` (o `/gimnasios` si no tiene gym)
+- `'judge'` → ir a `/judge/onboarding` o dashboard de juez
+- `'fighter'` → seguir el flujo de licencia (onboarding/pending/dashboard/suspended)
 
-Actualmente:
-- `OWNER` = "Main Coach" (ingles)
-- `HEAD_COACH` = "Entrenador Principal"
+Si NO hay seleccion en localStorage (ej: el usuario uso "Ya tengo cuenta" sin pasar por el selector), entonces usar la logica actual de prioridad de roles como fallback.
 
-Esto causa que al corregir OWNER a espanol, ambos roles digan lo mismo. La correccion correcta:
-- `OWNER` = "Propietario" o "Director"
-- `HEAD_COACH` = "Entrenador Principal"
-- `ASSISTANT_COACH` = "Asistente"
+### Archivo 2: `src/pages/AuthCallback.tsx` - funcion `determineUserDestination()`
+
+Aplicar la misma logica: leer `fighter_id_selected_role` primero, enrutar por modulo seleccionado, y solo usar la prioridad de roles como fallback.
+
+## Cambios Especificos
+
+### `Auth.tsx` - `routeAuthenticatedUser()` (lineas 117-207)
+
+Reestructurar la funcion:
+
+```
+1. Leer savedRole de localStorage
+2. Leer roles de la BD (user_roles)
+3. Si savedRole existe:
+   - 'admin' → si tiene rol admin/super_admin → /admin/dashboard, sino → toast error
+   - 'gym' → buscar gym_staff → /gym/:id/dashboard o /gimnasios
+   - 'judge' → verificar licencia de juez o /judge/onboarding
+   - 'fighter' → flujo de licencia (app_user → fighter_profile → license)
+4. Si NO hay savedRole (login directo):
+   - Usar logica de prioridad actual como fallback
+5. Limpiar localStorage al final
+```
+
+### `AuthCallback.tsx` - `determineUserDestination()` (lineas 123-191)
+
+Misma reestructuracion:
+
+```
+1. Leer savedRole de localStorage
+2. Si savedRole existe, enrutar al modulo correspondiente
+3. Si no, usar fallback de prioridad de roles
+4. Limpiar localStorage
+```
+
+## Detalle Tecnico
+
+- Se mantiene la validacion de permisos: si alguien selecciona "admin" pero no tiene el rol, se le niega acceso
+- La seleccion de rol solo afecta la redireccion post-login, no los permisos de acceso a las rutas (los ProtectedRoute/AdminProtectedRoute siguen funcionando igual)
+- Para el flujo de "Ya tengo cuenta" (sin seleccion de rol), se mantiene el comportamiento actual de prioridad
 
 ## Archivos a Modificar
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/gym/GymDashboardHeader.tsx` | `OWNER: 'Main Coach'` a `OWNER: 'Director'` |
-| `src/components/gym/GymStaffCard.tsx` | `OWNER: 'Main Coach'` a `OWNER: 'Director'` |
-| `src/components/admin/FighterDetailModal.tsx` | `label="Stance"` a `label="Guardia"` |
-| `src/pages/license/LicenseOnboarding.tsx` | Label "Stance" a "Guardia", placeholder a "Selecciona tu guardia" |
-| `src/components/admin/FighterEditModal.tsx` | `Label: "Postura"` a `Label: "Guardia"` |
-| `src/components/UserFighterProfileEditForm.tsx` | `FormLabel: "Postura"` a `FormLabel: "Guardia"`, placeholder a "Seleccionar guardia" |
+| `src/pages/Auth.tsx` | Reestructurar `routeAuthenticatedUser()` (~40 lineas) |
+| `src/pages/AuthCallback.tsx` | Reestructurar `determineUserDestination()` (~30 lineas) |
 
-## Flujo de Habilitacion de Licencias
-
-El flujo de licencias esta completo y correcto en espanol:
-
-1. `/license/auth` - Autenticacion (espanol)
-2. `/license/onboarding` - Formulario de solicitud (espanol, excepto "Stance")
-3. `/license/pending` - Estado de espera con pasos claros (espanol)
-4. `/license/dashboard` - Panel activo con toda la info (espanol)
-5. `/license/suspended` - Pagina de suspension (espanol)
-
-No hay problemas funcionales en el flujo. Solo las correcciones de etiquetas mencionadas arriba.
-
-## Total: 6 archivos, ~10 lineas de cambio
+**Total: 2 archivos, ~70 lineas de cambio**
