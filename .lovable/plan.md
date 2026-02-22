@@ -1,32 +1,69 @@
 
 
-# Corregir Error Critico: Licencia No Detectada
+# Auditoria de Idioma y Coherencia del Sistema
 
-## Problema
+## Problemas Encontrados
 
-La funcion RPC `check_user_license_status` esta rota. Referencia el campo `v_profile.gym` que no existe en la tabla `fighter_profiles`. Los campos correctos son `gym_id` y `gym_name`.
+Se identificaron inconsistencias de idioma (texto en ingles dentro de la interfaz en espanol) y una etiqueta incorrecta en el flujo de licencias.
 
-Esto causa que TODOS los usuarios con licencia activa vean "Sin Licencia Oficial" porque el RPC falla con error `record "v_profile" has no field "gym"`, y el fallback legacy tampoco puede recuperar correctamente el estado.
+### 1. Texto en Ingles que debe traducirse al Espanol
 
-Willis Yang tiene licencia ACTIVA (FGT-2025-006) en la base de datos, pero el sistema no la detecta por este error.
+| Archivo | Linea | Actual (Ingles) | Correccion (Espanol) |
+|---------|-------|-----------------|----------------------|
+| `src/components/FighterCard.tsx` | 128 | `Record` | `Record` (aceptable como termino deportivo) o `Palmarés` |
+| `src/components/gym/GymDashboardHeader.tsx` | 24 | `OWNER: 'Main Coach'` | `OWNER: 'Entrenador Principal'` |
+| `src/components/gym/GymStaffCard.tsx` | 14 | `OWNER: 'Main Coach'` | `OWNER: 'Entrenador Principal'` |
+| `src/components/admin/FighterDetailModal.tsx` | 244 | `label="Stance"` | `label="Guardia"` |
+| `src/pages/license/LicenseOnboarding.tsx` | 542 | `Label: "Stance"` | `Label: "Guardia"` |
+| `src/pages/license/LicenseOnboarding.tsx` | 548 | `placeholder="Selecciona tu stance"` | `placeholder="Selecciona tu guardia"` |
 
-## Solucion
+### 2. Inconsistencia en la etiqueta "Guardia" / "Postura" / "Stance"
 
-### 1. Corregir la funcion RPC (migracion SQL)
+El mismo campo `stance` tiene 3 nombres diferentes segun el formulario:
 
-Crear una migracion que reemplace `v_profile.gym` por `v_profile.gym_name` en la funcion `check_user_license_status`.
+| Archivo | Etiqueta Actual |
+|---------|----------------|
+| `AdminFighterForm.tsx` | "Guardia" (correcto) |
+| `FighterEditModal.tsx` | "Postura" |
+| `UserFighterProfileEditForm.tsx` | "Postura" |
+| `ProfileChangeRequest.tsx` | "Guardia" (correcto) |
+| `LicenseOnboarding.tsx` | "Stance" (ingles) |
+| `FighterDetailModal.tsx` | "Stance" (ingles) |
 
-Tambien agregar `gym_id` al JSON del perfil para que el frontend tenga acceso al ID del gimnasio si lo necesita.
+**Decision:** Unificar todo a **"Guardia"** que es el termino correcto en espanol para deportes de combate.
 
-### 2. Verificacion
+### 3. Rol "HEAD_COACH" duplica "Entrenador Principal" con OWNER
 
-Despues de aplicar la migracion, la funcion devolvera correctamente el estado `active_license` para Willis Yang y todos los demas peleadores con licencia activa.
+Actualmente:
+- `OWNER` = "Main Coach" (ingles)
+- `HEAD_COACH` = "Entrenador Principal"
 
-## Detalle tecnico
+Esto causa que al corregir OWNER a espanol, ambos roles digan lo mismo. La correccion correcta:
+- `OWNER` = "Propietario" o "Director"
+- `HEAD_COACH` = "Entrenador Principal"
+- `ASSISTANT_COACH` = "Asistente"
 
-| Archivo | Accion |
+## Archivos a Modificar
+
+| Archivo | Cambio |
 |---------|--------|
-| `supabase/migrations/fix_license_rpc_gym_field.sql` | Crear: migracion que corrige `gym` a `gym_name` en el RPC |
+| `src/components/gym/GymDashboardHeader.tsx` | `OWNER: 'Main Coach'` a `OWNER: 'Director'` |
+| `src/components/gym/GymStaffCard.tsx` | `OWNER: 'Main Coach'` a `OWNER: 'Director'` |
+| `src/components/admin/FighterDetailModal.tsx` | `label="Stance"` a `label="Guardia"` |
+| `src/pages/license/LicenseOnboarding.tsx` | Label "Stance" a "Guardia", placeholder a "Selecciona tu guardia" |
+| `src/components/admin/FighterEditModal.tsx` | `Label: "Postura"` a `Label: "Guardia"` |
+| `src/components/UserFighterProfileEditForm.tsx` | `FormLabel: "Postura"` a `FormLabel: "Guardia"`, placeholder a "Seleccionar guardia" |
 
-Es un cambio de 1 linea en la funcion SQL. No hay cambios en archivos del frontend.
+## Flujo de Habilitacion de Licencias
 
+El flujo de licencias esta completo y correcto en espanol:
+
+1. `/license/auth` - Autenticacion (espanol)
+2. `/license/onboarding` - Formulario de solicitud (espanol, excepto "Stance")
+3. `/license/pending` - Estado de espera con pasos claros (espanol)
+4. `/license/dashboard` - Panel activo con toda la info (espanol)
+5. `/license/suspended` - Pagina de suspension (espanol)
+
+No hay problemas funcionales en el flujo. Solo las correcciones de etiquetas mencionadas arriba.
+
+## Total: 6 archivos, ~10 lineas de cambio
