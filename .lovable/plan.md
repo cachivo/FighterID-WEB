@@ -1,43 +1,58 @@
 
 
-# Uniformar Tarjetas de Ranking
+# Corregir Ranking y Agregar Seccion de Gimnasios
 
-Las tarjetas del ranking actualmente se ven inconsistentes porque la informacion se acomoda de forma variable: algunos peleadores tienen nickname y otros no, los nombres de gimnasio se truncan a distintos anchos, y el record se mezcla con los badges en una sola linea que se desborda.
+## Problema actual
+
+En las tarjetas de ranking, el nombre del gimnasio aparece comprimido entre la division y el record, truncandose a una sola letra (ej: "C.", "L."). Ademas, falta una seccion dedicada a gimnasios en la pagina principal.
 
 ## Cambios
 
-### Estructura fija por filas en cada tarjeta (archivo: `src/components/sections/Ranking.tsx`)
+### 1. Reestructurar tarjetas de ranking (archivo: `src/components/sections/Ranking.tsx`)
 
-Reorganizar el contenido de cada tarjeta para que siempre ocupe las mismas lineas, sin importar si el peleador tiene nickname o gym:
+Cambiar de 3 lineas a 4 lineas por tarjeta:
 
 ```text
-Linea 1: Nombre completo + badge campeon (si aplica)
-Linea 2: Nickname (si existe, en italica; si no, se omite pero el espacio se mantiene con min-height)
-Linea 3: [Badge division] [Gym name] [Record W-L-D]
+Linea 1: Nombre completo + badge campeon
+Linea 2: Nickname (con min-height para uniformidad)
+Linea 3: [Badge division] [Record W-L-D]
+Linea 4: Icono edificio + Nombre del gimnasio (o "Independiente")
 ```
 
-Cambios especificos:
+El gimnasio pasa a tener su propia linea debajo de la division, con un icono de edificio y texto en gris claro. Asi se ve completo sin truncarse.
 
-1. **Nombre del peleador**: Quitar `max-w-[100px]` y `truncate` del nombre. En movil, permitir que el nombre ocupe toda la linea con `text-ellipsis` solo si realmente no cabe.
+### 2. Nueva seccion "Escuelas" en la pagina principal
 
-2. **Nickname**: Mantener un `min-h-[14px]` para que las tarjetas sin nickname no colapsen esa linea, manteniendo la alineacion vertical uniforme entre todas las tarjetas.
+Crear `src/components/sections/GymShowcase.tsx` - una seccion ligera que muestra los gimnasios con sus peleadores agrupados por escuela.
 
-3. **Fila de badges (division + gym + record)**: Usar `flex items-center gap-1.5` con anchos maximos consistentes para cada elemento:
-   - Division badge: ancho fijo con truncate
-   - Gym name: `flex-1 truncate` para que ocupe el espacio disponible sin empujar el record
-   - Record (W-L-D): `shrink-0 ml-auto` para que siempre quede alineado a la derecha de esa fila
+Caracteristicas:
+- Query optimizado: un solo SELECT con JOIN a `fighter_profiles` para traer gym + conteo de peleadores
+- Solo muestra gyms con al menos 1 peleador registrado
+- Cada gym se muestra como una tarjeta compacta con: logo (o fallback con iniciales), nombre, ciudad, disciplinas, y cantidad de peleadores
+- Al tocar un gym, navega a `/gimnasios/{slug}` para ver el detalle completo
+- Scroll horizontal con snap para gama baja (sin grid pesado)
+- Lazy-loaded con `React.lazy` + `Suspense`
 
-4. **Puntos**: Ya estan bien posicionados a la derecha. Sin cambios.
+### 3. Integrar en la pagina principal (archivo: `src/pages/Index.tsx`)
 
-### Resultado visual esperado
+Agregar la seccion de gimnasios entre el Ranking y los Aliados Estrategicos:
 
-Todas las tarjetas tendran exactamente la misma altura y estructura visual, con la informacion alineada en las mismas posiciones independientemente de los datos del peleador.
+```text
+Header > Hero > CTA > QuickStats > LeagueSelector > Ranking > [GymShowcase] > Allies > Footer
+```
+
+### 4. Hook dedicado (archivo: `src/hooks/useGymsWithFighters.ts`)
+
+Query liviano que trae gimnasios activos con conteo de peleadores, ordenados por cantidad de peleadores (los mas grandes primero). Usa `staleTime` largo para evitar re-fetches innecesarios en gama baja.
 
 ## Detalle tecnico
 
-| Archivo | Cambio |
+| Archivo | Accion |
 |---------|--------|
-| `src/components/sections/Ranking.tsx` | Reestructurar lineas 301-340: separar nickname en su propia linea con min-height, fijar layout de badges, quitar truncates agresivos del nombre |
+| `src/components/sections/Ranking.tsx` | Modificar: mover gym a linea propia debajo de division |
+| `src/components/sections/GymShowcase.tsx` | Crear: seccion de gimnasios con peleadores agrupados |
+| `src/hooks/useGymsWithFighters.ts` | Crear: hook con query optimizado gyms + fighter count |
+| `src/pages/Index.tsx` | Modificar: agregar GymShowcase lazy-loaded |
 
-Solo se modifica 1 archivo. No hay cambios en base de datos ni en logica de negocio.
+No hay cambios en base de datos. Toda la informacion ya existe en las tablas `gyms` y `fighter_profiles` (campo `gym_id`).
 
