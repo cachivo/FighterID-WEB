@@ -189,11 +189,11 @@ const EventDetail = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-950 to-black"></div>
         
         {/* Nebula effects */}
-        <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-purple-900/8 rounded-full blur-[150px] animate-pulse"></div>
-        <div className="absolute top-1/2 right-0 w-[600px] h-[600px] bg-blue-900/6 rounded-full blur-[150px] animate-pulse" style={{
+        <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-red-950/8 rounded-full blur-[150px] animate-pulse"></div>
+        <div className="absolute top-1/2 right-0 w-[600px] h-[600px] bg-red-900/6 rounded-full blur-[150px] animate-pulse" style={{
         animationDelay: '2s'
       }}></div>
-        <div className="absolute bottom-0 left-1/3 w-[700px] h-[700px] bg-indigo-900/5 rounded-full blur-[150px] animate-pulse" style={{
+        <div className="absolute bottom-0 left-1/3 w-[700px] h-[700px] bg-red-950/5 rounded-full blur-[150px] animate-pulse" style={{
         animationDelay: '4s'
       }}></div>
         
@@ -275,8 +275,8 @@ const EventDetail = () => {
         {/* Fight Card */}
         <section className="relative py-12 overflow-hidden">
           {/* Subtle Background Effects */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-purple-950/5 to-black/50"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.03),transparent_70%)]"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-red-950/5 to-black/50"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(206,16,16,0.03),transparent_70%)]"></div>
         
         <div className="container mx-auto px-4 relative z-10">
           {/* Dynamic Event Logo Header */}

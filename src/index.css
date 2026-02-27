@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Urban Design System - Minimalist street art aesthetic
+/* UFC Combat Design System - Black/Red aesthetic
 All colors MUST be HSL.
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* Mobile optimization - prevent horizontal scroll */
 * {
@@ -57,115 +57,111 @@ img, video {
 
 @layer base {
   :root {
-    /* Professional color palette - sober and elegant */
-    --background: 0 0% 98%;
-    --foreground: 210 11% 25%;
+    /* UFC Combat palette - Always dark mode */
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 210 11% 25%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 11% 25%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 95%;
 
-    /* Primary - Professional steel */
-    --primary: 210 15% 20%;
+    /* Primary - UFC Red */
+    --primary: 0 84% 44%;
     --primary-foreground: 0 0% 98%;
 
-    /* Secondary - Professional gray */
-    --secondary: 210 12% 35%;
-    --secondary-foreground: 0 0% 98%;
+    /* Secondary - Dark steel */
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 95%;
 
-    /* Muted professional tones */
-    --muted: 210 10% 85%;
-    --muted-foreground: 210 8% 55%;
+    /* Muted tones */
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 55%;
 
-    /* Accent - Professional steel accent */
-    --accent: 210 8% 55%;
-    --accent-foreground: 0 0% 10%;
+    /* Accent - UFC Red accent */
+    --accent: 0 84% 35%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 12% 85%;
-    --input: 210 12% 82%;
-    --ring: 210 15% 20%;
+    --border: 0 0% 18%;
+    --input: 0 0% 14%;
+    --ring: 0 84% 44%;
 
-    /* Urban Combat Professional - Mate palette for better hierarchy */
+    /* Urban Combat - Red palette */
     --urban-gray: 0 0% 10%;
     --urban-light: 0 0% 96%;
-    --street-accent: 280 60% 55%;
+    --street-accent: 0 84% 44%;
     
-    /* Neon colors for Home page - Vibrant and energetic */
-    --home-neon-primary: 285 100% 68%; /* Vibrant purple neon */
-    --home-neon-secondary: 200 100% 60%; /* Electric cyan */
-    --home-neon-glow: 280 90% 75%; /* Bright purple glow */
-    --home-cyan-neon: 180 100% 55%; /* Intense cyan */
+    /* Neon colors remapped to red - Home page */
+    --home-neon-primary: 0 84% 50%;
+    --home-neon-secondary: 0 84% 40%;
+    --home-neon-glow: 0 84% 60%;
+    --home-cyan-neon: 0 60% 45%;
     
-    /* Professional colors for App pages - Matte and clean */
-    --purple-neon-primary: 215 25% 50%; /* Professional blue-gray */
-    --purple-neon-secondary: 220 20% 55%; /* Soft blue */
-    --purple-neon-glow: 215 18% 65%; /* Light blue-gray */
-    --cyan-neon: 200 22% 52%; /* Muted cyan */
-    --vote-active: 215 25% 50%;
+    /* App pages - Red matte */
+    --purple-neon-primary: 0 84% 44%;
+    --purple-neon-secondary: 0 84% 35%;
+    --purple-neon-glow: 0 84% 55%;
+    --cyan-neon: 0 60% 40%;
+    --vote-active: 0 84% 44%;
     --vote-inactive: 0 0% 50%;
 
-    /* Professional Fighter Theme - Light mode readable */
-    --fighter-primary: 210 11% 25%; /* Readable dark */
-    --fighter-primary-foreground: 0 0% 98%;
-    --fighter-secondary: 210 9% 40%; /* Readable gray */
-    --fighter-secondary-foreground: 0 0% 98%;
-    --fighter-accent: 210 6% 60%; /* Light metallic */
-    --fighter-accent-foreground: 210 11% 15%;
-    --fighter-background: 0 0% 98%; /* Light background */
-    --fighter-card: 0 0% 100%; /* White card */
-    --fighter-border: 210 8% 85%; /* Light border */
+    /* Fighter Theme - Dark mode */
+    --fighter-primary: 0 0% 95%;
+    --fighter-primary-foreground: 0 0% 8%;
+    --fighter-secondary: 0 0% 65%;
+    --fighter-secondary-foreground: 0 0% 8%;
+    --fighter-accent: 0 0% 40%;
+    --fighter-accent-foreground: 0 0% 95%;
+    --fighter-background: 0 0% 5%;
+    --fighter-card: 0 0% 8%;
+    --fighter-border: 0 0% 18%;
     
-    /* Fighter status colors - readable in light mode */
-    --fighter-success: 142 76% 45%; /* Vibrant emerald green */
-    --fighter-warning: 43 74% 49%; /* Amber */
-    --fighter-danger: 0 63% 31%; /* Brick red */
-    --fighter-info: 210 100% 45%; /* Steel blue */
+    /* Fighter status colors */
+    --fighter-success: 142 76% 45%;
+    --fighter-warning: 43 74% 49%;
+    --fighter-danger: 0 84% 44%;
+    --fighter-info: 210 100% 45%;
 
-    /* Professional License/Profile System - Elegant & Masculine */
-    --professional-primary: 210 15% 20%; /* Deep steel blue */
+    /* Professional License/Profile System */
+    --professional-primary: 0 84% 44%;
     --professional-primary-foreground: 0 0% 98%;
-    --professional-secondary: 210 12% 35%; /* Medium steel */
-    --professional-secondary-foreground: 0 0% 98%;
-    --professional-accent: 210 8% 55%; /* Light steel */
-    --professional-accent-foreground: 0 0% 10%;
-    --professional-muted: 210 10% 85%; /* Light gray-blue */
-    --professional-border: 210 12% 25%; /* Dark border */
+    --professional-secondary: 0 0% 65%;
+    --professional-secondary-foreground: 0 0% 8%;
+    --professional-accent: 0 0% 45%;
+    --professional-accent-foreground: 0 0% 98%;
+    --professional-muted: 0 0% 14%;
+    --professional-border: 0 0% 18%;
     
-    /* Home page gradients - Neon and vibrant */
-    --gradient-home-hero: linear-gradient(135deg, hsl(280 60% 15%) 0%, hsl(200 80% 20%) 100%);
-    --gradient-home-cyber: linear-gradient(135deg, hsl(285 100% 68%) 0%, hsl(200 100% 60%) 100%);
-    --gradient-home-neon: linear-gradient(90deg, hsl(285 100% 68%) 0%, hsl(180 100% 55%) 100%);
+    /* Gradients - Red/black */
+    --gradient-home-hero: linear-gradient(135deg, hsl(0 84% 15%) 0%, hsl(0 0% 5%) 100%);
+    --gradient-home-cyber: linear-gradient(135deg, hsl(0 84% 44%) 0%, hsl(0 84% 30%) 100%);
+    --gradient-home-neon: linear-gradient(90deg, hsl(0 84% 44%) 0%, hsl(0 84% 55%) 100%);
     
-    /* App pages gradients - Professional and subtle */
-    --gradient-hero: linear-gradient(135deg, hsl(0 0% 8%) 0%, hsl(215 20% 25%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(215 10% 98%) 100%);
-    --gradient-cyber: linear-gradient(135deg, hsl(215 25% 50%) 0%, hsl(220 20% 55%) 100%);
-    --gradient-neon: linear-gradient(90deg, hsl(215 25% 50%) 0%, hsl(215 18% 65%) 100%);
-    --gradient-accent: linear-gradient(120deg, hsl(220 20% 55%) 0%, hsl(200 22% 52%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 84% 15%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 8%) 0%, hsl(0 0% 10%) 100%);
+    --gradient-cyber: linear-gradient(135deg, hsl(0 84% 44%) 0%, hsl(0 84% 35%) 100%);
+    --gradient-neon: linear-gradient(90deg, hsl(0 84% 44%) 0%, hsl(0 84% 55%) 100%);
+    --gradient-accent: linear-gradient(120deg, hsl(0 84% 35%) 0%, hsl(0 60% 40%) 100%);
     
-    /* Professional gradients - elegant and subtle */
-    --gradient-professional: linear-gradient(135deg, hsl(210 15% 20%) 0%, hsl(210 12% 35%) 100%);
-    --gradient-professional-light: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 10% 96%) 100%);
+    --gradient-professional: linear-gradient(135deg, hsl(0 84% 44%) 0%, hsl(0 84% 30%) 100%);
+    --gradient-professional-light: linear-gradient(145deg, hsl(0 0% 8%) 0%, hsl(0 0% 10%) 100%);
 
-    /* Home page shadows - Neon glow effects */
-    --shadow-home-neon: 0 0 20px hsl(285 100% 68% / 0.5), 0 0 40px hsl(285 100% 68% / 0.3);
-    --shadow-home-cyan: 0 0 20px hsl(180 100% 55% / 0.5), 0 0 40px hsl(180 100% 55% / 0.3);
+    /* Shadows - Red glow */
+    --shadow-home-neon: 0 0 20px hsl(0 84% 44% / 0.5), 0 0 40px hsl(0 84% 44% / 0.3);
+    --shadow-home-cyan: 0 0 20px hsl(0 84% 44% / 0.4), 0 0 40px hsl(0 84% 44% / 0.2);
     
-    /* App pages shadows - Professional and subtle */
-    --shadow-urban: 0 4px 20px -2px hsl(0 0% 8% / 0.08);
-    --shadow-card: 0 2px 12px -3px hsl(215 20% 30% / 0.05);
-    --shadow-accent-subtle: 0 4px 16px -4px hsl(215 25% 50% / 0.12);
-    --shadow-accent-hover: 0 6px 20px -4px hsl(215 25% 50% / 0.15);
-    --shadow-highlight: 0 2px 8px -2px hsl(215 18% 65% / 0.1);
+    --shadow-urban: 0 4px 20px -2px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 2px 12px -3px hsl(0 0% 0% / 0.2);
+    --shadow-accent-subtle: 0 4px 16px -4px hsl(0 84% 44% / 0.12);
+    --shadow-accent-hover: 0 6px 20px -4px hsl(0 84% 44% / 0.15);
+    --shadow-highlight: 0 2px 8px -2px hsl(0 84% 44% / 0.1);
     
-    /* Professional shadows - subtle and elegant */
-    --shadow-professional: 0 4px 16px -2px hsl(210 15% 20% / 0.15);
-    --shadow-professional-light: 0 2px 8px -1px hsl(210 15% 20% / 0.1);
+    --shadow-professional: 0 4px 16px -2px hsl(0 84% 44% / 0.15);
+    --shadow-professional-light: 0 2px 8px -1px hsl(0 84% 44% / 0.1);
 
     --radius: 0.5rem;
 
@@ -175,80 +171,14 @@ img, video {
     --tablet-padding: 1.5rem;
     --desktop-padding: 2rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 84% 44%;
     --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 210 15% 8%;
-    --foreground: 210 40% 98%;
-
-    --card: 210 15% 12%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 210 15% 12%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 210 15% 15%;
-
-    --secondary: 210 12% 25%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 210 15% 25%;
-    --muted-foreground: 210 8% 65%;
-
-    --accent: 210 8% 45%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 210 12% 30%;
-    --input: 210 15% 25%;
-    --ring: 210 40% 83%;
-    
-    /* Professional Fighter Theme - Dark mode */
-    --fighter-primary: 210 40% 98%; /* Light text */
-    --fighter-primary-foreground: 210 11% 15%;
-    --fighter-secondary: 215 20.2% 65.1%; /* Light gray */
-    --fighter-secondary-foreground: 210 11% 15%;
-    --fighter-accent: 210 6% 40%; /* Dark metallic */
-    --fighter-accent-foreground: 210 40% 98%;
-    --fighter-background: 222.2 84% 4.9%; /* Dark background */
-    --fighter-card: 217.2 32.6% 17.5%; /* Dark card */
-    --fighter-border: 210 8% 25%; /* Dark border */
-    
-    /* Professional License/Profile System - Dark mode */
-    --professional-primary: 210 40% 98%;
-    --professional-primary-foreground: 210 15% 15%;
-    --professional-secondary: 215 20.2% 65.1%;
-    --professional-secondary-foreground: 210 15% 15%;
-    --professional-accent: 210 8% 45%;
-    --professional-accent-foreground: 210 40% 98%;
-    --professional-muted: 210 15% 25%;
-    --professional-border: 210 12% 30%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 0 84% 44%;
   }
 }
 
@@ -265,6 +195,13 @@ img, video {
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* Barlow Condensed for headings - UFC style */
+  h1, h2, h3 {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   /* Urban animations */
@@ -284,50 +221,50 @@ img, video {
     to { opacity: 1; }
   }
 
-  /* Home page neon animations - Vibrant effects */
+  /* Neon animations - Red */
   @keyframes pulse-home-neon {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(285 100% 68% / 0.6); }
-    50% { box-shadow: 0 0 0 15px hsl(285 100% 68% / 0); }
+    0%, 100% { box-shadow: 0 0 0 0 hsl(0 84% 44% / 0.6); }
+    50% { box-shadow: 0 0 0 15px hsl(0 84% 44% / 0); }
   }
 
   @keyframes glow-home-neon {
     0%, 100% { 
-      box-shadow: 0 0 10px hsl(285 100% 68% / 0.5),
-                  0 0 20px hsl(285 100% 68% / 0.3),
-                  0 0 30px hsl(285 100% 68% / 0.2);
+      box-shadow: 0 0 10px hsl(0 84% 44% / 0.5),
+                  0 0 20px hsl(0 84% 44% / 0.3),
+                  0 0 30px hsl(0 84% 44% / 0.2);
     }
     50% { 
-      box-shadow: 0 0 15px hsl(285 100% 68% / 0.7),
-                  0 0 30px hsl(285 100% 68% / 0.5),
-                  0 0 45px hsl(285 100% 68% / 0.3);
+      box-shadow: 0 0 15px hsl(0 84% 44% / 0.7),
+                  0 0 30px hsl(0 84% 44% / 0.5),
+                  0 0 45px hsl(0 84% 44% / 0.3);
     }
   }
 
-  /* App pages animations - Subtle professional effects */
+  /* App pages animations - Red subtle */
   @keyframes pulse-purple-neon {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(215 25% 50% / 0.15); }
-    50% { box-shadow: 0 0 0 8px hsl(215 25% 50% / 0); }
+    0%, 100% { box-shadow: 0 0 0 0 hsl(0 84% 44% / 0.15); }
+    50% { box-shadow: 0 0 0 8px hsl(0 84% 44% / 0); }
   }
 
   @keyframes glow-neon {
     0%, 100% { 
-      box-shadow: 0 0 3px hsl(215 25% 50% / 0.15),
-                  0 0 6px hsl(215 25% 50% / 0.1);
+      box-shadow: 0 0 3px hsl(0 84% 44% / 0.15),
+                  0 0 6px hsl(0 84% 44% / 0.1);
     }
     50% { 
-      box-shadow: 0 0 5px hsl(215 25% 50% / 0.2),
-                  0 0 10px hsl(215 25% 50% / 0.15);
+      box-shadow: 0 0 5px hsl(0 84% 44% / 0.2),
+                  0 0 10px hsl(0 84% 44% / 0.15);
     }
   }
 
   @keyframes glow-cyber {
     0%, 100% { 
-      box-shadow: 0 0 3px hsl(220 20% 55% / 0.15),
-                  0 0 6px hsl(220 20% 55% / 0.1);
+      box-shadow: 0 0 3px hsl(0 84% 35% / 0.15),
+                  0 0 6px hsl(0 84% 35% / 0.1);
     }
     50% { 
-      box-shadow: 0 0 5px hsl(220 20% 55% / 0.2),
-                  0 0 10px hsl(220 20% 55% / 0.15);
+      box-shadow: 0 0 5px hsl(0 84% 35% / 0.2),
+                  0 0 10px hsl(0 84% 35% / 0.15);
     }
   }
 
@@ -351,9 +288,8 @@ img, video {
     animation: glow-cyber 2s ease-in-out infinite;
   }
 
-  /* Urban home page - Neon aesthetic for main page only */
+  /* Urban home page - override for home page */
   .urban-home {
-    /* Use neon colors for home page */
     --purple-neon-primary: var(--home-neon-primary);
     --purple-neon-secondary: var(--home-neon-secondary);
     --purple-neon-glow: var(--home-neon-glow);
@@ -428,19 +364,19 @@ img, video {
     animation: pulse-slow 8s ease-in-out infinite;
   }
 
-  /* Intense neon pulse for logos - Suave y tenue */
+  /* Intense neon pulse for logos - Red UFC */
   @keyframes pulse-neon-intense {
     0%, 100% {
       filter: brightness(1.05) contrast(1.05) 
               drop-shadow(0 0 2px rgba(255, 255, 255, 0.4))
-              drop-shadow(0 0 5px rgba(168, 85, 247, 0.35))
-              drop-shadow(0 0 8px rgba(168, 85, 247, 0.25));
+              drop-shadow(0 0 5px rgba(206, 16, 16, 0.35))
+              drop-shadow(0 0 8px rgba(206, 16, 16, 0.25));
     }
     50% {
       filter: brightness(1.1) contrast(1.08) 
               drop-shadow(0 0 3px rgba(255, 255, 255, 0.5))
-              drop-shadow(0 0 7px rgba(168, 85, 247, 0.4))
-              drop-shadow(0 0 12px rgba(168, 85, 247, 0.3));
+              drop-shadow(0 0 7px rgba(206, 16, 16, 0.4))
+              drop-shadow(0 0 12px rgba(206, 16, 16, 0.3));
     }
   }
   
@@ -448,17 +384,17 @@ img, video {
     animation: pulse-neon-intense 4s ease-in-out infinite;
   }
   
-  /* Neon drop shadows */
+  /* Neon drop shadows - Red */
   .drop-shadow-neon-purple {
-    filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.6)) 
-            drop-shadow(0 0 30px rgba(139, 92, 246, 0.4)) 
-            drop-shadow(0 0 45px rgba(139, 92, 246, 0.2));
+    filter: drop-shadow(0 0 15px rgba(206, 16, 16, 0.6)) 
+            drop-shadow(0 0 30px rgba(206, 16, 16, 0.4)) 
+            drop-shadow(0 0 45px rgba(206, 16, 16, 0.2));
   }
   
   .drop-shadow-neon-blue {
-    filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.6)) 
-            drop-shadow(0 0 30px rgba(37, 99, 235, 0.4)) 
-            drop-shadow(0 0 45px rgba(29, 78, 216, 0.2));
+    filter: drop-shadow(0 0 15px rgba(206, 16, 16, 0.5)) 
+            drop-shadow(0 0 30px rgba(180, 14, 14, 0.3)) 
+            drop-shadow(0 0 45px rgba(150, 12, 12, 0.2));
   }
 
   /* Mobile & PWA Optimizations */
@@ -480,36 +416,44 @@ img, video {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Better focus visible for accessibility on mobile */
+  /* Better focus visible - Red ring */
   *:focus-visible {
-    outline: 2px solid hsl(var(--primary));
+    outline: 2px solid hsl(0 84% 44%);
     outline-offset: 2px;
+  }
+
+  /* Custom scrollbar - Red accent */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(0 0% 5%);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(0 0% 20%);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(0 84% 44%);
   }
 
   /* Mobile Select Optimization - Fix for iOS and low-end devices */
   @media (max-width: 768px) {
     [data-radix-select-content] {
-      /* Disable backdrop blur on mobile for performance */
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
-      
-      /* Solid background for legibility */
       background-color: hsl(var(--popover)) !important;
-      
-      /* Immediate touch response */
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
     
     [data-radix-select-item] {
-      /* Larger touch targets (minimum 48px for accessibility) */
       min-height: 48px !important;
       padding-top: 12px !important;
       padding-bottom: 12px !important;
     }
     
     [data-radix-select-trigger] {
-      /* Ensure trigger is also touch-friendly */
       min-height: 44px;
       touch-action: manipulation;
     }
@@ -540,4 +484,54 @@ img, video {
       font-size: 0.875rem !important;
     }
   }
+}
+
+/* === Combat Utility Classes === */
+@layer components {
+  /* Diagonal cut corners - UFC style */
+  .combat-cut {
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+  .combat-cut-lg {
+    clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+  }
+
+  /* Card with red left border */
+  .combat-card {
+    border-left: 3px solid hsl(0 84% 44%);
+  }
+
+  /* LIVE badge with pulsing red dot */
+  .status-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    color: hsl(0 84% 44%);
+  }
+  .status-live::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: hsl(0 84% 44%);
+    animation: pulse-home-neon 2s infinite;
+  }
+
+  /* UFC label - uppercase Barlow Condensed */
+  .ufc-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+
+  /* Record colors */
+  .stat-win { color: hsl(142 76% 45%); }
+  .stat-loss { color: hsl(0 84% 50%); }
+  .stat-draw { color: hsl(43 74% 49%); }
 }

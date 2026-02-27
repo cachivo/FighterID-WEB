@@ -63,7 +63,7 @@ const Header = () => {
   return (
     <>
       <ProfileIncompleteNotification />
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
         {/* Logo + Título */}
         <div className="flex items-center gap-2 sm:gap-3">

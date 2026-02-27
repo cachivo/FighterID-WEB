@@ -22,9 +22,9 @@ const Hero = () => {
       <section className="relative min-h-[50vh] sm:min-h-[60vh] md:min-h-[70vh] lg:min-h-[75vh] flex items-center justify-center overflow-hidden pt-16 pb-8">
         {/* Background with gradient animation */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-blue-900/20"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.15),transparent_50%)] animate-pulse-slow"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(59,130,246,0.12),transparent_50%)]"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-red-950/30 via-background to-black"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(206,16,16,0.12),transparent_50%)] animate-pulse-slow"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(206,16,16,0.08),transparent_50%)]"></div>
         </div>
         
         {/* Content */}
@@ -62,17 +62,17 @@ const Hero = () => {
         
         {/* Scroll indicator for mobile */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce md:hidden">
-          <div className="w-6 h-10 border-2 border-purple-neon-primary/60 rounded-full flex items-start justify-center p-2">
-            <div className="w-1.5 h-3 bg-purple-neon-primary/60 rounded-full animate-pulse"></div>
+          <div className="w-6 h-10 border-2 border-primary/60 rounded-full flex items-start justify-center p-2">
+            <div className="w-1.5 h-3 bg-primary/60 rounded-full animate-pulse"></div>
           </div>
         </div>
 
         {/* Cinematic bottom fade */}
-        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent"></div>
+        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background to-transparent"></div>
         
-      {/* Corner accents - Más pequeños y sutiles */}
-      <div className="absolute top-0 left-0 w-16 h-16 border-l border-t border-purple-neon-primary/20"></div>
-      <div className="absolute bottom-0 right-0 w-16 h-16 border-r border-b border-purple-neon-primary/20"></div>
+      {/* Corner accents */}
+      <div className="absolute top-0 left-0 w-16 h-16 border-l border-t border-primary/20"></div>
+      <div className="absolute bottom-0 right-0 w-16 h-16 border-r border-b border-primary/20"></div>
       </section>
     );
   }
@@ -82,17 +82,17 @@ const Hero = () => {
     <section className="relative min-h-[45vh] sm:min-h-[55vh] md:min-h-[65vh] lg:min-h-[70vh] flex items-center justify-center overflow-hidden pt-16 pb-8">
       {/* Background with gradient animation */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-blue-900/20"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.15),transparent_50%)] animate-pulse-slow"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(59,130,246,0.12),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-red-950/30 via-background to-black"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(206,16,16,0.12),transparent_50%)] animate-pulse-slow"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(206,16,16,0.08),transparent_50%)]"></div>
       </div>
       
       {/* Content */}
       <div className="relative z-10 text-center text-white px-4 sm:px-6 max-w-4xl mx-auto">
         {/* Live indicator with cinematic style and dynamic data */}
-        <div className="mt-2 sm:mt-3 md:mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-purple-neon-primary font-semibold animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+        <div className="mt-2 sm:mt-3 md:mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-primary font-semibold animate-fade-in-up" style={{ animationDelay: '150ms' }}>
           <div className="flex items-center gap-2 max-w-full">
-            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-purple-neon-primary rounded-full animate-pulse-purple-neon shadow-lg shadow-purple-neon-primary/50 flex-shrink-0"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-primary rounded-full animate-pulse-purple-neon shadow-lg shadow-primary/50 flex-shrink-0"></div>
             <span className="text-[11px] sm:text-xs md:text-sm tracking-wider text-center truncate max-w-[200px] sm:max-w-none">
               {stats?.liveEvents && stats.liveEvents.length > 0 
                 ? `EN VIVO: ${stats.liveEvents[0].name.toUpperCase()}${stats.liveEvents[0].venue ? ` - ${stats.liveEvents[0].venue.toUpperCase()}` : ''}`
@@ -158,17 +158,17 @@ const Hero = () => {
       
       {/* Scroll indicator for mobile */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce md:hidden">
-        <div className="w-6 h-10 border-2 border-purple-neon-primary/60 rounded-full flex items-start justify-center p-2">
-          <div className="w-1.5 h-3 bg-purple-neon-primary/60 rounded-full animate-pulse"></div>
+        <div className="w-6 h-10 border-2 border-primary/60 rounded-full flex items-start justify-center p-2">
+          <div className="w-1.5 h-3 bg-primary/60 rounded-full animate-pulse"></div>
         </div>
       </div>
 
       {/* Cinematic bottom fade */}
-      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent"></div>
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background to-transparent"></div>
       
-      {/* Corner accents - Más pequeños y sutiles */}
-      <div className="absolute top-0 left-0 w-16 h-16 border-l border-t border-purple-neon-primary/20"></div>
-      <div className="absolute bottom-0 right-0 w-16 h-16 border-r border-b border-purple-neon-primary/20"></div>
+      {/* Corner accents */}
+      <div className="absolute top-0 left-0 w-16 h-16 border-l border-t border-primary/20"></div>
+      <div className="absolute bottom-0 right-0 w-16 h-16 border-r border-b border-primary/20"></div>
     </section>
   );
 };

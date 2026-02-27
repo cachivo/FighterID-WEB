@@ -1,16 +1,16 @@
 const UrbanDecorations = () => {
   return (
     <>
-      {/* Professional Urban - Subtle ambient lighting */}
+      {/* Combat ambient lighting - Red UFC */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Soft matte ambient lights */}
+        {/* Soft red ambient lights */}
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-neon-primary/12 rounded-full blur-3xl opacity-30"></div>
         <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-purple-neon-secondary/10 rounded-full blur-3xl opacity-35"></div>
         <div className="absolute bottom-1/4 left-1/4 w-[350px] h-[350px] bg-purple-neon-glow/15 rounded-full blur-3xl opacity-30"></div>
         
         {/* Subtle gradient overlays for depth */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(280_60%_55%/0.06)_0%,transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(220_50%_50%/0.05)_0%,transparent_60%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(0_84%_44%/0.06)_0%,transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(0_84%_30%/0.05)_0%,transparent_60%)]"></div>
       </div>
 
       {/* Dramatic shadow elements */}

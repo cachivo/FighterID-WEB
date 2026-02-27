@@ -18,16 +18,10 @@ export function ProfileIncompleteNotification() {
 
   useEffect(() => {
     const checkProfileCompleteness = async () => {
-      // No mostrar si aún está cargando el estado de licencia
       if (licenseLoading) return;
-
-      // No mostrar si no tiene licencia
       if (!hasLicense) return;
-
-      // No mostrar si está en la página de dashboard en modo edición
       if (location.pathname === '/license/dashboard') return;
 
-      // Verificar si fue cerrado recientemente
       const dismissed = localStorage.getItem(NOTIFICATION_DISMISS_KEY);
       if (dismissed) {
         const dismissedTime = parseInt(dismissed);
@@ -37,12 +31,10 @@ export function ProfileIncompleteNotification() {
         }
       }
 
-      // Obtener perfil del usuario
       try {
         const profile = await getUserFighterProfile();
         if (!profile) return;
 
-        // Verificar campos críticos faltantes
         const missingFields = [];
         if (!profile.birthdate) missingFields.push('birthdate');
         if (!profile.gender) missingFields.push('gender');
@@ -74,7 +66,7 @@ export function ProfileIncompleteNotification() {
 
   return (
     <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-top-4 duration-500">
-      <div className="bg-gradient-to-br from-purple-900/90 via-slate-900/90 to-slate-800/90 backdrop-blur-md border border-purple-500/30 rounded-lg shadow-2xl ring-1 ring-purple-500/20 p-4 max-w-sm">
+      <div className="bg-gradient-to-br from-red-950/90 via-card to-card backdrop-blur-md border border-primary/30 rounded-lg shadow-2xl ring-1 ring-primary/20 p-4 max-w-sm">
         <div className="flex items-start gap-3">
           {/* Icono animado */}
           <div className="flex-shrink-0 mt-0.5">
@@ -83,10 +75,10 @@ export function ProfileIncompleteNotification() {
 
           {/* Contenido */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-white mb-1">
+            <h3 className="text-sm font-semibold text-foreground mb-1">
               Completa tu información
             </h3>
-            <p className="text-xs text-purple-200 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               Faltan {missingCount} campo{missingCount > 1 ? 's' : ''} obligatorio{missingCount > 1 ? 's' : ''} en tu Fighter ID
             </p>
 
@@ -94,7 +86,7 @@ export function ProfileIncompleteNotification() {
             <Button
               onClick={handleComplete}
               size="sm"
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
             >
               Completar Ahora
             </Button>
@@ -106,7 +98,7 @@ export function ProfileIncompleteNotification() {
             className="flex-shrink-0 p-1 rounded-full hover:bg-white/10 transition-colors"
             aria-label="Cerrar notificación"
           >
-            <X className="h-4 w-4 text-purple-200" />
+            <X className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
       </div>

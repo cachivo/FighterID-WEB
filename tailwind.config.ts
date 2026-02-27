@@ -26,10 +26,11 @@ export default {
 			}
 		},
 		extend: {
-			fontFamily: {
-				'inter': ['Inter', 'sans-serif'],
-				'mono': ['JetBrains Mono', 'monospace'],
-			},
+		fontFamily: {
+			'inter': ['Inter', 'sans-serif'],
+			'barlow-condensed': ['Barlow Condensed', 'sans-serif'],
+			'mono': ['JetBrains Mono', 'monospace'],
+		},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
