@@ -2,16 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { toast } from 'sonner';
-
-interface StationSession {
-  session_id: string;
-  station_number: number;
-  event_id: string;
-  event_name: string;
-  current_fight_id: string | null;
-  judge_name: string;
-  logged_in_at: string;
-}
+import type { StationSession } from '@/types/station';
 
 /**
  * JudgeScoringPanel — Mobile-first redirect
@@ -39,7 +30,7 @@ export default function JudgeScoringPanel() {
       if (sessionAge > 24 * 60 * 60 * 1000) {
         toast.error('Sesión expirada');
         localStorage.removeItem('station_session');
-        navigate(`/estacion${session.station_number}`);
+        navigate(`/estacion/${session.station_number}`);
         return;
       }
 

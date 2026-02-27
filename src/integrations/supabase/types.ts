@@ -2440,6 +2440,9 @@ export type Database = {
       fighter_profiles: {
         Row: {
           active: boolean | null
+          amateur_draws: number | null
+          amateur_losses: number | null
+          amateur_wins: number | null
           avatar_url: string | null
           bio: string | null
           birthdate: string | null
@@ -2485,11 +2488,17 @@ export type Database = {
           nickname: string | null
           organization_id: string | null
           primary_license_id: string | null
+          pro_draws: number | null
+          pro_losses: number | null
+          pro_wins: number | null
           reach_cm: number | null
           record_draws: number | null
           record_losses: number | null
           record_type: string | null
           record_wins: number | null
+          semi_pro_draws: number | null
+          semi_pro_losses: number | null
+          semi_pro_wins: number | null
           stance: string | null
           tapology_url: string | null
           updated_at: string | null
@@ -2499,6 +2508,9 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          amateur_draws?: number | null
+          amateur_losses?: number | null
+          amateur_wins?: number | null
           avatar_url?: string | null
           bio?: string | null
           birthdate?: string | null
@@ -2544,11 +2556,17 @@ export type Database = {
           nickname?: string | null
           organization_id?: string | null
           primary_license_id?: string | null
+          pro_draws?: number | null
+          pro_losses?: number | null
+          pro_wins?: number | null
           reach_cm?: number | null
           record_draws?: number | null
           record_losses?: number | null
           record_type?: string | null
           record_wins?: number | null
+          semi_pro_draws?: number | null
+          semi_pro_losses?: number | null
+          semi_pro_wins?: number | null
           stance?: string | null
           tapology_url?: string | null
           updated_at?: string | null
@@ -2558,6 +2576,9 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          amateur_draws?: number | null
+          amateur_losses?: number | null
+          amateur_wins?: number | null
           avatar_url?: string | null
           bio?: string | null
           birthdate?: string | null
@@ -2603,11 +2624,17 @@ export type Database = {
           nickname?: string | null
           organization_id?: string | null
           primary_license_id?: string | null
+          pro_draws?: number | null
+          pro_losses?: number | null
+          pro_wins?: number | null
           reach_cm?: number | null
           record_draws?: number | null
           record_losses?: number | null
           record_type?: string | null
           record_wins?: number | null
+          semi_pro_draws?: number | null
+          semi_pro_losses?: number | null
+          semi_pro_wins?: number | null
           stance?: string | null
           tapology_url?: string | null
           updated_at?: string | null

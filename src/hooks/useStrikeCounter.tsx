@@ -57,10 +57,9 @@ export function useStrikeCounter(
         },
         (payload) => {
           if (payload.new && (payload.new as any).status === 'live') {
-            setState(prev => ({ ...prev, currentRoundId: (payload.new as any).id }));
-            // Reset contador al iniciar nuevo round
+            // Atomic reset: ref + state en una sola operación
             eventsRef.current = [];
-            setState(prev => ({ ...prev, strikeCount: 0, iag: 0 }));
+            setState(prev => ({ ...prev, currentRoundId: (payload.new as any).id, strikeCount: 0, iag: 0 }));
           }
         }
       )

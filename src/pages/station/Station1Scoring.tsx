@@ -4,11 +4,13 @@ import { useStrikeCounter } from '@/hooks/useStrikeCounter';
 import { supabase } from '@/integrations/supabase/client';
 import { Wifi, WifiOff, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import type { StationSession } from '@/types/station';
 
 export default function Station1Scoring() {
   const { fightId } = useParams<{ fightId: string }>();
   const navigate = useNavigate();
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<StationSession | null>(null);
   const [fighterName, setFighterName] = useState('Peleador Rojo');
   const [flashActive, setFlashActive] = useState(false);
 
@@ -20,9 +22,9 @@ export default function Station1Scoring() {
       return;
     }
 
-    const parsed = JSON.parse(sessionData);
-    if (parsed.stationNumber !== 1) {
-      navigate(`/estacion/${parsed.stationNumber}/scoring/${fightId}`);
+    const parsed: StationSession = JSON.parse(sessionData);
+    if (parsed.station_number !== 1) {
+      navigate(`/estacion/${parsed.station_number}/scoring/${fightId}`);
       return;
     }
 
@@ -65,6 +67,27 @@ export default function Station1Scoring() {
     fetchFighter();
   }, [fightId]);
 
+  // Detectar fin de pelea via Realtime
+  useEffect(() => {
+    if (!fightId || !session) return;
+
+    const channel = supabase
+      .channel(`fight-status-s1:${fightId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'fights',
+        filter: `id=eq.${fightId}`,
+      }, (payload) => {
+        if ((payload.new as any).status === 'finished') {
+          toast.success('Pelea terminada');
+          navigate(`/estacion/${session.station_number}/waiting`);
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [fightId, session, navigate]);
   const handleClick = () => {
     if (!currentRoundId) return;
     

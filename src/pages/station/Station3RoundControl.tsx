@@ -10,11 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Play, Pause, Square, Clock, CircleDot, Coffee, Timer, CheckCircle } from 'lucide-react';
 import { formatRoundTime } from '@/lib/scoring-utils';
+import { toast } from 'sonner';
+import type { StationSession } from '@/types/station';
 
 export default function Station3RoundControl() {
   const { fightId } = useParams<{ fightId: string }>();
   const navigate = useNavigate();
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<StationSession | null>(null);
   const [fighters, setFighters] = useState<{ red: string; blue: string }>({ red: '', blue: '' });
   const [customDuration, setCustomDuration] = useState(300);
 
@@ -26,9 +28,9 @@ export default function Station3RoundControl() {
       return;
     }
 
-    const parsed = JSON.parse(sessionData);
-    if (parsed.stationNumber !== 3) {
-      navigate(`/estacion/${parsed.stationNumber}/control/${fightId}`);
+    const parsed: StationSession = JSON.parse(sessionData);
+    if (parsed.station_number !== 3) {
+      navigate(`/estacion/${parsed.station_number}/control/${fightId}`);
       return;
     }
 
@@ -82,8 +84,13 @@ export default function Station3RoundControl() {
     fetchFighters();
   }, [fightId]);
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (nextRound) {
+      // Conectar customDuration al round antes de iniciarlo
+      await supabase
+        .from('fight_rounds')
+        .update({ duration_seconds: customDuration })
+        .eq('id', nextRound.id);
       startRound(nextRound.id);
     }
   };

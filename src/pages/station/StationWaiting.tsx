@@ -4,43 +4,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { supabase } from '@/integrations/supabase/client';
 import { Clock } from 'lucide-react';
-
-interface SessionData {
-  session_id: string;
-  station_number: number;
-  event_id: string;
-  event_name: string;
-  current_fight_id: string | null;
-  judge_name: string;
-  logged_in_at: string;
-}
+import type { StationSession } from '@/types/station';
 
 export default function StationWaiting() {
   const { stationNumber } = useParams<{ stationNumber: string }>();
-  const [sessionData, setSessionData] = useState<SessionData | null>(null);
+  const [sessionData, setSessionData] = useState<StationSession | null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const data = localStorage.getItem('station_session');
     if (!data) {
-      navigate(`/estacion${stationNumber}`);
+      navigate(`/estacion/${stationNumber}`);
       return;
     }
 
     try {
-      const parsed = JSON.parse(data);
+      const parsed: StationSession = JSON.parse(data);
       setSessionData(parsed);
     } catch (err) {
       console.error('Error parseando sesión:', err);
-      navigate(`/estacion${stationNumber}`);
+      navigate(`/estacion/${stationNumber}`);
     }
   }, [stationNumber, navigate]);
 
   useEffect(() => {
     if (!sessionData) return;
 
-    // Polling cada 10 segundos para detectar nueva pelea
+    // Check inicial para peleas existentes
     const checkForFight = async () => {
       try {
         const { data: fights, error } = await supabase
@@ -57,30 +48,42 @@ export default function StationWaiting() {
         }
 
         if (fights && fights.length > 0) {
-          const fightId = fights[0].id;
-          
-          // Actualizar sessionData con el nuevo fight_id
-          const updatedSession = { ...sessionData, current_fight_id: fightId };
-          localStorage.setItem('station_session', JSON.stringify(updatedSession));
-          
-          // Redirigir al panel de scoring
-          navigate(`/judge/fight/${fightId}`);
+          navigateToFight(fights[0].id);
         }
       } catch (err) {
-        console.error('Error en polling de peleas:', err);
+        console.error('Error en check de peleas:', err);
       } finally {
         setIsChecking(false);
       }
     };
 
-    // Check inmediato
     checkForFight();
 
-    // Polling cada 10 segundos
-    const interval = setInterval(checkForFight, 10000);
+    // Realtime subscription en lugar de polling
+    const channel = supabase
+      .channel(`event-fights:${sessionData.event_id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'fights',
+        filter: `event_id=eq.${sessionData.event_id}`,
+      }, (payload) => {
+        const newFight = payload.new as any;
+        if (newFight && (newFight.status === 'in_progress' || newFight.status === 'scheduled')) {
+          navigateToFight(newFight.id);
+        }
+      })
+      .subscribe();
 
-    return () => clearInterval(interval);
+    return () => { supabase.removeChannel(channel); };
   }, [sessionData, navigate]);
+
+  const navigateToFight = (fightId: string) => {
+    if (!sessionData) return;
+    const updatedSession = { ...sessionData, current_fight_id: fightId };
+    localStorage.setItem('station_session', JSON.stringify(updatedSession));
+    navigate(`/judge/fight/${fightId}`);
+  };
 
   if (!sessionData) {
     return (
