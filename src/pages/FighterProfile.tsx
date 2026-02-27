@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Shield, Trophy, MapPin, Users, BarChart3, Info, Home, GraduationCap, Edit, ExternalLink, CreditCard, ChevronDown, Building2 } from 'lucide-react';
-import { Crown, Award, Swords } from 'lucide-react';
+import { ArrowLeft, Shield, Trophy, MapPin, Users, BarChart3, Info, Home, GraduationCap, Edit, ExternalLink, CreditCard, ChevronDown, Building2, Swords } from 'lucide-react';
+import cageBackground from "@/assets/mma-cage-background.png";
+import { Crown, Award } from 'lucide-react';
 import FighterUpdatesFeed from '@/components/FighterUpdatesFeed';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -149,32 +150,35 @@ export default function FighterProfile() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {/* Header */}
-      <div className="border-b border-border pt-16">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+
+      {/* ========== CINEMATIC PROFILE HERO ========== */}
+      <section className="relative min-h-[50vh] md:min-h-[60vh] flex items-end overflow-hidden pt-16">
+        {/* Background */}
+        <div className="absolute inset-0">
+          <img src={cageBackground} alt="" className="w-full h-full object-cover" loading="eager" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-background" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.7)_100%)]" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-3 sm:px-6 pb-8 pt-6">
+          {/* Breadcrumbs */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
             <div className="flex gap-2">
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
                 <Link to="/">
                   <Home className="h-4 w-4 mr-2" />
                   Inicio
                 </Link>
               </Button>
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
                 <Link to="/fighters">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Fighters
                 </Link>
               </Button>
             </div>
-            
-            {/* Edit button for profile owner */}
             {isOwner && (
-              <Button 
-                asChild 
-                variant="default" 
-                className="min-h-[44px] touch-manipulation w-full sm:w-auto"
-              >
+              <Button asChild variant="default" className="min-h-[44px] touch-manipulation w-full sm:w-auto">
                 <Link to="/license/dashboard">
                   <Edit className="h-4 w-4 mr-2" />
                   Editar Mi Perfil
@@ -182,145 +186,126 @@ export default function FighterProfile() {
               </Button>
             )}
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        {/* Fighter Header */}
-        <Card>
-          <CardContent className="p-4 sm:p-5 md:p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-center">
-              {/* Fighter Info */}
-              <div className="space-y-3 sm:space-y-4">
-                <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
-                  <Badge className={`${getStatusColor(fighter.license_status)} text-xs sm:text-sm`}>
-                    {fighter.license_status === 'active' ? 'Activo' : fighter.license_status}
+          {/* Fighter Info Layout */}
+          <div className="flex flex-col md:flex-row gap-6 items-start md:items-end">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              {fighter.avatar_url ? (
+                <div className="h-48 w-36 sm:h-64 sm:w-48 overflow-hidden rounded-xl border-2 border-white/20 shadow-2xl">
+                  <img
+                    src={fighter.avatar_url}
+                    alt={`${fighter.first_name} ${fighter.last_name}`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="h-48 w-36 sm:h-64 sm:w-48 rounded-xl border-2 border-white/20 bg-white/5 backdrop-blur-sm flex items-center justify-center">
+                  <span className="text-4xl sm:text-5xl font-bold text-white/60">
+                    {fighter.first_name?.charAt(0) || 'F'}{fighter.last_name?.charAt(0) || 'F'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Fighter Details */}
+            <div className="flex-1 space-y-3">
+              {/* Badges */}
+              <div className="flex flex-wrap gap-2">
+                <Badge className={`${getStatusColor(fighter.license_status)} text-xs sm:text-sm`}>
+                  {fighter.license_status === 'active' ? 'Activo' : fighter.license_status}
+                </Badge>
+                <Badge className="bg-white/10 text-white border-white/20 text-xs sm:text-sm">
+                  {getWeightClassLabel(fighter.weight_class)}
+                </Badge>
+                {fighter.level && (
+                  <Badge className="bg-primary/20 text-primary border-primary/30 text-xs sm:text-sm">
+                    {fighter.level}
                   </Badge>
-                  <Badge variant="outline" className="text-xs sm:text-sm">{getWeightClassLabel(fighter.weight_class)}</Badge>
-                </div>
-                
-                {fighter.nickname && (
-                  <p className="text-sm sm:text-base md:text-lg font-medium text-muted-foreground truncate">
-                    "{fighter.nickname}"
-                  </p>
                 )}
-                
-                <div>
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-foreground break-words">
-                    {fighter.first_name} {fighter.last_name}
-                  </h1>
-                </div>
-                
-                <div className="flex items-center gap-2 text-muted-foreground text-sm sm:text-base">
-                  <MapPin className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{fighter.country}</span>
-                </div>
+              </div>
 
-                {/* Disciplina de Competencia - Badge prominente */}
-                <div className="my-4 sm:my-6 space-y-2">
-                  <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-primary/10 border border-primary/20">
-                    <Swords className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Disciplina</p>
-                      <p className="font-bold text-sm sm:text-base md:text-lg truncate">{fighter.discipline || 'No definida'}</p>
-                    </div>
-                    {fighter.level && (
-                      <Badge variant="secondary" className="text-xs flex-shrink-0">
-                        {fighter.level}
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {/* Gimnasio - prominente debajo de disciplina */}
-                  <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-muted/50 border border-border border-l-4 border-l-blue-500">
-                    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs text-blue-400 uppercase tracking-wide font-semibold">Club</p>
+              {/* Nickname */}
+              {fighter.nickname && (
+                <p className="ufc-label text-sm sm:text-base md:text-lg text-primary tracking-wider">
+                  "{fighter.nickname}"
+                </p>
+              )}
+
+              {/* Full Name */}
+              <h1 className="ufc-label text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-wider leading-tight">
+                {fighter.first_name} {fighter.last_name}
+              </h1>
+
+              {/* Info row */}
+              <div className="flex flex-wrap items-center gap-3 text-white/70 text-sm sm:text-base">
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  {fighter.country || 'N/A'}
+                </span>
+                <span className="w-px h-4 bg-white/20" />
+                <span className="flex items-center gap-1.5">
+                  <Swords className="h-4 w-4 text-primary" />
+                  {fighter.discipline || 'N/A'}
+                </span>
+                {fighter.gym_id && (
+                  <>
+                    <span className="w-px h-4 bg-white/20" />
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="h-4 w-4 text-primary" />
                       {fighter.gym_id ? (
                         <Link
                           to={`/gimnasios/${(fighter as any).gym?.slug || fighter.gym_id}`}
-                          className="font-bold text-sm sm:text-base md:text-lg text-primary hover:underline truncate block"
+                          className="text-white hover:text-primary transition-colors hover:underline"
                         >
                           {(fighter as any).gym?.nombre || fighter.gym_name || 'Ver gimnasio'}
                         </Link>
                       ) : (
-                        <p className="font-bold text-sm sm:text-base md:text-lg truncate">
-                          {fighter.gym_name || 'Independiente'}
-                        </p>
+                        <span>{fighter.gym_name || 'Independiente'}</span>
                       )}
-                    </div>
-                    {(fighter as any).gym?.logo_url && (
-                      <img 
-                        src={(fighter as any).gym.logo_url} 
-                        alt="Gym logo" 
-                        className="h-8 w-8 rounded-md object-cover flex-shrink-0"
-                      />
-                    )}
-                  </div>
-                </div>
+                    </span>
+                  </>
+                )}
+              </div>
 
-                {/* Fight Stats */}
-                <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                  <div className="text-center p-2 sm:p-3 rounded-lg bg-green-500/10">
-                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600 mb-0.5 sm:mb-1">
-                      {currentRecord.wins}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Victorias</div>
-                  </div>
-                  <div className="text-center p-2 sm:p-3 rounded-lg bg-red-500/10">
-                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-red-600 mb-0.5 sm:mb-1">
-                      {currentRecord.losses}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Derrotas</div>
-                  </div>
-                  <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
-                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-muted-foreground mb-0.5 sm:mb-1">
-                      {currentRecord.draws}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Empates</div>
-                  </div>
+              {/* Record Bar */}
+              <div className="combat-cut inline-flex items-center gap-3 sm:gap-5 bg-white/5 backdrop-blur-md border border-white/10 px-4 sm:px-6 py-3 mt-2">
+                <div className="text-center">
+                  <p className="ufc-label text-xl sm:text-2xl md:text-3xl font-bold text-green-400">{currentRecord.wins}</p>
+                  <p className="ufc-label text-[10px] sm:text-xs text-white/60 tracking-wider">Victorias</p>
                 </div>
-
-                {/* Record Info */}
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="h-4 w-4 text-green-600" />
-                    {currentRecord.wins} Victoria{currentRecord.wins !== 1 ? 's' : ''}
-                  </div>
-                  {currentRecord.source && (
-                    <div className="flex items-center gap-1">
+                <div className="w-px h-8 bg-white/15" />
+                <div className="text-center">
+                  <p className="ufc-label text-xl sm:text-2xl md:text-3xl font-bold text-red-400">{currentRecord.losses}</p>
+                  <p className="ufc-label text-[10px] sm:text-xs text-white/60 tracking-wider">Derrotas</p>
+                </div>
+                <div className="w-px h-8 bg-white/15" />
+                <div className="text-center">
+                  <p className="ufc-label text-xl sm:text-2xl md:text-3xl font-bold text-white/70">{currentRecord.draws}</p>
+                  <p className="ufc-label text-[10px] sm:text-xs text-white/60 tracking-wider">Empates</p>
+                </div>
+                {currentRecord.source && (
+                  <>
+                    <div className="w-px h-8 bg-white/15" />
+                    <div className="flex items-center gap-1 text-white/40 text-xs">
                       <Info className="h-3 w-3" />
                       {getRecordSourceText()}
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Fighter Image */}
-              <div className="flex justify-center lg:justify-end order-first lg:order-last">
-                <div className="relative">
-                  {fighter.avatar_url ? (
-                    <div className="h-48 w-36 sm:h-64 sm:w-48 md:h-80 md:w-60 flex items-end justify-center overflow-hidden rounded-xl bg-muted">
-                      <img 
-                        src={fighter.avatar_url} 
-                        alt={`${fighter.first_name} ${fighter.last_name}`}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="h-48 w-36 sm:h-64 sm:w-48 md:h-80 md:w-60 bg-muted rounded-xl flex items-center justify-center">
-                      <div className="text-4xl sm:text-5xl md:text-6xl font-bold text-muted-foreground">
-                        {fighter.first_name?.charAt(0) || 'F'}
-                        {fighter.last_name?.charAt(0) || 'F'}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  </>
+                )}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
+          {/* Red accent line */}
+          <div className="w-24 h-1 bg-primary mt-6" />
+        </div>
+
+        {/* Bottom fade */}
+        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-background to-transparent" />
+      </section>
+
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           {[
