@@ -71,6 +71,18 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
      boxeo_record_draws: 0,
      record_type: 'Amateur',
      level: 'Amateur',
+     gender: '',
+     height_cm: 0,
+     weight_kg: 0,
+     reach_cm: 0,
+     bio: '',
+     fighting_style: '',
+     gym_name: '',
+     gym_id: undefined,
+     birthdate: '',
+     birthplace: '',
+     stance: '',
+     avatar_url: '',
    });
  
     useEffect(() => {
@@ -327,7 +339,7 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
                <div className="grid grid-cols-2 gap-4">
                  <div>
                    <Label htmlFor="gender">Género</Label>
-                   <Select value={formData.gender} onValueChange={(value) => handleChange('gender', value)}>
+                   <Select value={formData.gender || undefined} onValueChange={(value) => handleChange('gender', value)}>
                      <SelectTrigger>
                        <SelectValue placeholder="Seleccionar género" />
                      </SelectTrigger>
@@ -388,7 +400,7 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
                   <Label htmlFor="birthplace">Lugar de Nacimiento</Label>
                   <Input
                     id="birthplace"
-                    value={formData.birthplace}
+                    value={formData.birthplace || ''}
                     onChange={(e) => handleChange('birthplace', e.target.value)}
                     placeholder="Ciudad, País"
                   />
@@ -498,7 +510,7 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
  
                <div>
                  <Label htmlFor="stance">Guardia</Label>
-                 <Select value={formData.stance} onValueChange={(value) => handleChange('stance', value)}>
+                 <Select value={formData.stance || undefined} onValueChange={(value) => handleChange('stance', value)}>
                    <SelectTrigger>
                      <SelectValue placeholder="Seleccionar guardia" />
                    </SelectTrigger>
@@ -609,7 +621,7 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
                   <p className="text-xs text-muted-foreground mb-2">
                     Define en qué ranking aparecerá el peleador
                   </p>
-                  <Select value={formData.discipline || ''} onValueChange={handleDisciplineChange}>
+                  <Select value={formData.discipline || undefined} onValueChange={handleDisciplineChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar disciplina" />
                     </SelectTrigger>
@@ -643,7 +655,7 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
                  <Label htmlFor="fighting_style">Estilo de Pelea</Label>
                  <Input
                    id="fighting_style"
-                   value={formData.fighting_style}
+                   value={formData.fighting_style || ''}
                    onChange={(e) => handleChange('fighting_style', e.target.value)}
                    placeholder="Ej: Striker, Grappler"
                  />
@@ -688,7 +700,7 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
                  {selectedGymMode === '__other__' && (
                    <Input
                      className="mt-2"
-                     value={formData.gym_name}
+                     value={formData.gym_name || ''}
                      onChange={(e) => handleChange('gym_name', e.target.value)}
                      placeholder="Escribir nombre del gimnasio"
                    />
@@ -895,7 +907,7 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
               <CardContent>
                 <Textarea
                   id="bio"
-                  value={formData.bio}
+                  value={formData.bio || ''}
                   onChange={(e) => handleChange('bio', e.target.value)}
                   placeholder="Describe la trayectoria del peleador..."
                   rows={4}
