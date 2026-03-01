@@ -83,6 +83,16 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
      birthplace: '',
      stance: '',
      avatar_url: '',
+     blood_type: '',
+     document_type: '',
+     document_number: '',
+     emergency_contact_name: '',
+     emergency_contact_relation: '',
+     emergency_contact_phone: '',
+     medical_allergies: '',
+     medical_conditions: '',
+     insurance_company: '',
+     insurance_policy: '',
    });
  
     useEffect(() => {
@@ -130,6 +140,16 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
           birthdate: existingFighter.birthdate || '',
           birthplace: existingFighter.birthplace || '',
           stance: existingFighter.stance || '',
+          blood_type: (existingFighter as any).blood_type || '',
+          document_type: (existingFighter as any).document_type || '',
+          document_number: (existingFighter as any).document_number || '',
+          emergency_contact_name: (existingFighter as any).emergency_contact_name || '',
+          emergency_contact_relation: (existingFighter as any).emergency_contact_relation || '',
+          emergency_contact_phone: (existingFighter as any).emergency_contact_phone || '',
+          medical_allergies: (existingFighter as any).medical_allergies || '',
+          medical_conditions: (existingFighter as any).medical_conditions || '',
+          insurance_company: (existingFighter as any).insurance_company || '',
+          insurance_policy: (existingFighter as any).insurance_policy || '',
         });
       }
     }, [existingFighter, mode]);
@@ -404,6 +424,127 @@ import { useFighterRankingMembership } from '@/hooks/useFighterRankingMembership
                     onChange={(e) => handleChange('birthplace', e.target.value)}
                     placeholder="Ciudad, País"
                   />
+                </div>
+               </CardContent>
+             </Card>
+
+            {/* Medical & Emergency Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Información Médica y de Emergencia</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="blood_type">Tipo de Sangre</Label>
+                    <Select value={formData.blood_type || undefined} onValueChange={(value) => handleChange('blood_type', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bt => (
+                          <SelectItem key={bt} value={bt}>{bt}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="document_type">Tipo de Documento</Label>
+                    <Select value={formData.document_type || undefined} onValueChange={(value) => handleChange('document_type', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DNI">DNI</SelectItem>
+                        <SelectItem value="Pasaporte">Pasaporte</SelectItem>
+                        <SelectItem value="Licencia">Licencia de Conducir</SelectItem>
+                        <SelectItem value="Otro">Otro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="document_number">Número de Documento</Label>
+                    <Input
+                      id="document_number"
+                      value={formData.document_number || ''}
+                      onChange={(e) => handleChange('document_number', e.target.value)}
+                      placeholder="0801-1990-12345"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="emergency_contact_name">Contacto de Emergencia</Label>
+                    <Input
+                      id="emergency_contact_name"
+                      value={formData.emergency_contact_name || ''}
+                      onChange={(e) => handleChange('emergency_contact_name', e.target.value)}
+                      placeholder="Nombre completo"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="emergency_contact_relation">Relación</Label>
+                    <Input
+                      id="emergency_contact_relation"
+                      value={formData.emergency_contact_relation || ''}
+                      onChange={(e) => handleChange('emergency_contact_relation', e.target.value)}
+                      placeholder="Ej: Madre, Esposa"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="emergency_contact_phone">Teléfono Emergencia</Label>
+                    <Input
+                      id="emergency_contact_phone"
+                      value={formData.emergency_contact_phone || ''}
+                      onChange={(e) => handleChange('emergency_contact_phone', e.target.value)}
+                      placeholder="+504 9999-9999"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="medical_allergies">Alergias</Label>
+                    <Textarea
+                      id="medical_allergies"
+                      value={formData.medical_allergies || ''}
+                      onChange={(e) => handleChange('medical_allergies', e.target.value)}
+                      placeholder="Alergias conocidas..."
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="medical_conditions">Condiciones Médicas</Label>
+                    <Textarea
+                      id="medical_conditions"
+                      value={formData.medical_conditions || ''}
+                      onChange={(e) => handleChange('medical_conditions', e.target.value)}
+                      placeholder="Condiciones médicas relevantes..."
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="insurance_company">Compañía de Seguro</Label>
+                    <Input
+                      id="insurance_company"
+                      value={formData.insurance_company || ''}
+                      onChange={(e) => handleChange('insurance_company', e.target.value)}
+                      placeholder="Nombre de la aseguradora"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="insurance_policy">Número de Póliza</Label>
+                    <Input
+                      id="insurance_policy"
+                      value={formData.insurance_policy || ''}
+                      onChange={(e) => handleChange('insurance_policy', e.target.value)}
+                      placeholder="Número de póliza"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>

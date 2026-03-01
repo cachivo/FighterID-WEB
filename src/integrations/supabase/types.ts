@@ -5999,7 +5999,7 @@ export type Database = {
           }
         | {
             Args: { p_fighter_id: string; p_profile_data: Json }
-            Returns: Json
+            Returns: undefined
           }
       admin_update_fighter_profile_v10: {
         Args: { p_fighter_id: string; p_profile_data: Json }
