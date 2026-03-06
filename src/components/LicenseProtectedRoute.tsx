@@ -20,19 +20,32 @@ export default function LicenseProtectedRoute({
   const [isRetrying, setIsRetrying] = useState(false);
 
   useEffect(() => {
-    // Show slow connection message after 8 seconds
+    // Adaptive timeouts based on connection quality
+    const conn = (navigator as any).connection;
+    const effectiveType = conn?.effectiveType || '4g';
+    
+    let slowThreshold = 8000;
+    let timeoutThreshold = 20000;
+    
+    if (effectiveType === 'slow-2g' || effectiveType === '2g') {
+      slowThreshold = 30000;
+      timeoutThreshold = 60000;
+    } else if (effectiveType === '3g') {
+      slowThreshold = 15000;
+      timeoutThreshold = 40000;
+    }
+
     const slowTimer = setTimeout(() => {
       if (loading) {
         setShowSlowConnection(true);
       }
-    }, 8000);
+    }, slowThreshold);
 
-    // Show timeout options after 20 seconds
     const timeoutTimer = setTimeout(() => {
       if (loading) {
         setShowTimeout(true);
       }
-    }, 20000);
+    }, timeoutThreshold);
 
     return () => {
       clearTimeout(slowTimer);

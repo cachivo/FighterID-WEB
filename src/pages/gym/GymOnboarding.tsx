@@ -13,10 +13,36 @@ export default function GymOnboarding() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [checkingExisting, setCheckingExisting] = useState(true);
   const [nombre, setNombre] = useState('');
   const [direccion, setDireccion] = useState('');
   const [ciudad, setCiudad] = useState('');
   const [telefono, setTelefono] = useState('');
+
+  // Check if user already has an active gym
+  useState(() => {
+    if (!user) { setCheckingExisting(false); return; }
+    supabase
+      .from('gym_staff')
+      .select('gym_id')
+      .eq('user_id', user.id)
+      .eq('active', true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          navigate(`/gym/${data.gym_id}/dashboard`, { replace: true });
+        }
+        setCheckingExisting(false);
+      });
+  });
+
+  if (checkingExisting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

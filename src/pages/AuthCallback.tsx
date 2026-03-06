@@ -187,8 +187,16 @@ async function resolveFighterDestination(authUserId: string): Promise<string> {
 
 async function determineUserDestination(authUserId: string): Promise<string> {
   try {
-    const savedRole = localStorage.getItem('fighter_id_selected_role');
+    // Read role from Supabase metadata first, then localStorage fallback
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    const metadataRole = currentUser?.user_metadata?.onboarding_role as string | undefined;
+    const localRole = localStorage.getItem('fighter_id_selected_role');
+    const savedRole = metadataRole || localRole;
     localStorage.removeItem('fighter_id_selected_role');
+    // Clean metadata after reading
+    if (metadataRole) {
+      supabase.auth.updateUser({ data: { onboarding_role: null } }).catch(() => {});
+    }
 
     // 1. Get user roles from DB
     const { data: roles } = await supabase

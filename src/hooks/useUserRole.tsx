@@ -90,9 +90,12 @@ export function useUserRole(): UseUserRoleReturn {
 
   return {
     roles,
-    isAdmin: hasRole('admin'),
+    isAdmin: hasRole('admin') || hasRole('super_admin'),
+    isSuperAdmin: hasRole('super_admin'),
     isModerator: hasRole('moderator'),
     isUser: hasRole('user'),
+    isGymOwner: hasRole('gym_owner'),
+    isJudge: hasRole('official_judge') || hasRole('judge'),
     hasRole,
     hasAnyRole,
     loading: loading || authLoading,

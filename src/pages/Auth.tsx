@@ -50,10 +50,13 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Save selected role to localStorage for AuthCallback
+  // Save selected role to Supabase metadata + localStorage fallback
   useEffect(() => {
     if (selectedRole) {
+      // localStorage as immediate same-session fallback
       localStorage.setItem('fighter_id_selected_role', selectedRole);
+      // Persist to Supabase metadata (survives cross-device)
+      supabase.auth.updateUser({ data: { onboarding_role: selectedRole } }).catch(() => {});
     }
     if (inviteGymToken) {
       localStorage.setItem('fighter_id_invite_gym', inviteGymToken);

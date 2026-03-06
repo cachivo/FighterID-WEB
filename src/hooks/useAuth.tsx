@@ -116,8 +116,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      // Direct users to onboarding after email confirmation for streamlined UX
-      const redirectUrl = `${window.location.origin}/license/onboarding`;
+      // Route through AuthCallback so it handles role-based routing
+      const redirectUrl = `${window.location.origin}/auth/callback`;
       
       console.log('[AUTH] Signing up with redirect:', redirectUrl);
       

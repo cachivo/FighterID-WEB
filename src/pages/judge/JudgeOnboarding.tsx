@@ -14,9 +14,35 @@ export default function JudgeOnboarding() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [checkingExisting, setCheckingExisting] = useState(true);
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [experiencia, setExperiencia] = useState('');
+
+  // Check if user already has a judge record
+  useState(() => {
+    if (!user) { setCheckingExisting(false); return; }
+    supabase
+      .from('judges')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          toast.info('Ya estás registrado como juez');
+          navigate('/', { replace: true });
+        }
+        setCheckingExisting(false);
+      });
+  });
+
+  if (checkingExisting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

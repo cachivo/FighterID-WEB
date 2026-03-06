@@ -121,13 +121,15 @@ export default function LicenseOnboarding() {
     setDraftLoaded(true);
   }, [draftLoaded]);
 
-  // Save draft to localStorage whenever formData changes (skip initial draft load)
+  // Debounce draft saves to avoid blocking UI on low-end devices
+  const debouncedFormData = useDebounce(formData, 500);
+  
   useEffect(() => {
     if (!draftLoaded) return;
-    if (formData.firstName || formData.lastName || formData.phone) {
-      localStorage.setItem('license_onboarding_draft', JSON.stringify(formData));
+    if (debouncedFormData.firstName || debouncedFormData.lastName || debouncedFormData.phone) {
+      localStorage.setItem('license_onboarding_draft', JSON.stringify(debouncedFormData));
     }
-  }, [formData, draftLoaded]);
+  }, [debouncedFormData, draftLoaded]);
 
   // Warn before leaving page with unsaved changes
   useEffect(() => {

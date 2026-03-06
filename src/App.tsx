@@ -184,6 +184,13 @@ const App = () => {
               <Route path="/predicciones" element={<Predicciones />} />
               <Route path="/evento/:eventId/betting" element={<EventoBetting />} />
               <Route path="/contacto" element={<Contact />} />
+              <Route path="/profile/hub" element={
+                <ProtectedRoute>
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ProfileHub />
+                  </Suspense>
+                </ProtectedRoute>
+              } />
               
               {/* Rutas de Gimnasios */}
               <Route path="/gimnasios" element={<Gimnasios />} />
