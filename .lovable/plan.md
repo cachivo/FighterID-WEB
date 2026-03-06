@@ -1,46 +1,37 @@
 
 
-# Plan: Rediseño del Módulo de Gimnasios Admin + Auditoría de Coherencia
+# Fix: Nombres de gimnasios mostrándose verticalmente (1 letra por línea)
 
-## Problemas Identificados
+## Causa raíz
 
-1. **Sin buscador en admin**: `GimnasiosAdmin.tsx` no tiene campo de búsqueda (la página pública `Gimnasios.tsx` sí lo tiene)
-2. **Nombre truncado**: `AdminGymCard.tsx` línea 93 usa `truncate` en `gym.nombre` — viola la política de no-truncamiento (visible en el screenshot: "CLUB DE B...")
-3. **Layout desordenado en mobile**: El header con título + botón "Crear Gimnasio" no tiene estructura responsive adecuada
-4. **Botón "Crear Gimnasio" invisible para no-SuperAdmin**: El botón solo aparece si `isSuperAdmin`, pero la condición ya es correcta — el problema es que el layout se rompe cuando aparece
-5. **GymCard pública también trunca**: `GymCard.tsx` línea 36 y 42 usan `truncate` en nombre y ciudad
-6. **Datos coherentes**: Los gimnasios se sirven desde `useGyms()` (tabla `gyms` con `activo=true`) y `useGymsList()` (misma tabla, campos reducidos). Ambos hooks consultan la misma fuente — están sincronizados correctamente.
+El `CardHeader` tiene un layout `flex` horizontal con 3 elementos compitiendo por espacio:
+1. Logo (48px fijo)
+2. Nombre (`flex-1 min-w-0`)
+3. Badges (Sin Main Coach + contadores) — estos badges ocupan ~200px, dejando casi 0px para el nombre
 
-## Cambios Propuestos
+Con `break-words`, el nombre rompe en cada carácter porque no tiene espacio horizontal.
 
-### 1. `src/pages/admin/GimnasiosAdmin.tsx` — Agregar buscador + mejorar layout
-- Agregar campo de búsqueda por nombre/ciudad (mismo patrón que `Gimnasios.tsx`)
-- Reorganizar header: título a la izquierda, contador + botón a la derecha, responsive con `flex-wrap`
-- Agregar contador de gimnasios registrados
-- Mejorar estado de carga con skeletons en lugar de texto "Cargando..."
+## Solución
 
-### 2. `src/components/admin/AdminGymCard.tsx` — Quitar truncate del nombre
-- Línea 93: Reemplazar `truncate` por `break-words leading-tight` en `gym.nombre`
+Reestructurar el `CardHeader` para que los badges NO estén en la misma fila que el nombre:
 
-### 3. `src/components/gym/GymCard.tsx` — Quitar truncate del nombre y ciudad
-- Línea 36: Reemplazar `truncate` por `break-words leading-tight` en `gym.nombre`
-- Línea 42: Reemplazar `truncate` por `break-words leading-tight` en ciudad
+```
+┌─────────────────────────────┐
+│ [Logo] Nombre del Gimnasio  │
+│         Ciudad, País        │
+│ [Sin Main Coach] [⚔4] [👥0] │
+└─────────────────────────────┘
+```
 
-## Archivos a Modificar
+- Mover los badges debajo del bloque nombre/ciudad
+- El nombre ocupa todo el ancho disponible (menos el logo)
+- Los badges van en una fila separada con `flex-wrap`
+
+## Archivo a modificar
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/pages/admin/GimnasiosAdmin.tsx` | Agregar buscador, mejorar layout responsive, skeletons |
-| `src/components/admin/AdminGymCard.tsx` | Quitar truncate del nombre |
-| `src/components/gym/GymCard.tsx` | Quitar truncate de nombre y ciudad |
+| `src/components/admin/AdminGymCard.tsx` | Reestructurar CardHeader: badges debajo del nombre en vez de al lado |
 
-## Verificación de Coherencia de Datos
-
-Los gimnasios en el sistema se consumen desde dos hooks:
-- `useGyms()` → lista completa para admin y página pública
-- `useGymsList()` → lista reducida (id, nombre, logo, slug) para selectores en formularios de peleadores, onboarding, etc.
-
-Ambos filtran por `activo=true` y ordenan por `nombre`. Están sincronizados. Los selectores de gimnasio en `AdminFighterForm`, `FighterEditModal`, `LicenseOnboarding`, `UserFighterProfileEditForm` y `FightersProfiles` todos usan estas mismas fuentes. La coherencia está garantizada — un gimnasio creado aparecerá automáticamente en todos los módulos.
-
-**3 archivos. Sin migraciones SQL.**
+**1 archivo.**
 
