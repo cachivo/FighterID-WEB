@@ -45,6 +45,7 @@ export default function AuthCallback() {
           if (type === 'signup' || type === 'email') {
             setStatus('success');
             setMessage('¡Email confirmado exitosamente!');
+            // Try metadata first, then localStorage fallback
             const savedRole = localStorage.getItem('fighter_id_selected_role');
             const dest = savedRole === 'gym' ? '/gym/onboarding' : savedRole === 'judge' ? '/judge/onboarding' : '/license/onboarding';
             setTimeout(() => navigate(dest, { replace: true }), 2000);
