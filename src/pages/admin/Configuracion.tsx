@@ -316,7 +316,7 @@ const Configuracion = () => {
             </div>
           </div>
 
-          <Table>
+          <div className="overflow-x-auto -mx-4 px-4"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Clave</TableHead>
@@ -381,7 +381,7 @@ const Configuracion = () => {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
 
           {filteredConfiguraciones.length === 0 && (
             <div className="text-center py-8">

@@ -987,13 +987,13 @@ export default function EventosPelea() {
  
    return (
      <div className="space-y-6">
-       <div className="flex justify-between items-center">
-         <div>
-           <h2 className="text-3xl font-bold tracking-tight">Eventos de Pelea</h2>
-           <p className="text-muted-foreground">
-             Gestiona los eventos de combate con peleadores y peleas específicas
-           </p>
-         </div>
+        <div className="flex flex-wrap gap-3 justify-between items-center">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Eventos de Pelea</h2>
+            <p className="text-muted-foreground text-sm">
+              Gestiona los eventos de combate con peleadores y peleas específicas
+            </p>
+          </div>
          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
            <DialogTrigger asChild>
              <Button>
@@ -1130,156 +1130,247 @@ export default function EventosPelea() {
             </CardDescription>
           </CardHeader>
          <CardContent>
+           {/* Desktop Table */}
+           <div className="hidden md:block">
            <Table>
-             <TableHeader>
-               <TableRow>
-                 <TableHead>Nombre</TableHead>
-                 <TableHead>Disciplina</TableHead>
-                 <TableHead>Estado</TableHead>
-                 <TableHead>Visibilidad</TableHead>
-                 <TableHead>Fecha</TableHead>
-                 <TableHead>Sede</TableHead>
-                 <TableHead>Acciones</TableHead>
-               </TableRow>
-             </TableHeader>
-             <TableBody>
-               {events.map((event) => (
-                 <TableRow key={event.id}>
-                   <TableCell className="font-medium">
-                     <div className="flex items-center gap-2">
-                       <EventIcon className="h-5 w-5" />
-                       {event.name}
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Disciplina</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Visibilidad</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Sede</TableHead>
+                  <TableHead>Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {events.map((event) => (
+                  <TableRow key={event.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <EventIcon className="h-5 w-5" />
+                        {event.name}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{event.discipline}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStateColor(event.state)}>
+                        {getStateText(event.state)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleTogglePublish(event.id, event.published)}
+                        className={event.published ? 'text-green-600 hover:text-green-700' : 'text-muted-foreground hover:text-foreground'}
+                      >
+                        {event.published ? (
+                          <>
+                            <Eye className="h-4 w-4 mr-1" />
+                            Público
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="h-4 w-4 mr-1" />
+                            Privado
+                          </>
+                        )}
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      {event.start_time ? (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar className="w-4 h-4" />
+                          {format(new Date(event.start_time), 'dd/MM/yyyy HH:mm', { locale: es })}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Sin fecha</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {event.venue ? (
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="w-4 h-4" />
+                          {event.venue}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Sin sede</span>
+                      )}
+                    </TableCell>
+                     <TableCell>
+                       <div className="flex items-center gap-2 flex-wrap">
+                         <Button 
+                           variant="outline" 
+                           size="sm"
+                           onClick={() => {
+                             setBrandingEvent(event);
+                             setShowBrandingModal(true);
+                           }}
+                           className="text-primary border-primary/30"
+                         >
+                           <Palette className="w-4 h-4 mr-1" />
+                           Branding
+                         </Button>
+                         <Button 
+                           variant="outline" 
+                           size="sm"
+                           onClick={() => {
+                             setSelectedEvent(event);
+                             setEventFighters([]);
+                             setShowFightersDialog(true);
+                           }}
+                         >
+                           <Users className="w-4 h-4 mr-1" />
+                           Peleadores
+                         </Button>
+                         <Button 
+                           variant="outline" 
+                           size="sm"
+                           onClick={() => {
+                             setSelectedEvent(event);
+                             setFightsEventId(event.id);
+                             resetFightForm();
+                             setShowFightsDialog(true);
+                           }}
+                         >
+                           <Edit className="w-4 h-4 mr-1" />
+                           Peleas
+                         </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Eliminar
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Eliminar evento?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta acción no se puede deshacer. Se eliminará permanentemente el evento "{event.name}" y todas las peleas asociadas.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteEvent(event.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <Select value={event.state} onValueChange={(value) => updateEventState(event.id, value)}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Borrador</SelectItem>
+                            <SelectItem value="live">En Vivo</SelectItem>
+                            <SelectItem value="finished">Finalizado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+           </div>
+
+           {/* Mobile Cards */}
+           <div className="md:hidden space-y-4">
+             {events.map((event) => (
+               <Card key={event.id} className="border-l-primary">
+                 <CardContent className="p-4 space-y-3">
+                   <div className="flex items-start justify-between gap-2">
+                     <div className="flex items-center gap-2 min-w-0">
+                       <EventIcon className="h-5 w-5 shrink-0" />
+                       <span className="font-medium">{event.name}</span>
                      </div>
-                   </TableCell>
-                   <TableCell>
-                     <Badge variant="outline">{event.discipline}</Badge>
-                   </TableCell>
-                   <TableCell>
-                     <Badge className={getStateColor(event.state)}>
-                       {getStateText(event.state)}
-                     </Badge>
-                   </TableCell>
-                   <TableCell>
                      <Button
                        variant="ghost"
                        size="sm"
                        onClick={() => handleTogglePublish(event.id, event.published)}
-                       className={event.published ? 'text-green-600 hover:text-green-700' : 'text-muted-foreground hover:text-foreground'}
+                       className={event.published ? 'text-green-600 shrink-0' : 'text-muted-foreground shrink-0'}
                      >
-                       {event.published ? (
-                         <>
-                           <Eye className="h-4 w-4 mr-1" />
-                           Público
-                         </>
-                       ) : (
-                         <>
-                           <EyeOff className="h-4 w-4 mr-1" />
-                           Privado
-                         </>
-                       )}
+                       {event.published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                      </Button>
-                   </TableCell>
-                   <TableCell>
-                     {event.start_time ? (
-                       <div className="flex items-center gap-2 text-sm">
-                         <Calendar className="w-4 h-4" />
+                   </div>
+
+                   <div className="flex flex-wrap gap-1.5">
+                     <Badge variant="outline">{event.discipline}</Badge>
+                     <Badge className={getStateColor(event.state)}>{getStateText(event.state)}</Badge>
+                   </div>
+
+                   <div className="text-sm text-muted-foreground space-y-1">
+                     {event.start_time && (
+                       <div className="flex items-center gap-2">
+                         <Calendar className="w-3.5 h-3.5" />
                          {format(new Date(event.start_time), 'dd/MM/yyyy HH:mm', { locale: es })}
                        </div>
-                     ) : (
-                       <span className="text-muted-foreground">Sin fecha</span>
                      )}
-                   </TableCell>
-                   <TableCell>
-                     {event.venue ? (
-                       <div className="flex items-center gap-2 text-sm">
-                         <MapPin className="w-4 h-4" />
+                     {event.venue && (
+                       <div className="flex items-center gap-2">
+                         <MapPin className="w-3.5 h-3.5" />
                          {event.venue}
                        </div>
-                     ) : (
-                       <span className="text-muted-foreground">Sin sede</span>
                      )}
-                   </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setBrandingEvent(event);
-                            setShowBrandingModal(true);
-                          }}
-                          className="text-primary border-primary/30"
-                        >
-                          <Palette className="w-4 h-4 mr-1" />
-                          Branding
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedEvent(event);
-                            setEventFighters([]);
-                            setShowFightersDialog(true);
-                          }}
-                        >
-                          <Users className="w-4 h-4 mr-1" />
-                          Peleadores
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedEvent(event);
-                            setFightsEventId(event.id); // Trigger useFights to load fights
-                            resetFightForm();
-                            setShowFightsDialog(true);
-                          }}
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Peleas
-                        </Button>
-                       <AlertDialog>
-                         <AlertDialogTrigger asChild>
-                           <Button variant="outline" size="sm">
-                             <Trash2 className="w-4 h-4 mr-1" />
+                   </div>
+
+                   <div className="flex flex-wrap gap-2">
+                     <Button variant="outline" size="sm" onClick={() => { setBrandingEvent(event); setShowBrandingModal(true); }} className="text-primary border-primary/30">
+                       <Palette className="w-4 h-4 mr-1" /> Branding
+                     </Button>
+                     <Button variant="outline" size="sm" onClick={() => { setSelectedEvent(event); setEventFighters([]); setShowFightersDialog(true); }}>
+                       <Users className="w-4 h-4 mr-1" /> Peleadores
+                     </Button>
+                     <Button variant="outline" size="sm" onClick={() => { setSelectedEvent(event); setFightsEventId(event.id); resetFightForm(); setShowFightsDialog(true); }}>
+                       <Edit className="w-4 h-4 mr-1" /> Peleas
+                     </Button>
+                     <AlertDialog>
+                       <AlertDialogTrigger asChild>
+                         <Button variant="outline" size="sm">
+                           <Trash2 className="w-4 h-4 mr-1" /> Eliminar
+                         </Button>
+                       </AlertDialogTrigger>
+                       <AlertDialogContent>
+                         <AlertDialogHeader>
+                           <AlertDialogTitle>¿Eliminar evento?</AlertDialogTitle>
+                           <AlertDialogDescription>
+                             Se eliminará permanentemente "{event.name}" y todas las peleas asociadas.
+                           </AlertDialogDescription>
+                         </AlertDialogHeader>
+                         <AlertDialogFooter>
+                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                           <AlertDialogAction onClick={() => handleDeleteEvent(event.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                              Eliminar
-                           </Button>
-                         </AlertDialogTrigger>
-                         <AlertDialogContent>
-                           <AlertDialogHeader>
-                             <AlertDialogTitle>¿Eliminar evento?</AlertDialogTitle>
-                             <AlertDialogDescription>
-                               Esta acción no se puede deshacer. Se eliminará permanentemente el evento "{event.name}" y todas las peleas asociadas.
-                             </AlertDialogDescription>
-                           </AlertDialogHeader>
-                           <AlertDialogFooter>
-                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                             <AlertDialogAction 
-                               onClick={() => handleDeleteEvent(event.id)}
-                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                             >
-                               Eliminar
-                             </AlertDialogAction>
-                           </AlertDialogFooter>
-                         </AlertDialogContent>
-                       </AlertDialog>
-                       <Select value={event.state} onValueChange={(value) => updateEventState(event.id, value)}>
-                         <SelectTrigger className="w-32">
-                           <SelectValue />
-                         </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="draft">Borrador</SelectItem>
-                           <SelectItem value="live">En Vivo</SelectItem>
-                           <SelectItem value="finished">Finalizado</SelectItem>
-                         </SelectContent>
-                       </Select>
-                     </div>
-                   </TableCell>
-                 </TableRow>
-               ))}
-             </TableBody>
-           </Table>
-         </CardContent>
+                           </AlertDialogAction>
+                         </AlertDialogFooter>
+                       </AlertDialogContent>
+                     </AlertDialog>
+                   </div>
+
+                   <Select value={event.state} onValueChange={(value) => updateEventState(event.id, value)}>
+                     <SelectTrigger className="w-full">
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="draft">Borrador</SelectItem>
+                       <SelectItem value="live">En Vivo</SelectItem>
+                       <SelectItem value="finished">Finalizado</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </CardContent>
+               </Card>
+             ))}
+           </div>
+          </CardContent>
        </Card>
  
        {/* Fighters Management Dialog */}
@@ -1469,7 +1560,7 @@ export default function EventosPelea() {
             </div>
             
             <div className="space-y-4">
-             <div className="grid grid-cols-3 gap-4">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                <div>
                  <Label>Número de Pelea</Label>
                  <Input
@@ -1510,7 +1601,7 @@ export default function EventosPelea() {
                </div>
              </div>
  
-             <div className="grid grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div className="space-y-3">
                  <div className="flex items-center justify-between">
                    <Label>Peleador A</Label>
@@ -1595,7 +1686,7 @@ export default function EventosPelea() {
                </div>
              </div>
  
-             <div className="grid grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div>
                  <Label>Categoría de Peso</Label>
                  <Select value={fightData.weight_class} onValueChange={(value) => setFightData(prev => ({...prev, weight_class: value}))}>
@@ -1636,7 +1727,7 @@ export default function EventosPelea() {
                   )}
                 </h4>
                 
-                <div className="grid grid-cols-2 gap-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* FIGHTER A IMAGE */}
                   <div className="space-y-3 p-3 border rounded-lg bg-red-500/5">
                     <Label className="flex items-center gap-2 text-red-400">

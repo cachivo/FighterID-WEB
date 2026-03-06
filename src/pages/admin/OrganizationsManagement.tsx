@@ -141,7 +141,7 @@ export default function OrganizationsManagement() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <div className="overflow-x-auto -mx-4 px-4"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Código</TableHead>
@@ -222,7 +222,7 @@ export default function OrganizationsManagement() {
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
 

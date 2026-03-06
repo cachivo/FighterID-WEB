@@ -155,10 +155,10 @@ export default function FightersProfiles() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap gap-3 items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold mb-2">Gestión de Perfiles de Peleadores</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl md:text-2xl font-bold mb-1">Gestión de Perfiles de Peleadores</h1>
+          <p className="text-muted-foreground text-sm">
             Administra los perfiles de todos los peleadores registrados
           </p>
         </div>

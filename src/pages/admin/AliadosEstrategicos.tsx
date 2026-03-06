@@ -356,7 +356,7 @@ export default function AliadosEstrategicos() {
           {isLoading ? (
             <div className="text-center py-8">Cargando...</div>
           ) : partners && partners.length > 0 ? (
-            <Table>
+            <div className="overflow-x-auto -mx-4 px-4"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16">Logo</TableHead>
@@ -435,7 +435,7 @@ export default function AliadosEstrategicos() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               No hay aliados estratégicos configurados

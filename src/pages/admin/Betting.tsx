@@ -656,7 +656,7 @@ export default function AdminBetting() {
             </Dialog>
           </div>
 
-          <Table>
+          <div className="overflow-x-auto -mx-4 px-4"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Mercado</TableHead>
@@ -744,7 +744,7 @@ export default function AdminBetting() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></div>
         </TabsContent>
 
         <TabsContent value="live" className="space-y-4">

@@ -532,7 +532,7 @@ const Comunidad = () => {
                 </Dialog>
               </div>
 
-              <Table>
+              <div className="overflow-x-auto -mx-4 px-4"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Avatar</TableHead>
@@ -611,7 +611,7 @@ const Comunidad = () => {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
 
               {filteredTestimonios.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
@@ -736,7 +736,7 @@ const Comunidad = () => {
                 </Dialog>
               </div>
 
-              <Table>
+              <div className="overflow-x-auto -mx-4 px-4"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Logo</TableHead>
@@ -820,7 +820,7 @@ const Comunidad = () => {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
 
               {filteredPartners.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
