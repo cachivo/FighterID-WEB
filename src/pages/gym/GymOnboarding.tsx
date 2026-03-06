@@ -20,7 +20,7 @@ export default function GymOnboarding() {
   const [telefono, setTelefono] = useState('');
 
   // Check if user already has an active gym
-  useState(() => {
+  useEffect(() => {
     if (!user) { setCheckingExisting(false); return; }
     supabase
       .from('gym_staff')
@@ -34,7 +34,7 @@ export default function GymOnboarding() {
         }
         setCheckingExisting(false);
       });
-  });
+  }, [user]);
 
   if (checkingExisting) {
     return (

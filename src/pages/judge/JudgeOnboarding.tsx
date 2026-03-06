@@ -20,7 +20,7 @@ export default function JudgeOnboarding() {
   const [experiencia, setExperiencia] = useState('');
 
   // Check if user already has a judge record
-  useState(() => {
+  useEffect(() => {
     if (!user) { setCheckingExisting(false); return; }
     supabase
       .from('judges')
@@ -34,7 +34,7 @@ export default function JudgeOnboarding() {
         }
         setCheckingExisting(false);
       });
-  });
+  }, [user]);
 
   if (checkingExisting) {
     return (
