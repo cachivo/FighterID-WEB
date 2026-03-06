@@ -80,12 +80,12 @@ export function AdminGymCard({ gym, readOnly = false }: AdminGymCardProps) {
           </div>
         )}
         
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 space-y-2">
           <div className="flex items-start gap-3">
             {gym.logo_url ? (
-              <img src={gym.logo_url} alt={gym.nombre} className="w-12 h-12 rounded-lg object-cover" />
+              <img src={gym.logo_url} alt={gym.nombre} className="w-12 h-12 rounded-lg object-cover shrink-0" />
             ) : (
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <span className="text-lg font-bold text-primary">{gym.nombre.charAt(0)}</span>
               </div>
             )}
@@ -93,31 +93,31 @@ export function AdminGymCard({ gym, readOnly = false }: AdminGymCardProps) {
               <h3 className="font-semibold text-lg break-words leading-tight">{gym.nombre}</h3>
               {(gym.ciudad || gym.pais) && (
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {[gym.ciudad, gym.pais].filter(Boolean).join(', ')}
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  <span className="break-words">{[gym.ciudad, gym.pais].filter(Boolean).join(', ')}</span>
                 </p>
               )}
             </div>
-          <div className="flex items-center gap-1">
-              {!gym.owner_id && (
-                <Badge variant="destructive" className="flex items-center gap-1 text-[10px]">
-                  <AlertCircle className="h-3 w-3" />
-                  Sin Main Coach
-                </Badge>
-              )}
-              {typeof fighterCount === 'number' && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Swords className="h-3 w-3" />
-                  {fighterCount}
-                </Badge>
-              )}
-              {typeof staffCount === 'number' && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  {staffCount}
-                </Badge>
-              )}
-            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-1">
+            {!gym.owner_id && (
+              <Badge variant="destructive" className="flex items-center gap-1 text-[10px]">
+                <AlertCircle className="h-3 w-3" />
+                Sin Main Coach
+              </Badge>
+            )}
+            {typeof fighterCount === 'number' && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Swords className="h-3 w-3" />
+                {fighterCount}
+              </Badge>
+            )}
+            {typeof staffCount === 'number' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                {staffCount}
+              </Badge>
+            )}
           </div>
         </CardHeader>
 
