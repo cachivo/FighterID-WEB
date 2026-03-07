@@ -297,9 +297,6 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
                     <Label htmlFor={discipline.value} className="text-sm font-medium cursor-pointer">
                       {discipline.label}
                     </Label>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {discipline.description}
-                    </p>
                   </div>
                 </div>
               ))}

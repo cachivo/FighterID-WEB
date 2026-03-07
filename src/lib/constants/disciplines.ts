@@ -7,18 +7,8 @@
 
 // Disciplines currently enabled in the platform (shown in forms)
 export const ENABLED_DISCIPLINES = [
-  { 
-    value: 'MMA', 
-    label: 'MMA (Artes Marciales Mixtas)',
-    description: 'Combate que combina técnicas de striking y grappling',
-    icon: 'Swords'
-  },
-  { 
-    value: 'Boxeo', 
-    label: 'Boxeo Profesional',
-    description: 'Arte del pugilismo - solo golpes con los puños',
-    icon: 'Target'
-  },
+  { value: 'MMA', label: 'MMA (Artes Marciales Mixtas)', icon: 'Swords' },
+  { value: 'Boxeo', label: 'Boxeo Profesional', icon: 'Target' },
 ] as const;
 
 // All disciplines valid in the database (for compatibility)

@@ -418,9 +418,6 @@ export default function LicenseOnboarding() {
                             <Label htmlFor={discipline.value} className="text-base font-medium cursor-pointer">
                               {discipline.label}
                             </Label>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {discipline.description}
-                            </p>
                           </div>
                         </CardContent>
                       </Card>
