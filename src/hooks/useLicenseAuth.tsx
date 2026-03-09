@@ -542,14 +542,34 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/license/reset-password`;
-    const { data, error } = await supabase.functions.invoke('send-password-recovery', {
-      body: { 
-        email,
-        redirectTo: redirectUrl
+    try {
+      const redirectUrl = `${window.location.origin}/license/reset-password`;
+      const { data, error } = await supabase.functions.invoke('send-password-recovery', {
+        body: { 
+          email,
+          redirectTo: redirectUrl
+        }
+      });
+
+      if (error) {
+        let errorMessage = 'Error al procesar la solicitud';
+        let retryAfter: number | undefined;
+        try {
+          const errorBody = await (error as any).context?.json();
+          if (errorBody?.error) errorMessage = errorBody.error;
+          if (errorBody?.retryAfter) retryAfter = errorBody.retryAfter;
+        } catch {}
+        return { error: { message: errorMessage, retryAfter } };
       }
-    });
-    return { error };
+
+      if (data?.error) {
+        return { error: { message: data.error, retryAfter: data.retryAfter } };
+      }
+
+      return { error: null };
+    } catch (e: any) {
+      return { error: { message: 'Error de conexión. Intenta de nuevo.' } };
+    }
   };
 
   const updatePassword = async (newPassword: string) => {

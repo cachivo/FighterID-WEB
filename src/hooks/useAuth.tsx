@@ -179,13 +179,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('[AUTH] Error sending recovery email:', error);
-        return { error: { message: error.message } };
+        let errorMessage = 'Error al procesar la solicitud';
+        let retryAfter: number | undefined;
+        try {
+          const errorBody = await (error as any).context?.json();
+          if (errorBody?.error) errorMessage = errorBody.error;
+          if (errorBody?.retryAfter) retryAfter = errorBody.retryAfter;
+        } catch {}
+        return { error: { message: errorMessage, retryAfter } };
+      }
+
+      if (data?.error) {
+        return { error: { message: data.error, retryAfter: data.retryAfter } };
       }
 
       return { error: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected error in resetPassword:', e);
-      return { error: { message: 'Error al procesar la solicitud' } };
+      return { error: { message: 'Error de conexión. Intenta de nuevo.' } };
     }
   };
 
