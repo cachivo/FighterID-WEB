@@ -63,6 +63,7 @@ import Predicciones from "./pages/Predicciones";
 import EventoBetting from "./pages/EventoBetting";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
+import EnVivo from "./pages/EnVivo";
 import Fighters from "./pages/Fighters";
 import SocialProfile from "./pages/social/SocialProfile";
 import Friends from "./pages/social/Friends";
