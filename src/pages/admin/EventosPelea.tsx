@@ -767,6 +767,37 @@ export default function EventosPelea() {
       }
     };
 
+    // *** Streaming config handlers ***
+    const openStreamDialog = (event: BdgEvent) => {
+      const meta = event.meta as { live_stream?: { embed_url?: string; chat_embed_url?: string; is_streaming?: boolean } } | null;
+      setStreamEvent(event);
+      setStreamEmbedUrl(meta?.live_stream?.embed_url || '');
+      setStreamChatUrl(meta?.live_stream?.chat_embed_url || '');
+      setStreamIsLive(meta?.live_stream?.is_streaming || false);
+      setShowStreamDialog(true);
+    };
+
+    const handleSaveStream = async () => {
+      if (!streamEvent) return;
+      try {
+        const currentMeta = (streamEvent.meta || {}) as Record<string, any>;
+        const newMeta = {
+          ...currentMeta,
+          live_stream: {
+            embed_url: streamEmbedUrl,
+            chat_embed_url: streamChatUrl,
+            is_streaming: streamIsLive,
+          }
+        };
+        await updateEventMeta(streamEvent.id, newMeta);
+        toast({ description: '✅ Configuración de transmisión guardada' });
+        setShowStreamDialog(false);
+        refreshEvents();
+      } catch (error) {
+        toast({ description: 'Error al guardar configuración', variant: 'destructive' });
+      }
+    };
+
     // *** HELPER: Get fighter display name ***
     const getFighterName = (fight: any, corner: 'A' | 'B') => {
       const fighter = corner === 'A' ? fight.fighter_a : fight.fighter_b;
