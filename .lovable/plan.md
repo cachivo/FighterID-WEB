@@ -1,84 +1,86 @@
 
 
-## Audit: Password Reset Flow
+# Plan: Optimización Mobile del Panel de Administración
 
-### Current Status
+## Problema Principal
 
-The password reset flow has **two issues** that could prevent users from resetting:
+El módulo **Eventos de Pelea** (`EventosPelea.tsx`) usa una tabla HTML de 7 columnas (Nombre, Disciplina, Estado, Visibilidad, Fecha, Sede, Acciones) que desborda horizontalmente en móvil, creando la barra de scroll que reportas. La columna de "Acciones" sola tiene 4 botones + 1 Select, ocupando ~400px.
 
-**1. Error handling bug in both auth hooks**
+Este mismo problema existe en **7 páginas admin más** que usan `<Table>`:
 
-When the edge function returns a 429 (rate limit) or 500, `supabase.functions.invoke` sets `error` to a generic `FunctionsHttpError` with message "Edge Function returned a non-2xx status code". The actual JSON body (with `retryAfter`, actual error message) is lost.
+| Página | Columnas | Severidad |
+|--------|----------|-----------|
+| **EventosPelea.tsx** | 7 cols + Acciones con 5 elementos | ALTA |
+| **Betting.tsx** | Tabla de mercados con múltiples cols | ALTA |
+| **Comunidad.tsx** | 2 tablas (testimonios + partners) | MEDIA |
+| **AliadosEstrategicos.tsx** | Tabla de aliados | MEDIA |
+| **OrganizationsManagement.tsx** | Tabla de organizaciones | MEDIA |
+| **RankingsManagement.tsx** | Ya tiene `overflow-x-auto` | BAJA (ya parcheado) |
+| **Configuracion.tsx** | Tabla de configuración | BAJA |
+| **EmailCampaignDetail.tsx** | Tabla de destinatarios | BAJA |
 
-Both `useAuth.resetPassword` and `useLicenseAuth.resetPassword` do:
-```tsx
-const { data, error } = await supabase.functions.invoke('send-password-recovery', ...);
-if (error) return { error: { message: error.message } }; // Generic message, loses details
+## Solución
+
+### 1. `EventosPelea.tsx` - Reemplazar tabla por tarjetas en móvil (PRIORIDAD)
+
+Reemplazar la `<Table>` de eventos (líneas 1133-1281) por un layout de tarjetas (`Card`) que funcione en móvil:
+
+```text
+┌──────────────────────────────┐
+│ 🏆 Batalla de Gimnasios #2   │
+│ MMA · Borrador · Privado     │
+│ 📅 15/03/2026 · 📍 Arena     │
+│ ┌────┐┌────┐┌────┐┌────┐    │
+│ │Brand││Pelead││Peleas││ ⋮ │    │
+│ └────┘└────┘└────┘└────┘    │
+│ Estado: [Borrador ▾]         │
+└──────────────────────────────┘
 ```
 
-The ForgotPassword pages then check `error.message.includes("Demasiados intentos")` — this will never match because the message is always generic.
+- Cada evento será un `Card` con la info apilada verticalmente
+- Botones de acción en una fila con `flex-wrap`
+- Select de estado en su propia fila
 
-**2. Edge function has no recent logs** — likely deployed but untested recently. The function itself looks correct, but the error response path (429) returns a non-2xx status which triggers the bug above.
+### 2. Páginas con tablas secundarias - Agregar `overflow-x-auto`
 
-### Routes and pages — all correct
+Para las demás páginas que usan `<Table>`, envolver en `<div className="overflow-x-auto -mx-4 px-4">` para permitir scroll horizontal controlado sin romper el layout del contenedor padre:
 
-| Entry point | ForgotPassword page | ResetPassword page | Edge function redirect |
-|---|---|---|---|
-| `/auth/forgot-password` | `useAuth.resetPassword` → `/auth/reset-password` | Handles tokens correctly | `SITE_URL/auth/reset-password` |
-| `/license/forgot-password` | `useLicenseAuth.resetPassword` → `/license/reset-password` | Handles tokens correctly | `SITE_URL/license/reset-password` |
+- `Betting.tsx`
+- `Comunidad.tsx` (2 tablas)
+- `AliadosEstrategicos.tsx`
+- `OrganizationsManagement.tsx`
+- `Configuracion.tsx`
+- `EmailCampaignDetail.tsx`
 
-### Fix
+### 3. Headers responsivos
 
-**`src/hooks/useAuth.tsx` — `resetPassword` method**
-- After `supabase.functions.invoke`, check if `error` exists and try to parse the response body for the actual error message and `retryAfter` value
-- Use `error.context?.json()` or handle the FunctionsHttpError properly
+Varias páginas tienen headers con `flex justify-between` que se rompen en móvil cuando el título y el botón no caben en una línea:
 
-**`src/hooks/useLicenseAuth.tsx` — `resetPassword` method**
-- Same fix as above
+- `EventosPelea.tsx` líneas 990-996: título + botón "Nuevo Evento"
+- `FightersProfiles.tsx` líneas 158-169: título + botón "Invitar Peleador"
 
-**Both fixes follow this pattern:**
-```tsx
-const resetPassword = async (email: string) => {
-  try {
-    const { data, error } = await supabase.functions.invoke('send-password-recovery', {
-      body: { email, redirectTo: `${window.location.origin}/auth/reset-password` }
-    });
+Cambiar a `flex flex-wrap gap-3` para que el botón baje en pantallas pequeñas.
 
-    if (error) {
-      // Try to extract actual error body from FunctionsHttpError
-      let errorMessage = 'Error al procesar la solicitud';
-      let retryAfter: number | undefined;
-      try {
-        const errorBody = await error.context.json();
-        errorMessage = errorBody.error || errorMessage;
-        retryAfter = errorBody.retryAfter;
-      } catch {}
-      return { error: { message: errorMessage, retryAfter } };
-    }
+### 4. Dialogs de pelea - Grids de 3 y 2 columnas
 
-    // data may contain error even on 200 (shouldn't, but defensive)
-    if (data?.error) {
-      return { error: { message: data.error } };
-    }
+Los diálogos internos de `EventosPelea.tsx` usan:
+- `grid-cols-3` (línea 1472) para Número/Tipo/Rounds
+- `grid-cols-2` (líneas 1513, 1598, 1639) para Peleadores A/B e imágenes
 
-    return { error: null };
-  } catch (e: any) {
-    return { error: { message: 'Error de conexión. Intenta de nuevo.' } };
-  }
-};
-```
+En móvil estos se comprimen. Cambiar a `grid-cols-1 md:grid-cols-3` y `grid-cols-1 md:grid-cols-2`.
 
-### Files to change
+## Archivos a Modificar
 
-| File | Change |
-|---|---|
-| `src/hooks/useAuth.tsx` | Fix `resetPassword` to properly parse edge function error responses |
-| `src/hooks/useLicenseAuth.tsx` | Same fix for `resetPassword` |
+| Archivo | Cambio |
+|---------|--------|
+| `src/pages/admin/EventosPelea.tsx` | Reemplazar tabla por cards, headers responsive, grids responsive en dialogs |
+| `src/pages/admin/Betting.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/Comunidad.tsx` | Wrap 2 tablas con `overflow-x-auto` |
+| `src/pages/admin/AliadosEstrategicos.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/OrganizationsManagement.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/Configuracion.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/EmailCampaignDetail.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/FightersProfiles.tsx` | Header responsive con `flex-wrap` |
 
-### Impact
-
-- Rate limit messages will now display correctly ("Demasiados intentos...")
-- Cooldown timer will work properly with the `retryAfter` value
-- Normal password reset flow (200 responses) is unaffected
-- Both `/auth` and `/license` users can reset passwords with proper feedback
+**8 archivos. Sin migraciones SQL.**
 
