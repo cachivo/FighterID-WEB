@@ -74,6 +74,7 @@ import TestNewsFunction from "./pages/TestNewsFunction";
 import ImportEvent from "./pages/ImportEvent";
 import Dashboard from "./pages/admin/Dashboard";
 import EventosPelea from "./pages/admin/EventosPelea";
+import LiveStreaming from "./pages/admin/LiveStreaming";
 import LicenseForgotPassword from "./pages/license/ForgotPassword";
 import LicenseResetPassword from "./pages/license/ResetPassword";
 import HudPublicDisplay from "./pages/HudPublicDisplay";
@@ -368,6 +369,7 @@ const App = () => {
                         </Suspense>
                       } />
                       <Route path="/live-events" element={<LiveEventsControl />} />
+                      <Route path="/live-streaming" element={<LiveStreaming />} />
                       <Route path="/pending-changes" element={<PendingChangesHub />} />
                       <Route path="/fight-results" element={
                         <Suspense fallback={<LoadingSpinner />}>
