@@ -20,7 +20,8 @@ import {
   Send,
   Medal,
   ImageIcon,
-  Building2
+  Building2,
+  Tv
 } from 'lucide-react';
 import {
   Sidebar,
