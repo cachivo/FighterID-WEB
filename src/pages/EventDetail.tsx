@@ -264,10 +264,23 @@ const EventDetail = () => {
               </div>
             </div>
             
-            {event.state === 'live' && <Button size="lg" className="animate-pulse">
-                <Trophy className="w-5 h-5 mr-2" />
-                Ver EN VIVO
-              </Button>}
+            {event.state === 'live' && (() => {
+              const meta = event.meta as { live_stream?: { is_streaming?: boolean } } | null;
+              const isStreaming = meta?.live_stream?.is_streaming;
+              return isStreaming ? (
+                <Button asChild size="lg" className="bg-destructive hover:bg-destructive/90 animate-pulse">
+                  <Link to="/en-vivo">
+                    <Tv className="w-5 h-5 mr-2" />
+                    📺 Ver En Vivo
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="lg" className="animate-pulse">
+                  <Trophy className="w-5 h-5 mr-2" />
+                  EN VIVO
+                </Button>
+              );
+            })()}
           </div>
         </div>
         </section>
