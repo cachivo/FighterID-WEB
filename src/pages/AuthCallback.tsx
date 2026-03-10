@@ -1,14 +1,65 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, RefreshCw, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+
+type ErrorType = 'expired' | 'already_confirmed' | 'generic';
+
+function detectErrorType(error: string, description: string): ErrorType {
+  const combined = `${error} ${description}`.toLowerCase();
+  if (combined.includes('expired') || combined.includes('expirado') || combined.includes('otp_expired')) {
+    return 'expired';
+  }
+  if (combined.includes('already') || combined.includes('confirmed') || combined.includes('ya confirmad')) {
+    return 'already_confirmed';
+  }
+  return 'generic';
+}
+
+function getErrorContent(type: ErrorType) {
+  switch (type) {
+    case 'expired':
+      return {
+        title: 'Enlace expirado',
+        message: 'Tu enlace de verificación ha expirado. Solicita uno nuevo.',
+        showResend: true,
+      };
+    case 'already_confirmed':
+      return {
+        title: 'Cuenta ya confirmada',
+        message: 'Tu cuenta ya fue verificada anteriormente. Puedes iniciar sesión directamente.',
+        showResend: false,
+      };
+    default:
+      return {
+        title: 'Error de verificación',
+        message: 'Ocurrió un problema al verificar tu cuenta.',
+        showResend: true,
+      };
+  }
+}
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const { resendConfirmation } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Verificando...');
+  const [errorType, setErrorType] = useState<ErrorType>('generic');
   const [errorDetails, setErrorDetails] = useState('');
+  const [resendEmail, setResendEmail] = useState('');
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -20,9 +71,12 @@ export default function AuthCallback() {
         const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
 
         if (error) {
+          const type = detectErrorType(error, errorDescription || '');
+          setErrorType(type);
+          const content = getErrorContent(type);
           setStatus('error');
-          setMessage('Error de verificación');
-          setErrorDetails(errorDescription || error);
+          setMessage(content.title);
+          setErrorDetails(errorDescription || content.message);
           return;
         }
 
@@ -50,6 +104,9 @@ export default function AuthCallback() {
           }
           throw new Error('No se pudo establecer la sesión');
         }
+
+        // Save email for potential resend
+        if (session.user?.email) setResendEmail(session.user.email);
 
         if (type === 'recovery') {
           setStatus('success');
@@ -84,14 +141,32 @@ export default function AuthCallback() {
         setTimeout(() => navigate('/', { replace: true }), 1500);
       } catch (err: any) {
         console.error('[AuthCallback] Error:', err);
+        const type = detectErrorType(err.message || '', '');
+        setErrorType(type);
+        const content = getErrorContent(type);
         setStatus('error');
-        setMessage('Error de verificación');
-        setErrorDetails(err.message || 'Por favor intenta de nuevo');
+        setMessage(content.title);
+        setErrorDetails(err.message || content.message);
       }
     };
 
     handleAuthCallback();
   }, [navigate]);
+
+  const handleResendEmail = async () => {
+    if (resendCooldown > 0 || !resendEmail) return;
+    setIsResending(true);
+    const { error } = await resendConfirmation(resendEmail);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Correo de verificación reenviado');
+      setResendCooldown(60);
+    }
+    setIsResending(false);
+  };
+
+  const errorContent = getErrorContent(errorType);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 p-4">
@@ -120,12 +195,39 @@ export default function AuthCallback() {
               <XCircle className="w-12 h-12 text-destructive" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">{message}</h2>
-            <p className="text-destructive/80 mb-6">{errorDetails}</p>
+            <p className="text-muted-foreground mb-6">{errorDetails}</p>
+
             <div className="space-y-3">
-              <Button onClick={() => navigate('/auth', { replace: true })} className="w-full bg-primary hover:bg-primary/90">
-                Ir a Iniciar Sesión
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/auth', { replace: true })} className="w-full border-border">
+              {errorType === 'already_confirmed' ? (
+                <Button onClick={() => navigate('/auth', { replace: true })} className="w-full bg-primary hover:bg-primary/90">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Ir a Iniciar Sesión
+                </Button>
+              ) : (
+                <>
+                  {errorContent.showResend && resendEmail && (
+                    <Button
+                      onClick={handleResendEmail}
+                      disabled={resendCooldown > 0 || isResending}
+                      className="w-full bg-primary hover:bg-primary/90"
+                    >
+                      {isResending ? (
+                        <><RefreshCw className="mr-2 h-4 w-4 animate-spin" />Reenviando...</>
+                      ) : resendCooldown > 0 ? (
+                        <>Reenviar en {resendCooldown}s</>
+                      ) : (
+                        <><RefreshCw className="mr-2 h-4 w-4" />Solicitar nuevo enlace</>
+                      )}
+                    </Button>
+                  )}
+                  <Button onClick={() => navigate('/auth', { replace: true })} variant="outline" className="w-full border-border">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Ir a Iniciar Sesión
+                  </Button>
+                </>
+              )}
+              <Button variant="ghost" onClick={() => navigate('/auth', { replace: true })} className="w-full text-muted-foreground">
+                <UserPlus className="mr-2 h-4 w-4" />
                 Registrarse de nuevo
               </Button>
             </div>

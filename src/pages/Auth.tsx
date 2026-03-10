@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Loader2, Mail, HelpCircle, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { PasswordStrength } from '@/components/ui/password-strength';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 import fighterIdLogo from '@/assets/fighter-id-logo-auth.png';
 import { useFighterInvitations } from '@/hooks/useFighterInvitations';
 import { supabase } from '@/integrations/supabase/client';
@@ -188,11 +190,7 @@ export default function Auth() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <PageSkeleton variant="auth" className="bg-black" />;
   }
 
   return (
@@ -236,8 +234,11 @@ export default function Auth() {
                 />
               </div>
               <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700" disabled={checkingEmail}>
-                {checkingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Continuar
+                {checkingEmail ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verificando email...</>
+                ) : (
+                  'Continuar'
+                )}
               </Button>
 
               <div className="flex flex-col gap-2">
@@ -342,6 +343,7 @@ export default function Auth() {
                     <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-6 h-9 w-9 text-white/50 hover:text-white" onClick={() => setShowPassword(!showPassword)}>
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
+                    <PasswordStrength password={password} />
                   </div>
 
                   <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700" disabled={loading || validatingToken}>

@@ -6,8 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Dumbbell, Building2, Scale, Shield, ArrowRight, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Dumbbell, Building2, Scale, Shield, ArrowRight, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import fighterIdLogo from '@/assets/fighter-id-logo-auth.png';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 
 type ModuleStatus = 'none' | 'pending' | 'active' | 'suspended';
 
@@ -118,11 +119,7 @@ export default function ProfileHub() {
   }, [user, authLoading, rolesLoading]);
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <PageSkeleton variant="hub" />;
   }
 
   if (!user) {
