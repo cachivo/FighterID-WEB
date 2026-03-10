@@ -80,8 +80,8 @@ export default function AuthCallback() {
           }
         }
 
-        const destination = await determineUserDestination(session.user.id);
-        setTimeout(() => navigate(destination, { replace: true }), 1500);
+        // Always redirect to home
+        setTimeout(() => navigate('/', { replace: true }), 1500);
       } catch (err: any) {
         console.error('[AuthCallback] Error:', err);
         setStatus('error');
@@ -134,106 +134,4 @@ export default function AuthCallback() {
       </div>
     </div>
   );
-}
-
-async function resolveGymDestination(authUserId: string): Promise<string> {
-  const { data: staffRecord } = await supabase
-    .from('gym_staff')
-    .select('gym_id')
-    .eq('user_id', authUserId)
-    .eq('active', true)
-    .maybeSingle();
-  if (staffRecord) return `/gym/${staffRecord.gym_id}/dashboard`;
-  return '/gym/pending-invitation';
-}
-
-async function resolveFighterDestination(authUserId: string): Promise<string> {
-  const { data: appUser } = await supabase
-    .from('app_user')
-    .select('id')
-    .eq('auth_user_id', authUserId)
-    .maybeSingle();
-
-  if (!appUser) return '/license/onboarding';
-
-  const { data: fighterProfile } = await supabase
-    .from('fighter_profiles')
-    .select('id')
-    .eq('user_id', appUser.id)
-    .maybeSingle();
-
-  if (!fighterProfile) return '/license/onboarding';
-
-  const { data: license } = await supabase
-    .from('fighter_licenses')
-    .select('status')
-    .eq('fighter_id', fighterProfile.id)
-    .maybeSingle();
-
-  if (!license) return '/license/onboarding';
-
-  switch (license.status) {
-    case 'ACTIVE': return '/license/dashboard';
-    case 'PENDING_REVIEW':
-    case 'APPLIED': return '/license/pending';
-    case 'SUSPENDED':
-    case 'REVOKED': return '/license/suspended';
-    default: return '/license/onboarding';
-  }
-}
-
-async function determineUserDestination(authUserId: string): Promise<string> {
-  try {
-    // Read role from Supabase metadata first, then localStorage fallback
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    const metadataRole = currentUser?.user_metadata?.onboarding_role as string | undefined;
-    const localRole = localStorage.getItem('fighter_id_selected_role');
-    const savedRole = metadataRole || localRole;
-    localStorage.removeItem('fighter_id_selected_role');
-    // Clean metadata after reading
-    if (metadataRole) {
-      supabase.auth.updateUser({ data: { onboarding_role: null } }).catch(() => {});
-    }
-
-    // 1. Get user roles from DB
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', authUserId);
-    const roleList = (roles || []).map(r => r.role);
-
-    // 2. If a module was selected, route to that module
-    if (savedRole) {
-      switch (savedRole) {
-        case 'admin':
-          if (roleList.includes('admin') || roleList.includes('super_admin')) {
-            return '/admin/dashboard';
-          }
-          return '/'; // No admin permission
-        case 'gym':
-          return resolveGymDestination(authUserId);
-        case 'judge':
-          return '/judge/onboarding';
-        case 'fighter':
-          return resolveFighterDestination(authUserId);
-      }
-    }
-
-    // 3. Fallback: no module selected — use role priority
-    if (roleList.includes('admin') || roleList.includes('super_admin')) {
-      return '/admin/dashboard';
-    }
-    if (roleList.includes('gym_owner') || roleList.includes('gym_coach')) {
-      return resolveGymDestination(authUserId);
-    }
-    if (roleList.includes('official_judge') || roleList.includes('official_referee')) {
-      return '/';
-    }
-
-    // 4. Default: fighter license flow
-    return resolveFighterDestination(authUserId);
-  } catch (error) {
-    console.error('[AuthCallback] Error in determineUserDestination:', error);
-    return '/license/onboarding';
-  }
 }

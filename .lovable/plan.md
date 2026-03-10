@@ -1,81 +1,86 @@
 
 
-## Plan: Rediseño del Flujo de Registro y Acceso a Módulos
+# Plan: Optimización Mobile del Panel de Administración
 
-### Problema actual
-La pantalla de Auth obliga al usuario a seleccionar un rol (Peleador/Gimnasio/Juez/Admin) **antes** de registrarse. Esto confunde porque:
-- Usuarios nuevos no saben qué elegir
-- El registro y el onboarding de módulos están mezclados
-- Después de confirmar email, la redirección depende del rol elegido en vez de llevar a un lugar universal
-- Admin aparece como opción de registro cuando solo debería ser asignado
+## Problema Principal
 
-### Nuevo flujo propuesto
+El módulo **Eventos de Pelea** (`EventosPelea.tsx`) usa una tabla HTML de 7 columnas (Nombre, Disciplina, Estado, Visibilidad, Fecha, Sede, Acciones) que desborda horizontalmente en móvil, creando la barra de scroll que reportas. La columna de "Acciones" sola tiene 4 botones + 1 Select, ocupando ~400px.
+
+Este mismo problema existe en **7 páginas admin más** que usan `<Table>`:
+
+| Página | Columnas | Severidad |
+|--------|----------|-----------|
+| **EventosPelea.tsx** | 7 cols + Acciones con 5 elementos | ALTA |
+| **Betting.tsx** | Tabla de mercados con múltiples cols | ALTA |
+| **Comunidad.tsx** | 2 tablas (testimonios + partners) | MEDIA |
+| **AliadosEstrategicos.tsx** | Tabla de aliados | MEDIA |
+| **OrganizationsManagement.tsx** | Tabla de organizaciones | MEDIA |
+| **RankingsManagement.tsx** | Ya tiene `overflow-x-auto` | BAJA (ya parcheado) |
+| **Configuracion.tsx** | Tabla de configuración | BAJA |
+| **EmailCampaignDetail.tsx** | Tabla de destinatarios | BAJA |
+
+## Solución
+
+### 1. `EventosPelea.tsx` - Reemplazar tabla por tarjetas en móvil (PRIORIDAD)
+
+Reemplazar la `<Table>` de eventos (líneas 1133-1281) por un layout de tarjetas (`Card`) que funcione en móvil:
 
 ```text
-┌─────────────────────────────────────────────┐
-│  REGISTRO (simplificado)                     │
-│  Email + Contraseña → Confirma email         │
-│  Sin selección de rol                        │
-└──────────────┬──────────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────────┐
-│  POST-LOGIN: Landing pública (/)             │
-│  Ve rankings, eventos, noticias, etc.        │
-│  Header muestra: avatar + menú de módulos    │
-└──────────────┬──────────────────────────────┘
-               │ Usuario decide crear perfil
-               ▼
-┌─────────────────────────────────────────────┐
-│  MENÚ DE MÓDULOS (desde Header o /profile/hub)│
-│  • Crear perfil Peleador → /license/onboarding│
-│  • Registrar Gimnasio → /gym/onboarding       │
-│  • Ser Juez/Oficial → /judge/onboarding       │
-│  • Panel Admin (solo si tiene rol admin)       │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────┐
+│ 🏆 Batalla de Gimnasios #2   │
+│ MMA · Borrador · Privado     │
+│ 📅 15/03/2026 · 📍 Arena     │
+│ ┌────┐┌────┐┌────┐┌────┐    │
+│ │Brand││Pelead││Peleas││ ⋮ │    │
+│ └────┘└────┘└────┘└────┘    │
+│ Estado: [Borrador ▾]         │
+└──────────────────────────────┘
 ```
 
-### Cambios específicos
+- Cada evento será un `Card` con la info apilada verticalmente
+- Botones de acción en una fila con `flex-wrap`
+- Select de estado en su propia fila
 
-**1. `src/pages/Auth.tsx` — Simplificar registro**
-- Eliminar paso `role-select` del registro
-- Flujo: Email → (existe? Login : Registro) → Confirma email
-- Eliminar la opción "Administrador" del registro
-- Mantener flujos de invitación (fighter invite, gym invite) como excepciones que pre-seleccionan rol automáticamente
-- Login directo sin selección de rol
+### 2. Páginas con tablas secundarias - Agregar `overflow-x-auto`
 
-**2. `src/pages/AuthCallback.tsx` — Redirección universal**
-- Después de confirmar email: redirigir siempre a `/` (Home)
-- Si el usuario ya tiene módulos activos y hace login normal: redirigir a `/` también
-- Excepciones: invitaciones de gimnasio siguen redirigiendo al gym dashboard
+Para las demás páginas que usan `<Table>`, envolver en `<div className="overflow-x-auto -mx-4 px-4">` para permitir scroll horizontal controlado sin romper el layout del contenedor padre:
 
-**3. `src/pages/Auth.tsx` — Post-login routing**
-- `routeAuthenticatedUser()`: siempre redirigir a `/` 
-- Excepciones: si viene de invitación de gym/fighter, redirigir al módulo correspondiente
+- `Betting.tsx`
+- `Comunidad.tsx` (2 tablas)
+- `AliadosEstrategicos.tsx`
+- `OrganizationsManagement.tsx`
+- `Configuracion.tsx`
+- `EmailCampaignDetail.tsx`
 
-**4. `src/components/Header.tsx` — Agregar acceso a módulos**
-- En el menú de usuario (dropdown del avatar), agregar sección "Mis Módulos":
-  - Si tiene perfil peleador activo → "Mi Fighter ID" → `/license/dashboard`
-  - Si es staff de gimnasio → "Mi Gimnasio" → `/gym/{id}/dashboard`
-  - Si es admin → "Panel Admin" → `/admin/dashboard`
-  - Siempre mostrar → "Gestionar Módulos" → `/profile/hub`
+### 3. Headers responsivos
 
-**5. `src/pages/profile/ProfileHub.tsx` — Mejorar como centro de módulos**
-- Mantener como está pero accesible desde el Header en vez de ser destino obligatorio post-login
-- Agregar botón "Volver al Inicio" prominente
+Varias páginas tienen headers con `flex justify-between` que se rompen en móvil cuando el título y el botón no caben en una línea:
 
-### Archivos a modificar
+- `EventosPelea.tsx` líneas 990-996: título + botón "Nuevo Evento"
+- `FightersProfiles.tsx` líneas 158-169: título + botón "Invitar Peleador"
+
+Cambiar a `flex flex-wrap gap-3` para que el botón baje en pantallas pequeñas.
+
+### 4. Dialogs de pelea - Grids de 3 y 2 columnas
+
+Los diálogos internos de `EventosPelea.tsx` usan:
+- `grid-cols-3` (línea 1472) para Número/Tipo/Rounds
+- `grid-cols-2` (líneas 1513, 1598, 1639) para Peleadores A/B e imágenes
+
+En móvil estos se comprimen. Cambiar a `grid-cols-1 md:grid-cols-3` y `grid-cols-1 md:grid-cols-2`.
+
+## Archivos a Modificar
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/pages/Auth.tsx` | Eliminar role-select, simplificar a email→password, post-login → `/` |
-| `src/pages/AuthCallback.tsx` | Redirección post-confirmación siempre a `/` (excepto invitaciones) |
-| `src/components/Header.tsx` | Agregar menú de módulos en dropdown del usuario |
-| `src/pages/profile/ProfileHub.tsx` | Agregar "Volver al Inicio", mejorar como destino secundario |
+| `src/pages/admin/EventosPelea.tsx` | Reemplazar tabla por cards, headers responsive, grids responsive en dialogs |
+| `src/pages/admin/Betting.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/Comunidad.tsx` | Wrap 2 tablas con `overflow-x-auto` |
+| `src/pages/admin/AliadosEstrategicos.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/OrganizationsManagement.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/Configuracion.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/EmailCampaignDetail.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/FightersProfiles.tsx` | Header responsive con `flex-wrap` |
 
-### Lo que NO cambia
-- Flujos de onboarding individuales (license, gym, judge) permanecen igual
-- Sistema de roles en DB permanece igual
-- Invitaciones por link siguen funcionando con su flujo especial
-- Asignación de admin sigue siendo solo desde el panel UserRoles
+**8 archivos. Sin migraciones SQL.**
 

@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFighterProfiles } from "@/hooks/useFighterProfiles";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useMyGymStaff } from "@/hooks/gyms/useMyGymStaff";
+import { useUserRole } from "@/hooks/useUserRole";
 import { ProfileIncompleteNotification } from "@/components/ProfileIncompleteNotification";
 import {
   NavigationMenu,
@@ -18,7 +19,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/optimized-dropdown";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Menu, Trophy, Calendar, Home, Users, DollarSign, Shield, LogOut, User, CreditCard, Compass, Bell, Dumbbell, Radio } from "lucide-react";
+import { Menu, Trophy, Calendar, Home, Users, Shield, LogOut, User, Compass, Bell, Dumbbell, Radio, Building2, LayoutGrid } from "lucide-react";
 import { useSystemAssets } from "@/hooks/useSystemAssets";
 
 const Header = () => {
@@ -29,6 +30,7 @@ const Header = () => {
   const { unreadCount } = useNotifications();
   const { logoUrl } = useSystemAssets();
   const { data: myGymStaff } = useMyGymStaff();
+  const { isAdmin, loading: rolesLoading } = useUserRole();
 
   const handleLogout = async () => {
     await signOut();
@@ -85,64 +87,6 @@ const Header = () => {
         
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-1">
-          {user && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  className="mr-2 gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 font-semibold shadow-lg"
-                >
-                  <Shield className="h-4 w-4" />
-                  Fighter ID
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Sistema de Licencias</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {hasFighterProfile ? (
-                  <>
-                    <DropdownMenuItem asChild>
-                      <Link to="/license/dashboard" className="cursor-pointer">
-                        <Shield className="mr-2 h-4 w-4" />
-                        Ver mi Fighter ID
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        Mi Perfil
-                      </Link>
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        const section = document.getElementById('solicitar-licencia');
-                        if (section) {
-                          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        } else {
-                          window.location.href = '/#solicitar-licencia';
-                        }
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      Obtén tu licencia
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        Mi Perfil
-                      </Link>
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-          
           <Button variant="ghost" size="sm" asChild>
             <Link to="/social/feed">Social</Link>
           </Button>
@@ -213,34 +157,14 @@ const Header = () => {
                 </div>
                 
                 {/* Navigation Items */}
-                <div className="flex-1 py-2">
-                  <div className="mb-4 px-3 sm:px-4">
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                      Principal
-                    </h3>
-                    {user && (
-                      <Button 
-                        variant="default" 
-                        asChild 
-                        className="w-full justify-start gap-3 bg-gradient-to-r from-primary to-accent hover:opacity-90 font-semibold shadow-lg text-base h-12"
-                        size="lg"
-                      >
-                        <Link to={hasFighterProfile ? "/license/dashboard" : "/license/auth?mode=signup"} onClick={() => setMobileMenuOpen(false)}>
-                          <Shield className="h-6 w-6" />
-                          {hasFighterProfile ? "Mi Fighter ID" : "Obtén tu Fighter ID"}
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="border-t border-border pt-4 px-3 sm:px-4">
+                <div className="flex-1 py-2 overflow-y-auto">
+                  <div className="border-b border-border pb-4 px-3 sm:px-4">
                     <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                       Navegación
                     </h3>
                     <nav className="space-y-1">
                       {navigationItems.map((item) => {
                         const IconComponent = item.icon;
-                        
                         return (
                           <Link
                             key={item.name}
@@ -256,33 +180,83 @@ const Header = () => {
                     </nav>
                   </div>
 
-                  {/* Mi Gimnasio - Solo visible si el usuario es staff activo */}
-                  {myGymStaff && (
-                    <div className="border-t border-border pt-4 px-3 sm:px-4">
+                  {/* Mis Módulos - Mobile */}
+                  {user && (
+                    <div className="border-b border-border py-4 px-3 sm:px-4">
                       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        Mi Gimnasio
+                        Mis Módulos
                       </h3>
-                      <Link
-                        to={`/gym/${myGymStaff.gymId}/dashboard`}
-                        className="flex items-center gap-3 rounded-lg px-3 py-3 text-foreground hover:bg-muted hover:text-primary transition-colors min-h-[48px] touch-manipulation"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Dumbbell className="h-5 w-5 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <span className="font-medium text-base truncate block">{myGymStaff.gymName}</span>
-                          <span className="text-xs text-muted-foreground">Dashboard</span>
-                        </div>
-                      </Link>
+                      <nav className="space-y-1">
+                        {hasFighterProfile ? (
+                          <Link
+                            to="/license/dashboard"
+                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-foreground hover:bg-muted hover:text-primary transition-colors min-h-[48px] touch-manipulation"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Shield className="h-5 w-5 flex-shrink-0" />
+                            <span className="font-medium text-base">Mi Fighter ID</span>
+                          </Link>
+                        ) : (
+                          <Link
+                            to="/license/onboarding"
+                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-foreground hover:bg-muted hover:text-primary transition-colors min-h-[48px] touch-manipulation"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Shield className="h-5 w-5 flex-shrink-0" />
+                            <span className="font-medium text-base">Obtén tu Fighter ID</span>
+                          </Link>
+                        )}
+
+                        {myGymStaff ? (
+                          <Link
+                            to={`/gym/${myGymStaff.gymId}/dashboard`}
+                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-foreground hover:bg-muted hover:text-primary transition-colors min-h-[48px] touch-manipulation"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Building2 className="h-5 w-5 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <span className="font-medium text-base truncate block">{myGymStaff.gymName}</span>
+                              <span className="text-xs text-muted-foreground">Dashboard</span>
+                            </div>
+                          </Link>
+                        ) : (
+                          <Link
+                            to="/gym/onboarding"
+                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-foreground hover:bg-muted hover:text-primary transition-colors min-h-[48px] touch-manipulation"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Building2 className="h-5 w-5 flex-shrink-0" />
+                            <span className="font-medium text-base">Registrar Gimnasio</span>
+                          </Link>
+                        )}
+
+                        {isAdmin && (
+                          <Link
+                            to="/admin/dashboard"
+                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-foreground hover:bg-muted hover:text-primary transition-colors min-h-[48px] touch-manipulation"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Shield className="h-5 w-5 flex-shrink-0 text-amber-500" />
+                            <span className="font-medium text-base">Panel Admin</span>
+                          </Link>
+                        )}
+
+                        <Link
+                          to="/profile/hub"
+                          className="flex items-center gap-3 rounded-lg px-3 py-3 text-muted-foreground hover:bg-muted hover:text-primary transition-colors min-h-[48px] touch-manipulation"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <LayoutGrid className="h-5 w-5 flex-shrink-0" />
+                          <span className="font-medium text-base">Gestionar Módulos</span>
+                        </Link>
+                      </nav>
                     </div>
                   )}
                 </div>
                 
-                {/* Call to Actions */}
+                {/* User Actions */}
                 {user && (
                   <div className="border-t border-border pt-4 px-3 sm:px-4 pb-4">
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                      Mi Cuenta
-                    </h3>
                     <div className="space-y-1 mb-4">
                       <div className="text-sm font-medium text-foreground px-3 py-2">{user.email}</div>
                       <Link 
@@ -292,14 +266,6 @@ const Header = () => {
                       >
                         <User className="h-4 w-4" />
                         <span>Mi Perfil</span>
-                      </Link>
-                      <Link 
-                        to={hasFighterProfile ? "/license/dashboard" : "/license/auth?mode=signup"}
-                        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/50 transition-colors min-h-[44px] touch-manipulation"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Shield className="h-4 w-4" />
-                        <span>{hasFighterProfile ? "Fighter ID" : "Obtén tu Fighter ID"}</span>
                       </Link>
                     </div>
                     <Button 
@@ -376,29 +342,51 @@ const Header = () => {
                       Mi Perfil
                     </Link>
                   </DropdownMenuItem>
+
+                  {/* Mis Módulos Section */}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Mis Módulos</DropdownMenuLabel>
                   <DropdownMenuItem asChild>
-                    <Link to={hasFighterProfile ? "/license/dashboard" : "/license/auth?mode=signup"} className="cursor-pointer min-h-[44px] touch-manipulation">
+                    <Link to={hasFighterProfile ? "/license/dashboard" : "/license/onboarding"} className="cursor-pointer min-h-[44px] touch-manipulation">
                       <Shield className="mr-2 h-4 w-4" />
-                      {hasFighterProfile ? "Fighter ID" : "Obtén tu Fighter ID"}
+                      {hasFighterProfile ? "Mi Fighter ID" : "Obtén tu Fighter ID"}
                     </Link>
                   </DropdownMenuItem>
-                  {myGymStaff && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel>Mi Gimnasio</DropdownMenuLabel>
-                      <DropdownMenuItem asChild>
-                        <Link to={`/gym/${myGymStaff.gymId}/dashboard`} className="cursor-pointer min-h-[44px] touch-manipulation">
-                          <Dumbbell className="mr-2 h-4 w-4" />
-                          {myGymStaff.gymName}
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
+                  {myGymStaff ? (
+                    <DropdownMenuItem asChild>
+                      <Link to={`/gym/${myGymStaff.gymId}/dashboard`} className="cursor-pointer min-h-[44px] touch-manipulation">
+                        <Building2 className="mr-2 h-4 w-4" />
+                        {myGymStaff.gymName}
+                      </Link>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem asChild>
+                      <Link to="/gym/onboarding" className="cursor-pointer min-h-[44px] touch-manipulation">
+                        <Building2 className="mr-2 h-4 w-4" />
+                        Registrar Gimnasio
+                      </Link>
+                    </DropdownMenuItem>
                   )}
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/dashboard" className="cursor-pointer min-h-[44px] touch-manipulation">
+                        <Shield className="mr-2 h-4 w-4 text-amber-500" />
+                        Panel Admin
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile/hub" className="cursor-pointer min-h-[44px] touch-manipulation">
+                      <LayoutGrid className="mr-2 h-4 w-4" />
+                      Gestionar Módulos
+                    </Link>
+                  </DropdownMenuItem>
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/" className="cursor-pointer min-h-[44px] touch-manipulation">
                       <Home className="mr-2 h-4 w-4" />
-                      Feed
+                      Inicio
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -411,12 +399,6 @@ const Header = () => {
                     <Link to="/social/discover" className="cursor-pointer min-h-[44px] touch-manipulation">
                       <Compass className="mr-2 h-4 w-4" />
                       Descubrir
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/social/notifications" className="cursor-pointer min-h-[44px] touch-manipulation">
-                      <Bell className="mr-2 h-4 w-4" />
-                      Notificaciones
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

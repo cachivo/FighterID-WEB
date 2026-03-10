@@ -5,21 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, Mail, HelpCircle, ArrowLeft, Shield, Dumbbell, Scale, Building2, CheckCircle, Eye, EyeOff } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Mail, HelpCircle, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import fighterIdLogo from '@/assets/fighter-id-logo-auth.png';
 import { useFighterInvitations } from '@/hooks/useFighterInvitations';
 import { supabase } from '@/integrations/supabase/client';
 
-type AuthStep = 'role-select' | 'email' | 'login' | 'register';
-type UserType = 'fighter' | 'gym' | 'judge' | 'admin';
-
-const ROLE_OPTIONS: { type: UserType; label: string; description: string; icon: typeof Dumbbell; adminOnly?: boolean }[] = [
-  { type: 'fighter', label: 'Peleador', description: 'Obtén tu Fighter ID profesional', icon: Dumbbell },
-  { type: 'gym', label: 'Gimnasio', description: 'Registra y gestiona tu gimnasio', icon: Building2 },
-  { type: 'judge', label: 'Juez / Oficial', description: 'Accede como oficial certificado', icon: Scale },
-  { type: 'admin', label: 'Administrador', description: 'Solo acceso autorizado', icon: Shield, adminOnly: true },
-];
+type AuthStep = 'email' | 'login' | 'register';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -29,7 +20,6 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('invite');
   const inviteGymToken = searchParams.get('invite_gym');
-  const preselectedRole = searchParams.get('role') as UserType | null;
   const { validateToken } = useFighterInvitations();
   const [invitation, setInvitation] = useState<any>(null);
   const [validatingToken, setValidatingToken] = useState(false);
@@ -39,31 +29,18 @@ export default function Auth() {
   const [isResending, setIsResending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Determine initial step
-  const getInitialStep = (): AuthStep => {
-    if (preselectedRole) return 'email';
-    return 'role-select';
-  };
-
-  const [step, setStep] = useState<AuthStep>(getInitialStep);
-  const [selectedRole, setSelectedRole] = useState<UserType | null>(preselectedRole);
+  const [step, setStep] = useState<AuthStep>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Save selected role to Supabase metadata + localStorage fallback
+  // Save gym invite token for post-auth processing
   useEffect(() => {
-    if (selectedRole) {
-      // localStorage as immediate same-session fallback
-      localStorage.setItem('fighter_id_selected_role', selectedRole);
-      // Persist to Supabase metadata (survives cross-device)
-      supabase.auth.updateUser({ data: { onboarding_role: selectedRole } }).catch(() => {});
-    }
     if (inviteGymToken) {
       localStorage.setItem('fighter_id_invite_gym', inviteGymToken);
     }
-  }, [selectedRole, inviteGymToken]);
+  }, [inviteGymToken]);
 
-  // Validate invitation token
+  // Validate fighter invitation token
   useEffect(() => {
     if (!inviteToken) return;
     const checkInvitation = async () => {
@@ -72,8 +49,6 @@ export default function Auth() {
       if (invitationData) {
         setInvitation(invitationData);
         setEmail(invitationData.email);
-        setSelectedRole('fighter');
-        setStep('email');
         toast.success(`Bienvenido ${invitationData.first_name}! Completa tu registro.`);
       } else {
         toast.error('El link de invitación ha expirado o no es válido');
@@ -115,115 +90,11 @@ export default function Auth() {
     handleHash();
   }, []);
 
-  // Smart routing for authenticated users
+  // Post-login: always redirect to home
   useEffect(() => {
     if (!user || authLoading) return;
-    routeAuthenticatedUser();
+    navigate('/', { replace: true });
   }, [user, authLoading]);
-
-  // Helper: route to gym dashboard
-  const routeToGym = async () => {
-    const { data: staffRecord } = await supabase
-      .from('gym_staff')
-      .select('gym_id')
-      .eq('user_id', user!.id)
-      .eq('active', true)
-      .maybeSingle();
-    navigate(staffRecord ? `/gym/${staffRecord.gym_id}/dashboard` : '/gym/pending-invitation', { replace: true });
-  };
-
-  // Helper: route to fighter license flow
-  const routeToFighter = async () => {
-    const { data: appUser } = await supabase
-      .from('app_user')
-      .select('id')
-      .eq('auth_user_id', user!.id)
-      .maybeSingle();
-
-    if (!appUser) { navigate('/license/onboarding', { replace: true }); return; }
-
-    const { data: fighterProfile } = await supabase
-      .from('fighter_profiles')
-      .select('id')
-      .eq('user_id', appUser.id)
-      .maybeSingle();
-
-    if (!fighterProfile) { navigate('/license/onboarding', { replace: true }); return; }
-
-    const { data: license } = await supabase
-      .from('fighter_licenses')
-      .select('status')
-      .eq('fighter_id', fighterProfile.id)
-      .maybeSingle();
-
-    if (!license) { navigate('/license/onboarding', { replace: true }); return; }
-
-    switch (license.status) {
-      case 'ACTIVE': navigate('/license/dashboard', { replace: true }); break;
-      case 'PENDING_REVIEW':
-      case 'APPLIED': navigate('/license/pending', { replace: true }); break;
-      case 'SUSPENDED':
-      case 'REVOKED': navigate('/license/suspended', { replace: true }); break;
-      default: navigate('/license/onboarding', { replace: true });
-    }
-  };
-
-  const routeAuthenticatedUser = async () => {
-    try {
-      const savedRole = localStorage.getItem('fighter_id_selected_role');
-      localStorage.removeItem('fighter_id_selected_role');
-
-      // 1. Get user roles from DB
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user!.id);
-      const roleList = (roles || []).map(r => r.role);
-
-      // 2. If a module was selected, route to that module
-      if (savedRole) {
-        switch (savedRole) {
-          case 'admin':
-            if (roleList.includes('admin') || roleList.includes('super_admin')) {
-              navigate('/admin/dashboard', { replace: true });
-            } else {
-              toast.error('No tienes permisos de administrador.');
-              navigate('/', { replace: true });
-            }
-            return;
-          case 'gym':
-            await routeToGym();
-            return;
-          case 'judge':
-            navigate('/judge/onboarding', { replace: true });
-            return;
-          case 'fighter':
-            await routeToFighter();
-            return;
-        }
-      }
-
-      // 3. Fallback: no module selected (direct login) — use role priority
-      if (roleList.includes('admin') || roleList.includes('super_admin')) {
-        navigate('/admin/dashboard', { replace: true });
-        return;
-      }
-      if (roleList.includes('gym_owner') || roleList.includes('gym_coach')) {
-        await routeToGym();
-        return;
-      }
-      if (roleList.includes('official_judge') || roleList.includes('official_referee')) {
-        navigate('/', { replace: true });
-        return;
-      }
-
-      // 4. Default: fighter license flow
-      await routeToFighter();
-    } catch (error) {
-      console.error('[Auth] Error routing user:', error);
-      navigate('/', { replace: true });
-    }
-  };
 
   const checkEmailExists = async (emailToCheck: string): Promise<boolean> => {
     try {
@@ -235,40 +106,17 @@ export default function Auth() {
     } catch { return false; }
   };
 
-  const handleRoleSelect = (role: UserType) => {
-    setSelectedRole(role);
-    setStep('email');
-  };
-
-  const handleLoginDirect = () => {
-    setSelectedRole(null);
-    setStep('email');
-  };
-
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setCheckingEmail(true);
     const exists = await checkEmailExists(email);
     setCheckingEmail(false);
-
-    if (selectedRole === 'admin' && !exists) {
-      toast.error('Las cuentas de administrador no se pueden crear aquí. Contacta al equipo.');
-      return;
-    }
-
     setStep(exists ? 'login' : 'register');
   };
 
   const handleBackToEmail = () => {
     setStep('email');
-    setPassword('');
-  };
-
-  const handleBackToRoles = () => {
-    setStep('role-select');
-    setSelectedRole(null);
-    setEmail('');
     setPassword('');
   };
 
@@ -347,8 +195,6 @@ export default function Auth() {
     );
   }
 
-  const roleLabel = selectedRole ? ROLE_OPTIONS.find(r => r.type === selectedRole)?.label : '';
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4 relative overflow-hidden">
       {/* Background */}
@@ -360,54 +206,18 @@ export default function Auth() {
         <CardHeader className="text-center pb-2">
           <img src={fighterIdLogo} alt="Fighter ID" className="w-24 mx-auto mb-2" />
           <CardTitle className="text-xl font-bold text-white">
-            {step === 'role-select' && 'Selecciona tu tipo de cuenta'}
-            {step === 'email' && (selectedRole ? `Acceso — ${roleLabel}` : 'Iniciar Sesión')}
+            {step === 'email' && 'Bienvenido a Fighter ID'}
             {step === 'login' && 'Ingresa tu contraseña'}
             {step === 'register' && (registrationSuccess ? '¡Revisa tu correo!' : 'Crea tu cuenta')}
           </CardTitle>
           <CardDescription className="text-white/60">
-            {step === 'role-select' && '¿Cómo usarás Fighter ID?'}
-            {step === 'email' && 'Ingresa tu email para continuar'}
+            {step === 'email' && 'Ingresa tu email para iniciar sesión o crear una cuenta'}
             {step === 'login' && email}
-            {step === 'register' && !registrationSuccess && `Registro como ${roleLabel || 'usuario'}`}
+            {step === 'register' && !registrationSuccess && 'Elige una contraseña para tu cuenta'}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* STEP 0: Role Selector */}
-          {step === 'role-select' && (
-            <div className="space-y-4 animate-fade-in">
-              <div className="grid grid-cols-2 gap-3">
-                {ROLE_OPTIONS.map(({ type, label, description, icon: Icon, adminOnly }) => (
-                  <button
-                    key={type}
-                    onClick={() => handleRoleSelect(type)}
-                    className="group relative flex flex-col items-center gap-2 p-4 rounded-xl border border-purple-500/20 bg-slate-900/50 hover:bg-purple-600/20 hover:border-purple-500/50 transition-all duration-300 text-center"
-                  >
-                    <div className="rounded-full p-3 bg-purple-600/20 group-hover:bg-purple-600/30 transition-colors">
-                      <Icon className="w-6 h-6 text-purple-400 group-hover:text-purple-300" />
-                    </div>
-                    <span className="text-sm font-semibold text-white">{label}</span>
-                    <span className="text-xs text-white/50 leading-tight">{description}</span>
-                    {adminOnly && (
-                      <span className="absolute top-2 right-2 text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">Solo login</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <div className="pt-2 border-t border-white/10">
-                <Button
-                  variant="ghost"
-                  onClick={handleLoginDirect}
-                  className="w-full text-white/60 hover:text-white"
-                >
-                  Ya tengo cuenta — Iniciar sesión
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* STEP 1: Email */}
           {step === 'email' && (
             <form onSubmit={handleEmailSubmit} className="space-y-4 animate-fade-in">
@@ -435,10 +245,6 @@ export default function Auth() {
                   <HelpCircle className="h-3.5 w-3.5" />
                   ¿Olvidaste tu contraseña?
                 </Link>
-                <Button type="button" variant="ghost" onClick={handleBackToRoles} className="text-sm text-white/50 hover:text-white">
-                  <ArrowLeft className="w-4 h-4 mr-1.5" />
-                  Volver
-                </Button>
               </div>
             </form>
           )}
@@ -540,7 +346,7 @@ export default function Auth() {
 
                   <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700" disabled={loading || validatingToken}>
                     {(loading || validatingToken) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {invitation ? 'Completar Registro' : 'Registrarse'}
+                    {invitation ? 'Completar Registro' : 'Crear Cuenta'}
                   </Button>
 
                   <Button type="button" variant="ghost" onClick={handleBackToEmail} className="w-full text-sm text-white/50 hover:text-white">

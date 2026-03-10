@@ -158,6 +158,10 @@ export default function ProfileHub() {
           <p className="text-muted-foreground mt-1">Selecciona o gestiona tus módulos activos</p>
         </div>
 
+        <Button variant="outline" className="w-full" onClick={() => navigate('/')}>
+          ← Volver al Inicio
+        </Button>
+
         <div className="space-y-3">
           {modules.map((mod) => (
             <Card
