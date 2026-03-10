@@ -1,9 +1,10 @@
-// Fighter ID Service Worker
-const CACHE_VERSION = 'fighter-id-v9';
+// Fighter ID Service Worker v10
+const CACHE_VERSION = 'fighter-id-v10';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
+const IMAGE_CACHE = `${CACHE_VERSION}-images`;
+const MAX_IMAGE_CACHE = 50;
 
-// Assets to cache on install
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -12,110 +13,133 @@ const STATIC_ASSETS = [
   '/icons/icon-512x512.png',
 ];
 
-// Install event - cache static assets
+// Install
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      console.log('[SW] Caching static assets');
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate — clean old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker...');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name.startsWith('fighter-id-') && name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
-      );
-    })
+    caches.keys().then((names) =>
+      Promise.all(
+        names
+          .filter((n) => n.startsWith('fighter-id-') && n !== STATIC_CACHE && n !== DYNAMIC_CACHE && n !== IMAGE_CACHE)
+          .map((n) => caches.delete(n))
+      )
+    )
   );
   self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
+  if (request.method !== 'GET') return;
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/~oauth') || url.pathname.startsWith('/auth/callback') || url.pathname.startsWith('/license/callback')) return;
+
+  // Images — cache-first with FIFO eviction
+  if (request.destination === 'image') {
+    event.respondWith(imageStrategy(request));
     return;
   }
 
-  // Skip cross-origin requests (like Supabase API)
-  if (url.origin !== self.location.origin) {
+  // Static assets (JS, CSS, fonts) — cache-first
+  if (request.destination === 'style' || request.destination === 'script' || request.destination === 'font') {
+    event.respondWith(cacheFirst(request, STATIC_CACHE));
     return;
   }
 
-  // Never cache auth redirects (OAuth, callbacks)
-  if (url.pathname.startsWith('/~oauth') || url.pathname.startsWith('/auth/callback') || url.pathname.startsWith('/license/callback')) {
+  // HTML pages — network-first
+  if (request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(networkFirst(request, DYNAMIC_CACHE));
     return;
   }
 
-  // Network-first strategy for API calls and HTML pages
-  if (url.pathname.startsWith('/api') || request.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Clone and cache the response
-          const responseClone = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(request, responseClone);
-          });
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cache if network fails
-          return caches.match(request).then((cached) => {
-            return cached || new Response('Offline - No cached version available', {
-              status: 503,
-              statusText: 'Service Unavailable',
-            });
-          });
-        })
-    );
+  // API-like requests — stale-while-revalidate
+  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/rest/')) {
+    event.respondWith(staleWhileRevalidate(request, DYNAMIC_CACHE));
     return;
   }
 
-  // Cache-first strategy for static assets
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) {
-        console.log('[SW] Serving from cache:', request.url);
-        return cached;
-      }
-
-      return fetch(request)
-        .then((response) => {
-          // Cache the new resource
-          const responseClone = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(request, responseClone);
-          });
-          return response;
-        })
-        .catch((error) => {
-          console.error('[SW] Fetch failed:', error);
-          return new Response('Network error', {
-            status: 408,
-            statusText: 'Request Timeout',
-          });
-        });
-    })
-  );
+  // Everything else — cache-first
+  event.respondWith(cacheFirst(request, DYNAMIC_CACHE));
 });
 
-// Listen for messages from the client
+async function cacheFirst(request, cacheName) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+async function networkFirst(request, cacheName) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+  }
+}
+
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+
+  const fetchPromise = fetch(request)
+    .then((response) => {
+      if (response.ok) cache.put(request, response.clone());
+      return response;
+    })
+    .catch(() => cached);
+
+  return cached || fetchPromise;
+}
+
+async function imageStrategy(request) {
+  const cache = await caches.open(IMAGE_CACHE);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      // FIFO eviction
+      const keys = await cache.keys();
+      if (keys.length >= MAX_IMAGE_CACHE) {
+        await cache.delete(keys[0]);
+      }
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    // SVG placeholder fallback
+    return new Response(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="#1a1a2e" width="100" height="100"/><text x="50" y="54" text-anchor="middle" fill="#666" font-size="10">Sin imagen</text></svg>',
+      { headers: { 'Content-Type': 'image/svg+xml' } }
+    );
+  }
+}
+
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();

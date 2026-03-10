@@ -1,69 +1,86 @@
 
 
-## Plan: Phase 1 — Scalability & Low-End Device Optimizations
+# Plan: Optimización Mobile del Panel de Administración
 
-This is a large audit. I'll focus on **practical, immediate wins** that can be implemented now without restructuring the entire codebase. Later phases can tackle micro-frontends, feature flags DB table, and module federation.
+## Problema Principal
 
-### Scope: What we implement NOW
+El módulo **Eventos de Pelea** (`EventosPelea.tsx`) usa una tabla HTML de 7 columnas (Nombre, Disciplina, Estado, Visibilidad, Fecha, Sede, Acciones) que desborda horizontalmente en móvil, creando la barra de scroll que reportas. La columna de "Acciones" sola tiene 4 botones + 1 Select, ocupando ~400px.
 
-**A. Device Capability Detection** — New `src/lib/deviceCapability.ts`
-- Detect memory, CPU cores, connection type, RTT
-- Compute `isLowEnd` score
-- React hook `useDeviceCapability()` with reactive connection change listener
+Este mismo problema existe en **7 páginas admin más** que usan `<Table>`:
 
-**B. Adaptive UI Hook** — New `src/hooks/useReducedMotion.ts`
-- Combine `prefers-reduced-motion` + device capability
-- Auto-disable animations on low-end devices
-- Used in Auth.tsx background animations and any pulse/glow effects
+| Página | Columnas | Severidad |
+|--------|----------|-----------|
+| **EventosPelea.tsx** | 7 cols + Acciones con 5 elementos | ALTA |
+| **Betting.tsx** | Tabla de mercados con múltiples cols | ALTA |
+| **Comunidad.tsx** | 2 tablas (testimonios + partners) | MEDIA |
+| **AliadosEstrategicos.tsx** | Tabla de aliados | MEDIA |
+| **OrganizationsManagement.tsx** | Tabla de organizaciones | MEDIA |
+| **RankingsManagement.tsx** | Ya tiene `overflow-x-auto` | BAJA (ya parcheado) |
+| **Configuracion.tsx** | Tabla de configuración | BAJA |
+| **EmailCampaignDetail.tsx** | Tabla de destinatarios | BAJA |
 
-**C. Aggressive Code Splitting in App.tsx**
-- Move remaining eager imports to `lazy()`: `Index`, `Auth`, `AuthCallback`, `SocialFeed`, `Events`, `EventDetail`, `Fighters`, `FighterProfile`, `Contact`, `Gimnasios`, `GimnasioDetalle`, `Entrenadores`, `EntrenadorDetalle`, and all admin pages currently imported eagerly (Dashboard, EventosPelea, LiveStreaming, etc.)
-- Keep only providers, layout shells, and route config as eager
+## Solución
 
-**D. LazyImage Component** — New `src/components/ui/lazy-image.tsx`
-- Intersection Observer-based image loading
-- Placeholder/skeleton while loading
-- `loading="lazy"` + `decoding="async"` attributes
-- Replace key image usages in Header logo, fighter cards
+### 1. `EventosPelea.tsx` - Reemplazar tabla por tarjetas en móvil (PRIORIDAD)
 
-**E. Enhanced Service Worker** — Update `public/sw.js`
-- Add separate `IMAGE_CACHE` with 50-item FIFO eviction
-- Stale-while-revalidate for API-like requests
-- SVG placeholder fallback for failed images
-- Cache-first for static assets (CSS, JS, fonts) by `request.destination`
+Reemplazar la `<Table>` de eventos (líneas 1133-1281) por un layout de tarjetas (`Card`) que funcione en móvil:
 
-**F. Performance Meta Tags** — Update `index.html`
-- Add `dns-prefetch` and `preconnect` for Supabase domain
-- Add `meta` viewport already exists, verify `font-display: swap` on Google Fonts import
+```text
+┌──────────────────────────────┐
+│ 🏆 Batalla de Gimnasios #2   │
+│ MMA · Borrador · Privado     │
+│ 📅 15/03/2026 · 📍 Arena     │
+│ ┌────┐┌────┐┌────┐┌────┐    │
+│ │Brand││Pelead││Peleas││ ⋮ │    │
+│ └────┘└────┘└────┘└────┘    │
+│ Estado: [Borrador ▾]         │
+└──────────────────────────────┘
+```
 
-**G. Virtual Scrolling Utility** — Skip for now (requires `@tanstack/react-virtual` dependency + refactoring list components). Recommend for Phase 2.
+- Cada evento será un `Card` con la info apilada verticalmente
+- Botones de acción en una fila con `flex-wrap`
+- Select de estado en su propia fila
 
-### Files to create/modify
+### 2. Páginas con tablas secundarias - Agregar `overflow-x-auto`
 
-| File | Action |
-|------|--------|
-| `src/lib/deviceCapability.ts` | New — capability detection + hook |
-| `src/hooks/useReducedMotion.ts` | New — motion preference + low-end detection |
-| `src/components/ui/lazy-image.tsx` | New — IO-based lazy image |
-| `src/App.tsx` | Convert ~20 eager imports to `lazy()` |
-| `public/sw.js` | Add image cache, stale-while-revalidate, destination-based strategies |
-| `index.html` | Add preconnect/dns-prefetch hints |
-| `src/index.css` | Google Fonts URL: add `&display=swap` (already has it — verify) |
+Para las demás páginas que usan `<Table>`, envolver en `<div className="overflow-x-auto -mx-4 px-4">` para permitir scroll horizontal controlado sin romper el layout del contenedor padre:
 
-### What is NOT in this phase
-- Feature flags system + DB table — separate effort, needs migration + admin UI
-- Module federation / micro-frontends — architectural change for 15+ dev teams
-- Domain-driven folder restructure (`src/modules/`) — refactor effort, no user-facing benefit now
-- XState auth machine — over-engineering for current team size
-- Virtual scrolling — needs new dependency
-- Offline form queue with IndexedDB — complex, Phase 3
-- `performance_logs` table — needs DB migration, Phase 2
-- Babel plugins for tree shaking — Vite already handles this via ESM
+- `Betting.tsx`
+- `Comunidad.tsx` (2 tablas)
+- `AliadosEstrategicos.tsx`
+- `OrganizationsManagement.tsx`
+- `Configuracion.tsx`
+- `EmailCampaignDetail.tsx`
 
-### Impact on old phones
-- Lazy loading cuts initial bundle by ~40-60%
-- Device detection disables animations automatically on ≤2GB RAM / 2G connections
-- Image lazy loading reduces initial data transfer significantly
-- Service worker strategies provide instant repeat visits and offline image fallbacks
-- Preconnect hints save 100-300ms on first Supabase request
+### 3. Headers responsivos
+
+Varias páginas tienen headers con `flex justify-between` que se rompen en móvil cuando el título y el botón no caben en una línea:
+
+- `EventosPelea.tsx` líneas 990-996: título + botón "Nuevo Evento"
+- `FightersProfiles.tsx` líneas 158-169: título + botón "Invitar Peleador"
+
+Cambiar a `flex flex-wrap gap-3` para que el botón baje en pantallas pequeñas.
+
+### 4. Dialogs de pelea - Grids de 3 y 2 columnas
+
+Los diálogos internos de `EventosPelea.tsx` usan:
+- `grid-cols-3` (línea 1472) para Número/Tipo/Rounds
+- `grid-cols-2` (líneas 1513, 1598, 1639) para Peleadores A/B e imágenes
+
+En móvil estos se comprimen. Cambiar a `grid-cols-1 md:grid-cols-3` y `grid-cols-1 md:grid-cols-2`.
+
+## Archivos a Modificar
+
+| Archivo | Cambio |
+|---------|--------|
+| `src/pages/admin/EventosPelea.tsx` | Reemplazar tabla por cards, headers responsive, grids responsive en dialogs |
+| `src/pages/admin/Betting.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/Comunidad.tsx` | Wrap 2 tablas con `overflow-x-auto` |
+| `src/pages/admin/AliadosEstrategicos.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/OrganizationsManagement.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/Configuracion.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/EmailCampaignDetail.tsx` | Wrap tabla con `overflow-x-auto` |
+| `src/pages/admin/FightersProfiles.tsx` | Header responsive con `flex-wrap` |
+
+**8 archivos. Sin migraciones SQL.**
 

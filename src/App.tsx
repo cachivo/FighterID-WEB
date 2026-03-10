@@ -11,114 +11,120 @@ import LicenseProtectedRoute from '@/components/LicenseProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
 import LicenseLayout from '@/components/LicenseLayout';
 import AdminCertLayout from '@/components/AdminCertLayout';
-
-import { JudgeProtectedRoute } from '@/components/JudgeProtectedRoute';
-import { FighterLicense } from './pages/FighterLicense';
-import UserProfile from './pages/UserProfile';
-import FighterProfile from './pages/FighterProfile';
-import ProfileSetup from './pages/profile/ProfileSetup';
-import VerifyLicense from './pages/VerifyLicense';
-import ValidacionLicencias from './pages/admin/ValidacionLicencias';
-import AdminFightersProfiles from './pages/admin/FightersProfiles';
-import FightersProfilesInvite from './pages/admin/FightersProfilesInvite';
-import FightersProfilesCreate from './pages/admin/FightersProfilesCreate';
-import JudgesManagement from './pages/admin/JudgesManagement';
-import LiveEventsControl from './pages/admin/LiveEventsControl';
-// ProfileChangeRequests eliminado - consolidado en PendingChangesHub
-import PendingChangesHub from './pages/admin/PendingChangesHub';
-import ProfileChangeRequest from './pages/ProfileChangeRequest';
-import AIStrikeMonitor from './pages/admin/AIStrikeMonitor';
 import SuperAdminRoute from './components/SuperAdminRoute';
-import AIStrikeTestPanel from './pages/admin/AIStrikeTestPanel';
-import AIStrikeOverlay from './pages/AIStrikeOverlay';
 import { lazy, Suspense, useEffect } from 'react';
 import React from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { StationPinLogin } from '@/components/station/StationPinLogin';
-import StationWaiting from '@/pages/station/StationWaiting';
-import Station1Scoring from '@/pages/station/Station1Scoring';
-import Station2Scoring from '@/pages/station/Station2Scoring';
-import Station3RoundControl from '@/pages/station/Station3RoundControl';
 
-// Lazy loaded components
-const FightResults = lazy(() => import('./pages/admin/FightResults'));
+// === ALL pages lazy-loaded for optimal code splitting ===
+
+// Auth & Profile
+const Auth = lazy(() => import("./pages/Auth"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
+const ProfileHub = lazy(() => import('./pages/profile/ProfileHub'));
+const ProfileSetup = lazy(() => import('./pages/profile/ProfileSetup'));
+const UserProfile = lazy(() => import('./pages/UserProfile'));
+const ProfileChangeRequest = lazy(() => import('./pages/ProfileChangeRequest'));
+
+// Public pages
+const Index = lazy(() => import("./pages/Index"));
+const SocialFeed = lazy(() => import("./pages/SocialFeed"));
+const Events = lazy(() => import("./pages/Events"));
+const EventDetail = lazy(() => import("./pages/EventDetail"));
+const EnVivo = lazy(() => import("./pages/EnVivo"));
+const Fighters = lazy(() => import("./pages/Fighters"));
+const FighterProfile = lazy(() => import('./pages/FighterProfile'));
+const Contact = lazy(() => import("./pages/Contact"));
+const Gimnasios = lazy(() => import("./pages/Gimnasios"));
+const GimnasioDetalle = lazy(() => import("./pages/GimnasioDetalle"));
+const Entrenadores = lazy(() => import("./pages/Entrenadores"));
+const EntrenadorDetalle = lazy(() => import("./pages/EntrenadorDetalle"));
+const Predicciones = lazy(() => import("./pages/Predicciones"));
+const EventoBetting = lazy(() => import("./pages/EventoBetting"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AccessDenied = lazy(() => import("./pages/AccessDenied"));
+const VerifyLicense = lazy(() => import('./pages/VerifyLicense'));
+const HudPublicDisplay = lazy(() => import("./pages/HudPublicDisplay"));
+const ImportEvent = lazy(() => import("./pages/ImportEvent"));
+const TestNewsFunction = lazy(() => import("./pages/TestNewsFunction"));
 const PublicFightResults = lazy(() => import('./pages/FightResults'));
+const AIStrikeOverlay = lazy(() => import('./pages/AIStrikeOverlay'));
+
+// Social
+const SocialProfile = lazy(() => import("./pages/social/SocialProfile"));
+const Friends = lazy(() => import("./pages/social/Friends"));
+const Discover = lazy(() => import("./pages/social/Discover"));
+const Notifications = lazy(() => import("./pages/social/Notifications"));
+const SocialUserProfile = lazy(() => import("./pages/social/UserProfile"));
+
+// Fighter License portal
+const FighterLicense = lazy(() => import('./pages/FighterLicense').then(m => ({ default: m.FighterLicense })));
+const LicenseDashboard = lazy(() => import('./pages/license/LicenseDashboard'));
+const LicensePending = lazy(() => import('./pages/license/LicensePending'));
+const LicenseSuspended = lazy(() => import('./pages/license/LicenseSuspended'));
+const LicenseOnboarding = lazy(() => import('./pages/license/LicenseOnboarding'));
+const LicenseForgotPassword = lazy(() => import("./pages/license/ForgotPassword"));
+const LicenseResetPassword = lazy(() => import("./pages/license/ResetPassword"));
+
+// Judge & Referee
+const JudgeProtectedRoute = lazy(() => import('@/components/JudgeProtectedRoute').then(m => ({ default: m.JudgeProtectedRoute })));
 const DigitalScorecard = lazy(() => import('./pages/judge/DigitalScorecard'));
 const RefereeControlRoom = lazy(() => import('./pages/referee/RefereeControlRoom'));
-const UserRoles = lazy(() => import('./pages/admin/UserRoles'));
 const JudgeScoringPanel = lazy(() => import('./pages/judge/JudgeScoringPanel'));
+const JudgeOnboarding = lazy(() => import("./pages/judge/JudgeOnboarding"));
+
+// Stations
+const StationPinLogin = lazy(() => import('@/components/station/StationPinLogin').then(m => ({ default: m.StationPinLogin })));
+const StationWaiting = lazy(() => import('@/pages/station/StationWaiting'));
+const Station1Scoring = lazy(() => import('@/pages/station/Station1Scoring'));
+const Station2Scoring = lazy(() => import('@/pages/station/Station2Scoring'));
+const Station3RoundControl = lazy(() => import('@/pages/station/Station3RoundControl'));
+
+// Admin pages
+const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
+const EventosPelea = lazy(() => import("./pages/admin/EventosPelea"));
+const LiveStreaming = lazy(() => import("./pages/admin/LiveStreaming"));
+const LiveEventsControl = lazy(() => import('./pages/admin/LiveEventsControl'));
+const AdminFightersProfiles = lazy(() => import('./pages/admin/FightersProfiles'));
+const FightersProfilesInvite = lazy(() => import('./pages/admin/FightersProfilesInvite'));
+const FightersProfilesCreate = lazy(() => import('./pages/admin/FightersProfilesCreate'));
+const JudgesManagement = lazy(() => import('./pages/admin/JudgesManagement'));
+const PendingChangesHub = lazy(() => import('./pages/admin/PendingChangesHub'));
+const AIStrikeMonitor = lazy(() => import('./pages/admin/AIStrikeMonitor'));
+const AIStrikeTestPanel = lazy(() => import('./pages/admin/AIStrikeTestPanel'));
+const ValidacionLicencias = lazy(() => import('./pages/admin/ValidacionLicencias'));
+const AliadosEstrategicos = lazy(() => import("./pages/admin/AliadosEstrategicos"));
+const Comunidad = lazy(() => import("./pages/admin/Comunidad"));
+const Configuracion = lazy(() => import("./pages/admin/Configuracion"));
+const Betting = lazy(() => import("./pages/admin/Betting"));
+const EmailMonitoring = lazy(() => import("./pages/admin/EmailMonitoring"));
+const EmailValidation = lazy(() => import("./pages/admin/EmailValidation"));
+const EmailCampaigns = lazy(() => import("./pages/admin/EmailCampaigns"));
+const EmailCampaignDetail = lazy(() => import("./pages/admin/EmailCampaignDetail"));
+const EmailCampaignEditor = lazy(() => import("./pages/admin/EmailCampaignEditor"));
+const GimnasiosAdmin = lazy(() => import("./pages/admin/GimnasiosAdmin"));
+const EntrenadoresAdmin = lazy(() => import("./pages/admin/EntrenadoresAdmin"));
+const FightResults = lazy(() => import('./pages/admin/FightResults'));
+const UserRoles = lazy(() => import('./pages/admin/UserRoles'));
 const JudgeStationsSetup = lazy(() => import('./pages/admin/JudgeStationsSetup'));
-// LicenseAuth removed - unified into Auth.tsx
-import LicenseDashboard from './pages/license/LicenseDashboard';
-import LicensePending from './pages/license/LicensePending';
-import LicenseSuspended from './pages/license/LicenseSuspended';
-import LicenseOnboarding from './pages/license/LicenseOnboarding';
-import Index from "./pages/Index";
-import SocialFeed from "./pages/SocialFeed";
-import Auth from "./pages/Auth";
-import AuthCallback from "./pages/AuthCallback";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-import Predicciones from "./pages/Predicciones";
-import EventoBetting from "./pages/EventoBetting";
-import Events from "./pages/Events";
-import EventDetail from "./pages/EventDetail";
-import EnVivo from "./pages/EnVivo";
-import Fighters from "./pages/Fighters";
-import SocialProfile from "./pages/social/SocialProfile";
-import Friends from "./pages/social/Friends";
-import Discover from "./pages/social/Discover";
-import Notifications from "./pages/social/Notifications";
-import SocialUserProfile from "./pages/social/UserProfile";
-import TestNewsFunction from "./pages/TestNewsFunction";
-import ImportEvent from "./pages/ImportEvent";
-import Dashboard from "./pages/admin/Dashboard";
-import EventosPelea from "./pages/admin/EventosPelea";
-import LiveStreaming from "./pages/admin/LiveStreaming";
-import LicenseForgotPassword from "./pages/license/ForgotPassword";
-import LicenseResetPassword from "./pages/license/ResetPassword";
-import HudPublicDisplay from "./pages/HudPublicDisplay";
+const RankingsManagement = lazy(() => import("./pages/admin/RankingsManagement"));
+const SystemAssets = lazy(() => import("./pages/admin/SystemAssets"));
+const OfficialsManagement = lazy(() => import("./pages/admin/OfficialsManagement"));
+const OrganizationsManagement = lazy(() => import("./pages/admin/OrganizationsManagement"));
+const FightApproval = lazy(() => import("./pages/admin/FightApproval"));
+const ContactInbox = lazy(() => import("./pages/admin/ContactInbox"));
+const Sanctions = lazy(() => import("./pages/admin/Sanctions"));
 
-import AliadosEstrategicos from "./pages/admin/AliadosEstrategicos";
-import Comunidad from "./pages/admin/Comunidad";
-import Configuracion from "./pages/admin/Configuracion";
-import Betting from "./pages/admin/Betting";
-import EmailMonitoring from "./pages/admin/EmailMonitoring";
-import EmailValidation from "./pages/admin/EmailValidation";
-import EmailCampaigns from "./pages/admin/EmailCampaigns";
-import EmailCampaignDetail from "./pages/admin/EmailCampaignDetail";
-import EmailCampaignEditor from "./pages/admin/EmailCampaignEditor";
-import NotFound from "./pages/NotFound";
-import AccessDenied from "./pages/AccessDenied";
-import Contact from "./pages/Contact";
-import Gimnasios from "./pages/Gimnasios";
-import GimnasioDetalle from "./pages/GimnasioDetalle";
-import Entrenadores from "./pages/Entrenadores";
-import EntrenadorDetalle from "./pages/EntrenadorDetalle";
-import GimnasiosAdmin from "./pages/admin/GimnasiosAdmin";
-import EntrenadoresAdmin from "./pages/admin/EntrenadoresAdmin";
-
-// Gym domain pages (lazy)
+// Gym pages
 const GymDashboard = lazy(() => import("./pages/gym/GymDashboard"));
 const GymFightersPage = lazy(() => import("./pages/gym/GymFighters"));
 const GymStaffManagement = lazy(() => import("./pages/gym/GymStaffManagement"));
 const GymAddFighter = lazy(() => import("./pages/gym/GymAddFighter"));
 const GymOnboarding = lazy(() => import("./pages/gym/GymOnboarding"));
 const GymPendingInvitation = lazy(() => import("./pages/gym/GymPendingInvitation"));
-const JudgeOnboarding = lazy(() => import("./pages/judge/JudgeOnboarding"));
-
-// Lazy load RankingsManagement
-const RankingsManagement = lazy(() => import("./pages/admin/RankingsManagement"));
-const SystemAssets = lazy(() => import("./pages/admin/SystemAssets"));
-const OfficialsManagement = lazy(() => import("./pages/admin/OfficialsManagement"));
-const OrganizationsManagement = lazy(() => import("./pages/admin/OrganizationsManagement"));
-const FightApproval = lazy(() => import("./pages/admin/FightApproval"));
 const RequestFight = lazy(() => import("./pages/gym/RequestFight"));
-const Sanctions = lazy(() => import("./pages/admin/Sanctions"));
-
-// Lazy load ContactInbox
-const ContactInbox = lazy(() => import("./pages/admin/ContactInbox"));
-const ProfileHub = lazy(() => import('./pages/profile/ProfileHub'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -156,6 +162,7 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               {/* Public Platform Routes */}
               <Route path="/" element={<Index />} />
@@ -164,18 +171,13 @@ const App = () => {
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/auth/forgot-password" element={<ForgotPassword />} />
               <Route path="/auth/reset-password" element={<ResetPassword />} />
-              {/* License auth callback - handles confirmation redirects */}
               <Route path="/license/callback" element={<AuthCallback />} />
               <Route path="/eventos" element={<Events />} />
               <Route path="/en-vivo" element={<EnVivo />} />
               <Route path="/evento/:eventId" element={<EventDetail />} />
               <Route path="/fighters" element={<Fighters />} />
               <Route path="/fighter/:id" element={<FighterProfile />} />
-              <Route path="/resultados" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <PublicFightResults />
-                </Suspense>
-              } />
+              <Route path="/resultados" element={<PublicFightResults />} />
               <Route path="/social/friends" element={<Friends />} />
               <Route path="/social/discover" element={<Discover />} />
               <Route path="/social/notifications" element={<Notifications />} />
@@ -188,168 +190,68 @@ const App = () => {
               <Route path="/evento/:eventId/betting" element={<EventoBetting />} />
               <Route path="/contacto" element={<Contact />} />
               <Route path="/profile/hub" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <ProfileHub />
-                  </Suspense>
-                </ProtectedRoute>
+                <ProtectedRoute><ProfileHub /></ProtectedRoute>
               } />
               
-              {/* Rutas de Gimnasios */}
+              {/* Gimnasios */}
               <Route path="/gimnasios" element={<Gimnasios />} />
               <Route path="/gimnasios/:slug" element={<GimnasioDetalle />} />
 
-              {/* Gym Dashboard (staff privado) */}
-              <Route path="/gym/:gymId/dashboard" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <GymDashboard />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              <Route path="/gym/:gymId/fighters" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <GymFightersPage />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              <Route path="/gym/:gymId/staff" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <GymStaffManagement />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              <Route path="/gym/:gymId/add-fighter" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <GymAddFighter />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              <Route path="/gym/request-fight" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <RequestFight />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
+              {/* Gym Dashboard */}
+              <Route path="/gym/:gymId/dashboard" element={<ProtectedRoute><GymDashboard /></ProtectedRoute>} />
+              <Route path="/gym/:gymId/fighters" element={<ProtectedRoute><GymFightersPage /></ProtectedRoute>} />
+              <Route path="/gym/:gymId/staff" element={<ProtectedRoute><GymStaffManagement /></ProtectedRoute>} />
+              <Route path="/gym/:gymId/add-fighter" element={<ProtectedRoute><GymAddFighter /></ProtectedRoute>} />
+              <Route path="/gym/request-fight" element={<ProtectedRoute><RequestFight /></ProtectedRoute>} />
 
               <Route path="/entrenadores" element={<Entrenadores />} />
               <Route path="/entrenadores/:slug" element={<EntrenadorDetalle />} />
 
               {/* Gym & Judge Onboarding */}
-              <Route path="/gym/onboarding" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <GymOnboarding />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              <Route path="/gym/pending-invitation" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <GymPendingInvitation />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
-              <Route path="/judge/onboarding" element={
-                <ProtectedRoute>
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <JudgeOnboarding />
-                  </Suspense>
-                </ProtectedRoute>
-              } />
+              <Route path="/gym/onboarding" element={<ProtectedRoute><GymOnboarding /></ProtectedRoute>} />
+              <Route path="/gym/pending-invitation" element={<ProtectedRoute><GymPendingInvitation /></ProtectedRoute>} />
+              <Route path="/judge/onboarding" element={<ProtectedRoute><JudgeOnboarding /></ProtectedRoute>} />
               
-              {/* HUD Público de Scoring en Vivo */}
+              {/* HUD & AI Overlay */}
               <Route path="/hud/fight/:fightId" element={<HudPublicDisplay />} />
-              
-              {/* AI Strike Detection Overlay - Público para OBS/Transmisión */}
               <Route path="/ai-overlay" element={<AIStrikeOverlay />} />
               <Route path="/ai-strike-overlay" element={<AIStrikeOverlay />} />
 
-              {/* Rutas de Estaciones con PIN (sin autenticación) */}
+              {/* Stations */}
               <Route path="/estacion/:stationNumber" element={<StationPinLogin />} />
               <Route path="/estacion/:stationNumber/waiting" element={<StationWaiting />} />
               <Route path="/estacion/1/scoring/:fightId" element={<Station1Scoring />} />
               <Route path="/estacion/2/scoring/:fightId" element={<Station2Scoring />} />
               <Route path="/estacion/3/control/:fightId" element={<Station3RoundControl />} />
 
-              {/* Fighter License Portal Routes */}
+              {/* Fighter License Portal */}
               <Route path="/license/welcome" element={<Navigate to="/auth?role=fighter" replace />} />
               <Route path="/license/auth" element={<Navigate to="/auth?role=fighter" replace />} />
-              {/* Redirect old license request route to unified onboarding */}
               <Route path="/license/request" element={<Navigate to="/license/onboarding" replace />} />
               <Route path="/license/forgot-password" element={<LicenseForgotPassword />} />
               <Route path="/license/reset-password" element={<LicenseResetPassword />} />
-              <Route path="/license/onboarding" element={
-                <LicenseProtectedRoute>
-                  <LicenseOnboarding />
-                </LicenseProtectedRoute>
-              } />
-              <Route path="/license/pending" element={
-                <LicenseProtectedRoute>
-                  <LicensePending />
-                </LicenseProtectedRoute>
-              } />
-              <Route path="/license/suspended" element={
-                <LicenseProtectedRoute>
-                  <LicenseSuspended />
-                </LicenseProtectedRoute>
-              } />
+              <Route path="/license/onboarding" element={<LicenseProtectedRoute><LicenseOnboarding /></LicenseProtectedRoute>} />
+              <Route path="/license/pending" element={<LicenseProtectedRoute><LicensePending /></LicenseProtectedRoute>} />
+              <Route path="/license/suspended" element={<LicenseProtectedRoute><LicenseSuspended /></LicenseProtectedRoute>} />
               
-              {/* Protected License Routes with Layout */}
-              <Route path="/license" element={
-                <LicenseProtectedRoute requireActiveLicense>
-                  <LicenseLayout />
-                </LicenseProtectedRoute>
-              }>
+              <Route path="/license" element={<LicenseProtectedRoute requireActiveLicense><LicenseLayout /></LicenseProtectedRoute>}>
                 <Route index element={<Navigate to="/license/dashboard" replace />} />
                 <Route path="dashboard" element={<LicenseDashboard />} />
               </Route>
 
-              {/* Profile Setup Route - For regular users */}
-              <Route path="/profile/setup" element={
-                <ProtectedRoute>
-                  <ProfileSetup />
-                </ProtectedRoute>
-              } />
-
-              {/* Unified Profile Route - Central hub for user and fighter info */}
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <UserProfile />
-                </ProtectedRoute>
-              } />
-              
-              {/* Alias for profile (backwards compatibility) */}
+              {/* Profile */}
+              <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               <Route path="/perfil" element={<Navigate to="/profile" replace />} />
-
-              {/* Profile Change Request Route */}
-              <Route path="/profile/request-changes" element={
-                <ProtectedRoute>
-                  <ProfileChangeRequest />
-                </ProtectedRoute>
-              } />
-
-              {/* Legacy Fighter Routes - Redirect to unified profile */}
+              <Route path="/profile/request-changes" element={<ProtectedRoute><ProfileChangeRequest /></ProtectedRoute>} />
               <Route path="/fighter/me" element={<Navigate to="/profile" replace />} />
               <Route path="/fighters/me" element={<Navigate to="/profile" replace />} />
-              <Route path="/fighters/license/:id" element={
-                <ProtectedRoute>
-                  <FighterLicense />
-                </ProtectedRoute>
-              } />
+              <Route path="/fighters/license/:id" element={<ProtectedRoute><FighterLicense /></ProtectedRoute>} />
 
-              {/* Admin Certification Panel Routes */}
-              <Route path="/admin-cert/*" element={
-                <AdminProtectedRoute>
-                  <AdminCertLayout />
-                </AdminProtectedRoute>
-              } />
+              {/* Admin Cert */}
+              <Route path="/admin-cert/*" element={<AdminProtectedRoute><AdminCertLayout /></AdminProtectedRoute>} />
 
-              {/* General Admin Routes */}
+              {/* Admin */}
               <Route path="/admin/*" element={
                 <AdminProtectedRoute>
                   <AdminLayout>
@@ -363,19 +265,11 @@ const App = () => {
                       <Route path="/fighters-profiles/invite" element={<FightersProfilesInvite />} />
                       <Route path="/fighters-profiles/create" element={<FightersProfilesCreate />} />
                       <Route path="/judges" element={<JudgesManagement />} />
-                      <Route path="/scoring/stations" element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <JudgeStationsSetup />
-                        </Suspense>
-                      } />
+                      <Route path="/scoring/stations" element={<JudgeStationsSetup />} />
                       <Route path="/live-events" element={<LiveEventsControl />} />
                       <Route path="/live-streaming" element={<LiveStreaming />} />
                       <Route path="/pending-changes" element={<PendingChangesHub />} />
-                      <Route path="/fight-results" element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <FightResults />
-                        </Suspense>
-                      } />
+                      <Route path="/fight-results" element={<FightResults />} />
                       <Route path="/betting" element={<Betting />} />
                       <Route path="/email-monitoring" element={<EmailMonitoring />} />
                       <Route path="/email-validation" element={<EmailValidation />} />
@@ -383,90 +277,36 @@ const App = () => {
                       <Route path="/email-campaigns/:id" element={<EmailCampaignDetail />} />
                       <Route path="/email-campaigns/editor" element={<EmailCampaignEditor />} />
                       <Route path="/email-campaigns/editor/:id" element={<EmailCampaignEditor />} />
-                      <Route path="/inbox" element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <ContactInbox />
-                        </Suspense>
-                      } />
+                      <Route path="/inbox" element={<ContactInbox />} />
                       <Route path="/comunidad" element={<Comunidad />} />
-                      <Route path="/configuracion" element={
-                        <SuperAdminRoute><Configuracion /></SuperAdminRoute>
-                      } />
+                      <Route path="/configuracion" element={<SuperAdminRoute><Configuracion /></SuperAdminRoute>} />
                       <Route path="/licencias" element={<ValidacionLicencias />} />
-                      {/* Ruta /profile-requests eliminada - consolidada en /pending-changes */}
-                      <Route path="/user-roles" element={
-                        <SuperAdminRoute>
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <UserRoles />
-                          </Suspense>
-                        </SuperAdminRoute>
-                      } />
-                      <Route path="/system-assets" element={
-                        <SuperAdminRoute>
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <SystemAssets />
-                          </Suspense>
-                        </SuperAdminRoute>
-                      } />
+                      <Route path="/user-roles" element={<SuperAdminRoute><UserRoles /></SuperAdminRoute>} />
+                      <Route path="/system-assets" element={<SuperAdminRoute><SystemAssets /></SuperAdminRoute>} />
                       <Route path="/ai-strike-monitor" element={<AIStrikeMonitor />} />
                       <Route path="/ai-strike-test" element={<AIStrikeTestPanel />} />
                       <Route path="/gimnasios" element={<GimnasiosAdmin />} />
                       <Route path="/entrenadores" element={<EntrenadoresAdmin />} />
-                       <Route path="/rankings" element={
-                         <Suspense fallback={<LoadingSpinner />}>
-                           <RankingsManagement />
-                         </Suspense>
-                       } />
-                       <Route path="/officials" element={
-                         <Suspense fallback={<LoadingSpinner />}>
-                           <OfficialsManagement />
-                         </Suspense>
-                       } />
-                       <Route path="/organizations" element={
-                         <Suspense fallback={<LoadingSpinner />}>
-                           <OrganizationsManagement />
-                         </Suspense>
-                       } />
-                       <Route path="/fight-approval" element={
-                         <Suspense fallback={<LoadingSpinner />}>
-                           <FightApproval />
-                         </Suspense>
-                       } />
-                       <Route path="/sanctions" element={
-                         <Suspense fallback={<LoadingSpinner />}>
-                           <Sanctions />
-                         </Suspense>
-                       } />
+                      <Route path="/rankings" element={<RankingsManagement />} />
+                      <Route path="/officials" element={<OfficialsManagement />} />
+                      <Route path="/organizations" element={<OrganizationsManagement />} />
+                      <Route path="/fight-approval" element={<FightApproval />} />
+                      <Route path="/sanctions" element={<Sanctions />} />
                     </Routes>
                   </AdminLayout>
                 </AdminProtectedRoute>
               } />
 
-              {/* Judge and Referee Routes */}
-              <Route path="/judge/scorecard/:fightId" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <DigitalScorecard />
-                </Suspense>
-              } />
-              
-              {/* Scoring Panel - Redirige al flujo de estaciones móviles */}
-              <Route path="/judge/fight/:fightId" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <JudgeScoringPanel />
-                </Suspense>
-              } />
-              
-              <Route path="/referee/control/:fightId" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <RefereeControlRoom />
-                </Suspense>
-              } />
+              {/* Judge & Referee */}
+              <Route path="/judge/scorecard/:fightId" element={<DigitalScorecard />} />
+              <Route path="/judge/fight/:fightId" element={<JudgeScoringPanel />} />
+              <Route path="/referee/control/:fightId" element={<RefereeControlRoom />} />
 
-              {/* Access Denied Route */}
+              {/* Misc */}
               <Route path="/access-denied" element={<AccessDenied />} />
-
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </TooltipProvider>
         </LicenseAuthProvider>
       </AuthProvider>
