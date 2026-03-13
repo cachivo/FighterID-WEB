@@ -150,25 +150,25 @@ export default function LicenseSuspended() {
             </p>
             
             <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <Mail className="h-4 w-4 text-blue-500 flex-shrink-0" />
+              <div className="flex items-center gap-3 p-3 bg-fighter-info/10 rounded-lg border border-fighter-info/30">
+                <Mail className="h-4 w-4 text-fighter-info flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-blue-900 dark:text-blue-100">
+                  <p className="font-medium text-foreground">
                     Correo Electrónico
                   </p>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <p className="text-sm text-muted-foreground">
                     admin@batallagimnasios.com
                   </p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <Phone className="h-4 w-4 text-blue-500 flex-shrink-0" />
+              <div className="flex items-center gap-3 p-3 bg-fighter-info/10 rounded-lg border border-fighter-info/30">
+                <Phone className="h-4 w-4 text-fighter-info flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-blue-900 dark:text-blue-100">
+                  <p className="font-medium text-foreground">
                     Soporte Administrativo
                   </p>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <p className="text-sm text-muted-foreground">
                     Disponible en horario de oficina
                   </p>
                 </div>
