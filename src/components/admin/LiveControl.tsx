@@ -303,7 +303,7 @@ export function LiveControl() {
 
       {/* Emergency Controls */}
       {emergencyMode && (
-        <Alert className="border-red-500 bg-red-50">
+        <Alert className="border-fighter-danger bg-fighter-danger/10">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
             <span>Modo de emergencia activado</span>
