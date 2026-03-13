@@ -581,7 +581,7 @@ export default function LiveEventsControl() {
               <Play className="h-4 w-4 text-fighter-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-fighter-success">
                 {fights.filter(f => f.status === 'in_progress').length}
               </div>
             </CardContent>
