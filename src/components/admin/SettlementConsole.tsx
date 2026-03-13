@@ -340,7 +340,7 @@ export function SettlementConsole() {
                       <div className="flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
-                          Admin 1: {request.admin1_confirmed ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-600" />}
+                          Admin 1: {request.admin1_confirmed ? <CheckCircle2 className="h-4 w-4 text-fighter-success" /> : <XCircle className="h-4 w-4 text-fighter-danger" />}
                         </div>
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
