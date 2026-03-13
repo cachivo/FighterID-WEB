@@ -241,9 +241,9 @@ export default function RefereeControlRoom() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-fighter-info">
           <CardHeader>
-            <CardTitle className="text-blue-600">
+            <CardTitle className="text-fighter-info">
               Corner Azul
             </CardTitle>
           </CardHeader>
