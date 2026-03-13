@@ -52,7 +52,7 @@ export default function LicenseWelcome() {
               <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-fighter-success flex-shrink-0" />
                     <span className="text-xs sm:text-sm">Licencia oficial verificada</span>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3">
