@@ -588,26 +588,26 @@ export default function ValidacionLicencias() {
                             </Badge>
                           </div>
                         )}
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="text-center p-3 bg-green-50 rounded">
-                            <div className="text-2xl font-bold text-green-600">
+                         <div className="grid grid-cols-3 gap-4">
+                          <div className="text-center p-3 bg-fighter-success/10 rounded">
+                            <div className="text-2xl font-bold text-fighter-success">
                               {reviewingLicense.fighter?.record_wins || 0}
                             </div>
-                            <div className="text-sm text-green-700">Victorias</div>
+                            <div className="text-sm text-fighter-success">Victorias</div>
                           </div>
-                          <div className="text-center p-3 bg-red-50 rounded">
-                            <div className="text-2xl font-bold text-red-600">
+                          <div className="text-center p-3 bg-fighter-danger/10 rounded">
+                            <div className="text-2xl font-bold text-fighter-danger">
                               {reviewingLicense.fighter?.record_losses || 0}
                             </div>
-                            <div className="text-sm text-red-700">Derrotas</div>
+                            <div className="text-sm text-fighter-danger">Derrotas</div>
                           </div>
-                          <div className="text-center p-3 bg-gray-50 rounded">
-                            <div className="text-2xl font-bold text-gray-600">
+                          <div className="text-center p-3 bg-muted/50 rounded">
+                            <div className="text-2xl font-bold text-muted-foreground">
                               {reviewingLicense.fighter?.record_draws || 0}
                             </div>
-                            <div className="text-sm text-gray-700">Empates</div>
+                            <div className="text-sm text-muted-foreground">Empates</div>
                           </div>
-                        </div>
+                         </div>
                       </div>
 
                       {/* Martial Arts */}
