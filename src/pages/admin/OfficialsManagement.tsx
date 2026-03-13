@@ -57,9 +57,9 @@ const getTypeLabel = (type: OfficialType) => {
 
 const getCertBadgeClass = (level: string) => {
   switch (level) {
-    case 'INTERNATIONAL': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-    case 'NATIONAL': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-    default: return 'bg-green-500/20 text-green-400 border-green-500/30';
+    case 'INTERNATIONAL': return 'bg-fighter-warning/20 text-fighter-warning border-fighter-warning/30';
+    case 'NATIONAL': return 'bg-fighter-info/20 text-fighter-info border-fighter-info/30';
+    default: return 'bg-fighter-success/20 text-fighter-success border-fighter-success/30';
   }
 };
 
