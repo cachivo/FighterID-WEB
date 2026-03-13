@@ -195,9 +195,9 @@ export default function GimnasioDetalle() {
                       </div>
                       <div className="text-right shrink-0">
                         <span className="text-xs font-mono">
-                          <span className="text-green-600">{wins}</span>
+                          <span className="text-fighter-success">{wins}</span>
                           <span className="text-muted-foreground">-</span>
-                          <span className="text-red-500">{losses}</span>
+                          <span className="text-fighter-danger">{losses}</span>
                           <span className="text-muted-foreground">-</span>
                           <span className="text-muted-foreground">{draws}</span>
                         </span>

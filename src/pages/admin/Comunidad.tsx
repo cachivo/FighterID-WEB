@@ -755,8 +755,8 @@ const Comunidad = () => {
                         {partner.logo ? (
                           <img src={partner.logo} alt={partner.nombre} className="w-10 h-10 object-contain" />
                         ) : (
-                          <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                            <Users className="h-5 w-5 text-gray-400" />
+                          <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                            <Users className="h-5 w-5 text-muted-foreground" />
                           </div>
                         )}
                       </TableCell>

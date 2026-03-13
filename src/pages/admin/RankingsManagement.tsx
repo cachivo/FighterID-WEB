@@ -256,7 +256,7 @@ export default function RankingsManagement() {
                             }`}>
                               {index + 1}
                               {ranking.is_champion && (
-                                <Crown className="absolute -top-2 -right-2 h-4 w-4 text-yellow-500" />
+                                <Crown className="absolute -top-2 -right-2 h-4 w-4 text-fighter-warning" />
                               )}
                             </div>
                           </TableCell>

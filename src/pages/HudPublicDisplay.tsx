@@ -119,15 +119,15 @@ export default function HudPublicDisplay() {
           </Card>
 
           {/* AZUL */}
-          <Card className="bg-blue-950/30 border-blue-600 border-4">
+          <Card className="bg-fighter-info/10 border-fighter-info border-4">
             <CardHeader>
-              <CardTitle className="text-center text-3xl text-blue-400">
+              <CardTitle className="text-center text-3xl text-fighter-info">
                 🔵 {fightData.blue_fighter?.first_name} {fightData.blue_fighter?.last_name}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center">
-                <div className="text-7xl font-bold text-blue-400">{blueStats.punches}</div>
+                <div className="text-7xl font-bold text-fighter-info">{blueStats.punches}</div>
                 <div className="text-sm text-muted-foreground">Golpes Efectivos</div>
               </div>
               <div className="grid grid-cols-2 gap-4 text-center">

@@ -186,18 +186,18 @@
            {/* Preview */}
            {reasonType && (
              <div className={`flex items-center justify-between p-3 rounded-lg border-2 ${
-               delta > 0 ? 'bg-green-500/10 border-green-500/30' :
-               delta < 0 ? 'bg-red-500/10 border-red-500/30' :
-               'bg-gray-500/10 border-gray-500/30'
-             }`}>
-               <span className="text-sm">Nuevos puntos:</span>
-               <div className="flex items-center gap-2">
-                 <span className="text-muted-foreground line-through">{currentPoints}</span>
-                 <span className="text-2xl font-bold">{newPoints}</span>
-                 <span className={`text-sm ${
-                   delta > 0 ? 'text-green-500' : 
-                   delta < 0 ? 'text-red-500' : 
-                   'text-gray-500'
+                delta > 0 ? 'bg-fighter-success/10 border-fighter-success/30' :
+                delta < 0 ? 'bg-fighter-danger/10 border-fighter-danger/30' :
+                'bg-muted/50 border-border'
+              }`}>
+                <span className="text-sm">Nuevos puntos:</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground line-through">{currentPoints}</span>
+                  <span className="text-2xl font-bold">{newPoints}</span>
+                  <span className={`text-sm ${
+                    delta > 0 ? 'text-fighter-success' : 
+                    delta < 0 ? 'text-fighter-danger' : 
+                    'text-muted-foreground'
                  }`}>
                    ({delta > 0 ? '+' : ''}{delta})
                  </span>

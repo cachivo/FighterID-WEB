@@ -207,7 +207,7 @@ export default function EmailMonitoring() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-semibold">{func.name}</p>
-                    <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-600/20">
+                    <Badge variant="outline" className="bg-fighter-success/10 text-fighter-success border-fighter-success/20">
                       {func.status}
                     </Badge>
                   </div>

@@ -18,10 +18,10 @@ const SportsNewsCarousel = () => {
 
   const categories = [
     { id: "all", name: "Todas", color: "bg-primary" },
-    { id: "mma", name: "MMA", color: "bg-red-600" },
-    { id: "boxing", name: "Boxeo", color: "bg-blue-600" },
-    { id: "muay_thai", name: "Muay Thai", color: "bg-yellow-600" },
-    { id: "kickboxing", name: "Kickboxing", color: "bg-green-600" }
+    { id: "mma", name: "MMA", color: "bg-destructive" },
+    { id: "boxing", name: "Boxeo", color: "bg-fighter-info" },
+    { id: "muay_thai", name: "Muay Thai", color: "bg-fighter-warning" },
+    { id: "kickboxing", name: "Kickboxing", color: "bg-fighter-success" }
   ];
 
   const displayNews = featuredNews.length > 0 ? featuredNews : news.slice(0, 6);

@@ -759,14 +759,14 @@ export function FighterEditModal({ fighter, open, onClose }: FighterEditModalPro
                       {/* Warning when discipline changes */}
                       {fighter.discipline !== formData.discipline && 
                        (fighter.discipline !== undefined || formData.discipline !== undefined) && (
-                        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-3 mt-3">
+                        <div className="bg-fighter-warning/10 border border-fighter-warning/30 rounded-md p-3 mt-3">
                           <div className="flex items-start gap-2">
-                            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
+                            <AlertTriangle className="h-4 w-4 text-fighter-warning mt-0.5 flex-shrink-0" />
                             <div>
-                              <p className="font-medium text-amber-800 dark:text-amber-400 text-sm">
+                              <p className="font-medium text-fighter-warning text-sm">
                                 Cambio de disciplina detectado
                               </p>
-                              <p className="text-amber-700 dark:text-amber-500 text-xs mt-1">
+                              <p className="text-fighter-warning/80 text-xs mt-1">
                                 Las membresías de ranking existentes no se modificarán automáticamente. 
                                 Utiliza la pestaña "Ligas" del peleador para gestionar sus rankings.
                               </p>

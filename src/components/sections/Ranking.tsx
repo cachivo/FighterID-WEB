@@ -299,7 +299,7 @@ const Ranking = ({ organizationCode = 'UCC_MMA' }: RankingProps) => {
                               {ranking.fighter.first_name} {ranking.fighter.last_name}
                             </h4>
                             {ranking.is_champion && (
-                              <Badge className="bg-yellow-500 text-yellow-950 text-[8px] xs:text-[10px] flex items-center gap-0.5 px-1 xs:px-1.5 shrink-0">
+                              <Badge className="bg-fighter-warning text-fighter-warning-foreground text-[8px] xs:text-[10px] flex items-center gap-0.5 px-1 xs:px-1.5 shrink-0">
                                 <Crown className="h-2.5 w-2.5 xs:h-3 xs:w-3" /> 
                                 <span className="hidden xs:inline">CAMPEÓN</span>
                                 <span className="xs:hidden">🏆</span>

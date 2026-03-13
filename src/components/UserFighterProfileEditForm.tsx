@@ -890,14 +890,14 @@ export function UserFighterProfileEditForm({ profile, onSuccess, onCancel }: Use
               </div>
               
               {/* Récord de Peleas - Condicional según estado de licencia */}
-              <Card className={isRecordLocked ? "border-l-4 border-l-amber-500 bg-muted/30" : ""}>
+              <Card className={isRecordLocked ? "border-l-4 border-l-fighter-warning bg-muted/30" : ""}>
                 <CardHeader>
-                  <CardTitle className={`flex items-center gap-2 ${isRecordLocked ? 'text-amber-600' : ''}`}>
+                  <CardTitle className={`flex items-center gap-2 ${isRecordLocked ? 'text-fighter-warning' : ''}`}>
                     {isRecordLocked && <Lock className="h-5 w-5" />}
                     Récord de Peleas
                   </CardTitle>
                   {isRecordLocked && (
-                    <CardDescription className="flex items-center gap-2 text-amber-700">
+                    <CardDescription className="flex items-center gap-2 text-fighter-warning/80">
                       <AlertCircle className="h-4 w-4" />
                       Tu licencia está aprobada. Los cambios en tu récord deben ser autorizados por un administrador.
                     </CardDescription>
