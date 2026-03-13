@@ -359,10 +359,10 @@ export default function JudgesManagement() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Activos</CardTitle>
-            <ToggleRight className="h-4 w-4 text-green-600" />
+            <ToggleRight className="h-4 w-4 text-fighter-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-fighter-success">
               {judges.filter(j => j.active).length}
             </div>
           </CardContent>
