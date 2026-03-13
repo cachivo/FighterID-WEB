@@ -371,10 +371,10 @@ export default function JudgesManagement() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Internacionales</CardTitle>
-            <Award className="h-4 w-4 text-yellow-600" />
+            <Award className="h-4 w-4 text-fighter-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-2xl font-bold text-fighter-warning">
               {judges.filter(j => j.certification_level === 'INTERNATIONAL').length}
             </div>
           </CardContent>
