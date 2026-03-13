@@ -151,7 +151,7 @@ export default function FightApproval() {
                             </Badge>
                             <Badge variant="outline">{req.discipline}</Badge>
                             <Badge variant="outline">{req.weight_class}</Badge>
-                            {req.is_championship && <Badge className="bg-yellow-500/20 text-yellow-400">🏆 Campeonato</Badge>}
+                            {req.is_championship && <Badge className="bg-fighter-warning/20 text-fighter-warning">🏆 Campeonato</Badge>}
                           </div>
                           <p className="font-semibold">
                             {getFighterName(req, 'a')} <span className="text-muted-foreground">vs</span> {getFighterName(req, 'b')}
