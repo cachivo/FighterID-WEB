@@ -105,6 +105,14 @@ export default function LiveEventsControl() {
               <Button 
                 size="sm" 
                 variant="outline"
+                onClick={() => window.open(`/hud/fight/${fight.id}`, '_blank')}
+              >
+                <Monitor className="mr-2 h-3 w-3" />
+                HUD
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
                 onClick={() => setSelectedFight(fight.id)}
               >
                 <Eye className="mr-2 h-3 w-3" />
