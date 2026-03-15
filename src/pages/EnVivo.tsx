@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Radio, Calendar, MapPin, Trophy, Tv, MessageSquare, Lock } from 'lucide-react';
+import { Radio, Calendar, MapPin, Trophy, Tv, MessageSquare, Lock, Share2, Copy, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/hooks/useAuth';
 import LiveFightStatsWidget from '@/components/LiveFightStatsWidget';
+import { toast } from 'sonner';
 
 interface LiveEvent {
   id: string;
