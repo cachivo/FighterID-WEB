@@ -2138,35 +2138,53 @@ export type Database = {
       }
       fight_telemetry_events: {
         Row: {
+          body_hit: boolean | null
           confidence: number | null
           created_at: string | null
+          elbow_angle: number | null
+          extension_m: number | null
+          face_hit: boolean | null
           fighter_corner: string | null
           fighter_id: string | null
           id: number
+          model_version: string | null
           round: number | null
           session_id: string | null
+          speed_ms: number | null
           strike_type: string | null
           timestamp_video: number | null
         }
         Insert: {
+          body_hit?: boolean | null
           confidence?: number | null
           created_at?: string | null
+          elbow_angle?: number | null
+          extension_m?: number | null
+          face_hit?: boolean | null
           fighter_corner?: string | null
           fighter_id?: string | null
           id?: never
+          model_version?: string | null
           round?: number | null
           session_id?: string | null
+          speed_ms?: number | null
           strike_type?: string | null
           timestamp_video?: number | null
         }
         Update: {
+          body_hit?: boolean | null
           confidence?: number | null
           created_at?: string | null
+          elbow_angle?: number | null
+          extension_m?: number | null
+          face_hit?: boolean | null
           fighter_corner?: string | null
           fighter_id?: string | null
           id?: never
+          model_version?: string | null
           round?: number | null
           session_id?: string | null
+          speed_ms?: number | null
           strike_type?: string | null
           timestamp_video?: number | null
         }
@@ -2615,6 +2633,7 @@ export type Database = {
           mma_record_draws: number | null
           mma_record_losses: number | null
           mma_record_wins: number | null
+          name: string | null
           nickname: string | null
           organization_id: string | null
           primary_license_id: string | null
@@ -2683,6 +2702,7 @@ export type Database = {
           mma_record_draws?: number | null
           mma_record_losses?: number | null
           mma_record_wins?: number | null
+          name?: string | null
           nickname?: string | null
           organization_id?: string | null
           primary_license_id?: string | null
@@ -2751,6 +2771,7 @@ export type Database = {
           mma_record_draws?: number | null
           mma_record_losses?: number | null
           mma_record_wins?: number | null
+          name?: string | null
           nickname?: string | null
           organization_id?: string | null
           primary_license_id?: string | null
