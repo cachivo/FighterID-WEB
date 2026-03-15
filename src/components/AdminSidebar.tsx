@@ -17,6 +17,7 @@ import {
   Trophy,
   Activity,
   TestTube2,
+  Eye,
   Mail,
   Send,
   Medal,
@@ -77,6 +78,7 @@ const fightControlItems = [
   { title: 'Resultados & Stats', url: '/admin/fight-results', icon: Trophy },
   { title: 'Monitor de IA', url: '/admin/ai-strike-monitor', icon: Activity },
   { title: '🧪 Pruebas IA', url: '/admin/ai-strike-test', icon: TestTube2 },
+  { title: 'Vision Diagnostics', url: '/admin/vision-diagnostics', icon: Eye },
 ];
 
 export function AdminSidebar() {
