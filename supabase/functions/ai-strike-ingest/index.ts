@@ -339,7 +339,7 @@ serve(async (req) => {
     // ==========================================
     if (path === 'health' && req.method === 'GET') {
       return new Response(
-        JSON.stringify({ status: 'ok', version: '2.0', timestamp: new Date().toISOString() }), 
+        JSON.stringify({ status: 'ok', version: '2.1', timestamp: new Date().toISOString() }), 
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
