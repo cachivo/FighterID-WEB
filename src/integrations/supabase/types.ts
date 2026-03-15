@@ -41,6 +41,50 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_fight_results: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          fight_id: string
+          fighter_a_stats: Json
+          fighter_b_stats: Json
+          id: string
+          metadata: Json | null
+          model_version: string
+          total_events: number
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          fight_id: string
+          fighter_a_stats?: Json
+          fighter_b_stats?: Json
+          id?: string
+          metadata?: Json | null
+          model_version: string
+          total_events?: number
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          fight_id?: string
+          fighter_a_stats?: Json
+          fighter_b_stats?: Json
+          id?: string
+          metadata?: Json | null
+          model_version?: string
+          total_events?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_fight_results_fight_id_fkey"
+            columns: ["fight_id"]
+            isOneToOne: true
+            referencedRelation: "fights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_inference_logs: {
         Row: {
           fight_id: string | null
@@ -2883,6 +2927,7 @@ export type Database = {
       }
       fights: {
         Row: {
+          ai_result: Json | null
           approved_at: string | null
           approved_by: string | null
           card_position: string | null
@@ -2918,6 +2963,7 @@ export type Database = {
           winner_id: string | null
         }
         Insert: {
+          ai_result?: Json | null
           approved_at?: string | null
           approved_by?: string | null
           card_position?: string | null
@@ -2953,6 +2999,7 @@ export type Database = {
           winner_id?: string | null
         }
         Update: {
+          ai_result?: Json | null
           approved_at?: string | null
           approved_by?: string | null
           card_position?: string | null
