@@ -142,7 +142,7 @@ export default function LiveStreaming() {
           ) : filteredEvents.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">No hay eventos para mostrar</div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto -mx-4 px-4"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Evento</TableHead>
