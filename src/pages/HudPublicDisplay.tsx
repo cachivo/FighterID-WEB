@@ -37,24 +37,35 @@ export default function HudPublicDisplay() {
     const load = async () => {
       const { data: fight } = await supabase
         .from('fights')
-        .select(`
-          id, fight_number,
-          red_fighter:fighter_a_id(first_name, last_name, nickname),
-          blue_fighter:fighter_b_id(first_name, last_name, nickname)
-        `)
+        .select('id, fight_number, fighter_a_id, fighter_b_id')
         .eq('id', fightId)
         .single();
 
-      if (fight) setFightData(fight as any);
+      if (fight) {
+        const result: FightData = { id: fight.id, fight_number: fight.fight_number ?? undefined };
 
-      const roundQuery = await (supabase as any)
+        const [resA, resB] = await Promise.all([
+          fight.fighter_a_id
+            ? supabase.from('fighter_profiles').select('first_name, last_name, nickname').eq('id', fight.fighter_a_id).single()
+            : null,
+          fight.fighter_b_id
+            ? supabase.from('fighter_profiles').select('first_name, last_name, nickname').eq('id', fight.fighter_b_id).single()
+            : null,
+        ]);
+
+        if (resA?.data) result.red_fighter = resA.data;
+        if (resB?.data) result.blue_fighter = resB.data;
+        setFightData(result);
+      }
+
+      const { data: rounds } = await (supabase as any)
         .from('rounds')
         .select('id, number, starts_at, status, duration_seconds')
         .eq('fight_id', fightId)
         .eq('status', 'live')
         .limit(1);
 
-      if (roundQuery.data?.length > 0) setRound(roundQuery.data[0]);
+      if (rounds && rounds.length > 0) setRound(rounds[0] as any);
     };
 
     load();
