@@ -37,8 +37,8 @@ interface TelemetryEvent {
 type Status = 'ok' | 'warn' | 'error';
 
 const StatusIcon = ({ s }: { s: Status }) =>
-  s === 'ok' ? <CheckCircle2 className="h-5 w-5 text-green-500" /> :
-  s === 'warn' ? <AlertTriangle className="h-5 w-5 text-yellow-500" /> :
+  s === 'ok' ? <CheckCircle2 className="h-5 w-5 text-primary" /> :
+  s === 'warn' ? <AlertTriangle className="h-5 w-5 text-accent-foreground" /> :
   <XCircle className="h-5 w-5 text-destructive" />;
 
 function heartbeatAge(ts: string | null): string {
