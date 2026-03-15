@@ -289,6 +289,7 @@ const App = () => {
                       <Route path="/system-assets" element={<SuperAdminRoute><SystemAssets /></SuperAdminRoute>} />
                       <Route path="/ai-strike-monitor" element={<AIStrikeMonitor />} />
                       <Route path="/ai-strike-test" element={<AIStrikeTestPanel />} />
+                      <Route path="/vision-diagnostics" element={<VisionDiagnostics />} />
                       <Route path="/gimnasios" element={<GimnasiosAdmin />} />
                       <Route path="/entrenadores" element={<EntrenadoresAdmin />} />
                       <Route path="/rankings" element={<RankingsManagement />} />
