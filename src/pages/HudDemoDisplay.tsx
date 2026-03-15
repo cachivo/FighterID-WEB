@@ -106,6 +106,7 @@ export default function HudDemoDisplay() {
   const { logoUrl } = useSystemAssets();
   const { events, round, isRunning, reset, togglePause } = useHudDemoMode();
   const [tick, setTick] = useState(0);
+  const { status: visionStatus, hudConnected, visionConnected, shortSession } = useVisionSyncSession();
 
   // Clock ticker for time display
   useEffect(() => {
