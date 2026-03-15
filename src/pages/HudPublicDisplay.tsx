@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAIStrikeEvents } from '@/hooks/useAIStrikeEvents';
+import { useSystemAssets } from '@/hooks/useSystemAssets';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
@@ -25,6 +26,7 @@ export default function HudPublicDisplay() {
   const [fightData, setFightData] = useState<FightData | null>(null);
   const [round, setRound] = useState<RoundData | null>(null);
   const [clockMs, setClockMs] = useState(0);
+  const { logoUrl } = useSystemAssets();
 
   const { events, loading } = useAIStrikeEvents(fightId || '', round?.number);
 
@@ -96,7 +98,7 @@ export default function HudPublicDisplay() {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center space-y-4">
-          <img src="/lovable-uploads/fighter-id-logo-white.png" alt="Fighter ID" className="h-16 mx-auto opacity-60" />
+          <img src={logoUrl} alt="Fighter ID" className="h-16 mx-auto opacity-60" />
           <h1 className="text-4xl font-black tracking-tight">FIGHTER ID — LIVE</h1>
           <p className="text-gray-500 text-lg">Esperando datos de la pelea...</p>
           {loading && <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto" />}
@@ -118,7 +120,7 @@ export default function HudPublicDisplay() {
     <div className="min-h-screen bg-black text-white select-none overflow-hidden">
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-red-950/80 via-black to-blue-950/80 border-b border-white/10">
-        <img src="/lovable-uploads/fighter-id-logo-white.png" alt="Fighter ID" className="h-8 opacity-70" />
+        <img src={logoUrl} alt="Fighter ID" className="h-8 opacity-70" />
         <div className="flex items-center gap-3">
           {round && (
             <Badge className="bg-red-600 text-white text-lg px-4 py-1 font-mono animate-pulse">
