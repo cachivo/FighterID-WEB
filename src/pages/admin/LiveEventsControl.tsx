@@ -263,7 +263,7 @@ export default function LiveEventsControl() {
             {session && (
               <Card variant="cyber">
                 <CardContent className="pt-4">
-                  <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Estado</p>
                       <Badge variant={session.status === 'running' ? 'neon' : 'secondary'}>
