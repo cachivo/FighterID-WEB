@@ -26,6 +26,7 @@ export default function HudPublicDisplay() {
   const [fightData, setFightData] = useState<FightData | null>(null);
   const [round, setRound] = useState<RoundData | null>(null);
   const [clockMs, setClockMs] = useState(0);
+  const { logoUrl } = useSystemAssets();
 
   const { events, loading } = useAIStrikeEvents(fightId || '', round?.number);
 
