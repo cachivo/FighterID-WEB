@@ -135,11 +135,12 @@ export type Database = {
           avg_fps: number | null
           avg_latency_ms: number | null
           created_by: string | null
+          device_id: string | null
           fight_id: string
           id: string
           metadata: Json | null
-          model_version: string
-          source_url: string
+          model_version: string | null
+          source_url: string | null
           started_at: string | null
           status: string
           stopped_at: string | null
@@ -149,11 +150,12 @@ export type Database = {
           avg_fps?: number | null
           avg_latency_ms?: number | null
           created_by?: string | null
+          device_id?: string | null
           fight_id: string
           id?: string
           metadata?: Json | null
-          model_version: string
-          source_url: string
+          model_version?: string | null
+          source_url?: string | null
           started_at?: string | null
           status?: string
           stopped_at?: string | null
@@ -163,11 +165,12 @@ export type Database = {
           avg_fps?: number | null
           avg_latency_ms?: number | null
           created_by?: string | null
+          device_id?: string | null
           fight_id?: string
           id?: string
           metadata?: Json | null
-          model_version?: string
-          source_url?: string
+          model_version?: string | null
+          source_url?: string | null
           started_at?: string | null
           status?: string
           stopped_at?: string | null
