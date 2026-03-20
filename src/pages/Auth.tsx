@@ -205,7 +205,7 @@ export default function Auth() {
   };
 
   if (authLoading) {
-    return <PageSkeleton variant="auth" className="bg-black" />;
+    return <PageSkeleton variant="auth" />;
   }
 
   return (
