@@ -155,11 +155,19 @@ serve(async (req) => {
       const body = await req.json();
       const fightId = body.fight_id || body.fightId;
       const deviceId = body.device_id || body.deviceId || 'unknown';
+      const fps = body.fps ?? null;
+      const persons = body.persons ?? null;
+      const latencyMs = body.latency_ms ?? null;
 
       if (!fightId) return json({ error: 'fight_id is required' }, 400);
 
       const exists = await validateFightExists(supabase, fightId);
       if (!exists) return json({ error: 'fight_id inválido' }, 400);
+
+      const metadata: Record<string, unknown> = {};
+      if (fps !== null) metadata.fps = fps;
+      if (persons !== null) metadata.persons = persons;
+      if (latencyMs !== null) metadata.latency_ms = latencyMs;
 
       const { data, error } = await supabase
         .from('fight_telemetry_sessions')
@@ -169,7 +177,8 @@ serve(async (req) => {
           status: 'connected',
           last_heartbeat: new Date().toISOString(),
           vision_connected: true,
-        }, { onConflict: 'fight_id' })
+          metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+        }, { onConflict: 'fight_id,device_id' })
         .select('id')
         .single();
 
