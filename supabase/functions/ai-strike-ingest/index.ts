@@ -110,7 +110,7 @@ serve(async (req) => {
         return json({ error: sessErr.message }, 500);
       }
 
-      // 3. Upsert fight_telemetry_sessions (bridge)
+      // 3. Upsert fight_telemetry_sessions (bridge) — multi-device safe
       await supabase
         .from('fight_telemetry_sessions')
         .upsert({
@@ -120,7 +120,7 @@ serve(async (req) => {
           last_heartbeat: new Date().toISOString(),
           vision_connected: true,
           session_token: session.id,
-        }, { onConflict: 'fight_id' });
+        }, { onConflict: 'fight_id,device_id' });
 
       // 4. Broadcast realtime
       const channel = supabase.channel('fight_sync');
