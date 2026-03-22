@@ -127,19 +127,33 @@ serve(async (req) => {
       });
       supabase.removeChannel(channel);
 
-      // 5. Responder
+      // 5. Responder con datos enriquecidos
+      const formatRecord = (w: number | null, l: number | null, d: number | null) =>
+        `${w ?? 0}-${l ?? 0}-${d ?? 0}`;
+
       return json({
         session_id: session.id,
         fight_id,
         fighters: {
           red: {
-            id: fight.fighter_a?.id || null,
-            name: fight.fighter_a?.name || 'Fighter A',
+            id: ctx.fighter_a_id || null,
+            name: ctx.fighter_a_name || 'Fighter A',
+            nickname: ctx.fighter_a_nickname || null,
+            record: formatRecord(ctx.fighter_a_wins, ctx.fighter_a_losses, ctx.fighter_a_draws),
+            weight_class: ctx.fighter_a_weight || null,
           },
           blue: {
-            id: fight.fighter_b?.id || null,
-            name: fight.fighter_b?.name || 'Fighter B',
+            id: ctx.fighter_b_id || null,
+            name: ctx.fighter_b_name || 'Fighter B',
+            nickname: ctx.fighter_b_nickname || null,
+            record: formatRecord(ctx.fighter_b_wins, ctx.fighter_b_losses, ctx.fighter_b_draws),
+            weight_class: ctx.fighter_b_weight || null,
           },
+        },
+        event: {
+          name: ctx.event_name || null,
+          date: ctx.event_date || null,
+          venue: ctx.event_venue || null,
         },
       });
     }
