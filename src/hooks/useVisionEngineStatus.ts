@@ -24,6 +24,7 @@ function extractMetrics(metadata: Record<string, unknown> | null) {
   return {
     fps: typeof metadata?.fps === 'number' ? metadata.fps : null,
     personsDetected: typeof metadata?.persons === 'number' ? metadata.persons : null,
+    latencyMs: typeof metadata?.latency_ms === 'number' ? metadata.latency_ms : null,
   };
 }
 
