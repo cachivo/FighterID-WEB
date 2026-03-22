@@ -1,115 +1,45 @@
 
 
-# Sincronización Completa del Sistema — Vision → Negocio → Web
+# Hardening Phase — Blindaje del Sistema
 
-## Estado actual
+## Problema
 
-- `fights.status` es `TEXT` libre, sin constraint
-- No existe trigger que actualice rankings al insertar en `fight_results`
-- `/start` no valida el estado de la pelea ni lo cambia a `ACTIVE`
-- `/end` no marca la pelea como `finished`
-- Se pueden crear sesiones duplicadas activas para la misma pelea+dispositivo
-- `COALESCE` en la vista ya usa `CONCAT_WS` (NULL-safe) — esto está correcto
-- No hay realtime en rankings (solo en telemetry)
+El sistema es funcional (7.5/10) pero tiene 4 vulnerabilidades criticas que pueden corromper datos en produccion.
 
 ## Cambios
 
-### 1. Migration SQL — Lifecycle + Ranking trigger
+### 1. Migration SQL — 3 protecciones
 
-```sql
--- A. Partial unique index: solo 1 sesión activa por fight+device
-CREATE UNIQUE INDEX IF NOT EXISTS idx_telemetry_one_active_per_fight_device
-  ON fight_telemetry_sessions (fight_id, device_id)
-  WHERE status = 'connected';
+**A. Unique index en `fight_results(fight_id)`** -- previene doble insert que duplicaria ranking y records.
 
--- B. Trigger: al insertar fight_result → actualizar records + ranking + status
-CREATE OR REPLACE FUNCTION public.on_fight_result_inserted()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-DECLARE
-  v_fight RECORD;
-  v_loser_id UUID;
-BEGIN
-  -- 1. Marcar pelea como finished
-  UPDATE fights SET status = 'finished', winner_id = NEW.winner_id
-  WHERE id = NEW.fight_id
-  RETURNING * INTO v_fight;
+**B. Idempotencia en trigger** -- `on_fight_result_inserted` debe verificar que la pelea no este ya `finished` antes de actualizar records/ranking. Si ya esta finished, skip silencioso (la pelea ya fue procesada).
 
-  IF NOT FOUND THEN RETURN NEW; END IF;
+**C. Normalizar status existentes** -- UPDATE en la misma migracion para estandarizar valores legacy (`ACTIVE` -> `active`, `FINISHED` -> `finished`, etc.).
 
-  -- 2. Actualizar records de peleadores
-  IF NEW.winner_id IS NOT NULL THEN
-    -- Winner: +1 win
-    UPDATE fighter_profiles SET record_wins = COALESCE(record_wins, 0) + 1
-    WHERE id = NEW.winner_id;
-
-    -- Loser: +1 loss
-    v_loser_id := CASE
-      WHEN v_fight.fighter_a_id = NEW.winner_id THEN v_fight.fighter_b_id
-      ELSE v_fight.fighter_a_id
-    END;
-
-    IF v_loser_id IS NOT NULL THEN
-      UPDATE fighter_profiles SET record_losses = COALESCE(record_losses, 0) + 1
-      WHERE id = v_loser_id;
-    END IF;
-
-    -- 3. Ranking: +3 pts winner, -1 pt loser
-    UPDATE fighter_rankings SET points = points + 3, last_fight_date = now()
-    WHERE fighter_id = NEW.winner_id AND is_active = true;
-
-    IF v_loser_id IS NOT NULL THEN
-      UPDATE fighter_rankings SET points = GREATEST(points - 1, 0), last_fight_date = now()
-      WHERE fighter_id = v_loser_id AND is_active = true;
-    END IF;
-  ELSE
-    -- Draw: +1 each
-    UPDATE fighter_profiles SET record_draws = COALESCE(record_draws, 0) + 1
-    WHERE id IN (v_fight.fighter_a_id, v_fight.fighter_b_id);
-
-    UPDATE fighter_rankings SET points = points + 1, last_fight_date = now()
-    WHERE fighter_id IN (v_fight.fighter_a_id, v_fight.fighter_b_id) AND is_active = true;
-  END IF;
-
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER trg_fight_result_inserted
-  AFTER INSERT ON fight_results
-  FOR EACH ROW
-  EXECUTE FUNCTION on_fight_result_inserted();
-```
-
-### 2. Edge Function `ai-strike-ingest` — Lifecycle en `/start` y `/end`
+### 2. Edge Function — Lifecycle estricto
 
 **`/start`**:
-- Validar `ctx.status` no sea `'finished'` — rechazar si ya terminó
-- Después de crear sesión: `UPDATE fights SET status = 'active' WHERE id = fight_id AND status != 'finished'`
+- Cambiar `neq('status', 'finished')` por condicion explicita: solo permitir si status es `scheduled` o `ready`
+- Usar `RETURNING` (via `.select()`) para verificar que el UPDATE realmente modifico una fila
+- Si no modifico nada: devolver 409 "Fight already active or not ready"
 
 **`/end`**:
-- Ya existe y calcula stats, pero actualmente no marca la pelea como `finished` (eso lo hará el trigger al insertar `fight_result`)
-- Agregar: desconectar TODAS las sesiones telemetry del fight (no solo por `fight_id`, usar `device_id` también)
-- Bump version a `3.3`
+- Antes de calcular stats, verificar que `fight.status === 'active'`
+- Si no esta active: devolver 409 "Fight not active"
+- Usar `upsert` con `onConflict: 'fight_id'` en `ai_fight_results` (ya lo hace) -- esto es idempotente para la tabla de AI stats
+- Marcar pelea como `finished` directamente en `/end` (no depender solo del trigger de `fight_results`, ya que `/end` opera sobre `ai_fight_results` que es tabla diferente)
 
-### 3. Frontend — Realtime en `fight_results` ya existe
+**Version bump**: 3.4
 
-`useFightRealtime.tsx` ya subscribe a `fight_results` (línea 107). El ranking se actualiza via trigger (server-side), así que el frontend solo necesita refrescar la query de rankings cuando detecta un cambio en `fights.status`.
+### 3. No se incluye
 
-No se requiere cambio frontend adicional — el trigger hace todo server-side.
+- **ENUM de status**: Requiere migracion pesada con ALTER COLUMN y cast de todos los valores legacy. Es un cambio de fase posterior, no de hardening.
+- **Realtime para rankings**: Mejora UX, no de integridad. Fase posterior.
 
 ## Archivos afectados
 
 | Archivo | Cambio |
 |---------|--------|
-| Nueva migración SQL | Trigger `on_fight_result_inserted`, partial unique index |
-| `supabase/functions/ai-strike-ingest/index.ts` | `/start` valida status + actualiza a active; `/end` limpia sesiones; v3.3 |
-
-## Lo que NO se incluye (y por qué)
-
-- **CHECK constraint en `status`**: No se agrega porque hay valores legacy variados en la tabla. El trigger normaliza hacia adelante.
-- **Realtime en rankings**: El trigger actualiza server-side. Los componentes de ranking ya hacen refetch periódico. Agregar un channel Realtime a `fighter_rankings` sería una mejora futura pero no es crítico.
+| Nueva migracion SQL | Unique index, trigger idempotente, normalizacion de status |
+| `supabase/functions/ai-strike-ingest/index.ts` | `/start` estricto, `/end` con validacion, v3.4 |
 
