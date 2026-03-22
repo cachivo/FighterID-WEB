@@ -372,11 +372,12 @@ serve(async (req) => {
         })
         .eq('id', fightId);
 
-      // Mark telemetry session as disconnected
+      // Mark ALL telemetry sessions as disconnected for this fight
       await supabase
         .from('fight_telemetry_sessions')
         .update({ status: 'disconnected', vision_connected: false })
-        .eq('fight_id', fightId);
+        .eq('fight_id', fightId)
+        .eq('status', 'connected');
 
       return json({
         success: true,
