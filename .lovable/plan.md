@@ -1,46 +1,39 @@
 
 
-# Mejoras Nivel Producción — Vision Engine Sync
+# Panel de Métricas en Tiempo Real — Vision Engine
+
+## Objetivo
+
+Agregar un panel compacto dentro de cada `FightCard` en `LiveEventsControl.tsx` que muestre las métricas del motor de visión en tiempo real: FPS, latencia, personas detectadas y estado de conexión.
 
 ## Cambios
 
-### 1. Migration SQL — UNIQUE constraint + device_id en select
+### 1. Nuevo componente: `VisionMetricsPanel`
 
-```sql
--- Unique per fight+device to prevent collisions with 2 motors
-CREATE UNIQUE INDEX IF NOT EXISTS idx_telemetry_fight_device 
-  ON public.fight_telemetry_sessions (fight_id, device_id);
+Archivo: `src/components/admin/VisionMetricsPanel.tsx`
 
--- Drop old fight_id-only unique if exists (currently used by upsert onConflict)
--- The upsert will now use (fight_id, device_id) as conflict target
-```
+Panel compacto que usa `useVisionEngineStatus(fightId)` y muestra:
+- **Estado**: 🟢 Conectado / 🔴 Desconectado con `deviceId`
+- **FPS**: Gauge visual con color (verde >20, amarillo >10, rojo <10)
+- **Latencia**: Valor en ms con indicador de calidad
+- **Personas detectadas**: Contador con icono
+- **Último heartbeat**: Tiempo relativo ("hace 3s")
 
-This solves the "2 motors same fight_id overwrite each other" problem.
+Layout: Una fila horizontal de 4 mini-cards dentro de un contenedor con borde `border-dashed` similar al panel de simulación en VisionDiagnostics.
 
-### 2. Edge Function `ai-strike-ingest` — v3.2
+### 2. Integrar en `LiveEventsControl.tsx`
 
-- **`/heartbeat`**: Accept optional `fps`, `persons`, `latency_ms` metrics. Store in `fight_telemetry_sessions.metadata` JSONB field (or dedicated columns if migration adds them). Change upsert `onConflict` from `fight_id` to `fight_id, device_id`.
-- **`/start`**: Same `onConflict` fix to `fight_id, device_id`.
-- **`/health`**: Version bump to `3.2`.
-- No backoff logic needed server-side — that's a motor (Python) responsibility.
+Dentro del `FightCard`, después del `RoundControlPanel` (línea 185), montar `<VisionMetricsPanel fightId={fight.id} />`. Se muestra siempre — el componente mismo indica "Sin motor conectado" cuando no hay sesión activa.
 
-### 3. Frontend hook `useVisionEngineStatus` — Metrics + robust threshold
+### 3. Extender `useVisionEngineStatus` — agregar `latencyMs`
 
-- Add `fps` and `personsDetected` to the returned interface (read from session metadata via Realtime).
-- Select `device_id` in the initial fetch query (currently missing from `.select()`).
-- Threshold is already `10_000ms` which equals ~3× the 3s heartbeat interval — this is correct. No change needed, just confirming.
+El hook ya devuelve `fps` y `personsDetected` del metadata. Falta extraer `latency_ms` del mismo objeto metadata y exponerlo como `latencyMs`.
 
-### 4. Component `VisionEngineIndicator` — Show metrics
+## Archivos afectados
 
-- Display `device_id` when live (e.g., "Motor AI · PC-GYM-01_a3f9c2").
-- Show FPS and persons detected when available from the hook.
-
-## Files affected
-
-| File | Change |
-|------|--------|
-| `supabase/migrations/[new].sql` | Add UNIQUE(fight_id, device_id), add `metadata` jsonb if missing |
-| `supabase/functions/ai-strike-ingest/index.ts` | Fix onConflict, accept metrics in /heartbeat, v3.2 |
-| `src/hooks/useVisionEngineStatus.ts` | Add device_id to select, return fps/persons from metadata |
-| `src/components/VisionEngineIndicator.tsx` | Show device_id, FPS, persons count |
+| Archivo | Cambio |
+|---------|--------|
+| `src/components/admin/VisionMetricsPanel.tsx` | Nuevo componente |
+| `src/pages/admin/LiveEventsControl.tsx` | Importar y montar el panel en FightCard |
+| `src/hooks/useVisionEngineStatus.ts` | Agregar `latencyMs` al return |
 
