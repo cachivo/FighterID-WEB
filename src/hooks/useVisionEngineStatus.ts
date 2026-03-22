@@ -8,6 +8,7 @@ interface VisionEngineStatus {
   status: string | null;
   fps: number | null;
   personsDetected: number | null;
+  latencyMs: number | null;
 }
 
 const HEARTBEAT_THRESHOLD_MS = 10_000;
