@@ -18,6 +18,7 @@ import { useAIStrikeEvents } from '@/hooks/useAIStrikeEvents';
 import { useAIInferenceSessions } from '@/hooks/useAIInferenceSessions';
 import { RoundControlPanel } from '@/components/admin/RoundControlPanel';
 import { PrepareFightDialog } from '@/components/admin/PrepareFightDialog';
+import VisionMetricsPanel from '@/components/admin/VisionMetricsPanel';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function LiveEventsControl() {
