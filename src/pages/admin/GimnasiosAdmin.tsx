@@ -37,14 +37,21 @@ export default function GimnasiosAdmin() {
 
   const filteredGyms = useMemo(() => {
     if (!gyms) return [];
-    // First filter by discipline access
     let result = gyms;
-    if (!hasFullAccess && allowedDisciplines.length > 0) {
+    // Filter by discipline context if inside a discipline panel
+    if (disciplineCtx) {
       result = result.filter(g =>
-        g.disciplinas?.some(d => allowedDisciplines.includes(d as any))
+        g.disciplinas?.some(d => d === disciplineCtx.discipline)
       );
-    } else if (!hasFullAccess && allowedDisciplines.length === 0) {
-      result = [];
+    } else {
+      // Fallback: filter by user discipline access
+      if (!hasFullAccess && allowedDisciplines.length > 0) {
+        result = result.filter(g =>
+          g.disciplinas?.some(d => allowedDisciplines.includes(d as any))
+        );
+      } else if (!hasFullAccess && allowedDisciplines.length === 0) {
+        result = [];
+      }
     }
     // Then filter by search query
     if (!searchQuery.trim()) return result;
@@ -55,7 +62,7 @@ export default function GimnasiosAdmin() {
       g.pais?.toLowerCase().includes(q) ||
       g.disciplinas?.some(d => d.toLowerCase().includes(q))
     );
-  }, [gyms, searchQuery, hasFullAccess, allowedDisciplines]);
+  }, [gyms, searchQuery, hasFullAccess, allowedDisciplines, disciplineCtx]);
 
   const toggleDiscipline = (id: string) => {
     setSelectedDisciplines(prev =>

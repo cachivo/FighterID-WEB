@@ -307,8 +307,7 @@ export default function RankingsManagement() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+      </div>
 
       {adjustmentModal && (
         <PointAdjustmentModal

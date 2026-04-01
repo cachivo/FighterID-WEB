@@ -222,10 +222,10 @@ export default function EventosPelea() {
     };
    
    // Form states
-   const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
      name: '',
      description: '',
-     discipline: 'MMA',
+     discipline: disciplineCtx?.discipline || 'MMA',
      venue: '',
      start_time: '',
      end_time: '',
