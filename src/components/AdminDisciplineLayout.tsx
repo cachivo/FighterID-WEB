@@ -1,11 +1,14 @@
+import { useEffect, useRef } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminDisciplineSidebar } from './AdminDisciplineSidebar';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Navigate, Outlet } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Home } from 'lucide-react';
+import { Home, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { DisciplineProvider, type AdminDiscipline } from '@/contexts/DisciplineContext';
+import { useUserDisciplineAccess } from '@/hooks/useUserDisciplineAccess';
+import { toast } from 'sonner';
 
 interface Props {
   discipline: AdminDiscipline;
@@ -13,6 +16,29 @@ interface Props {
 
 export default function AdminDisciplineLayout({ discipline }: Props) {
   const isMobile = useIsMobile();
+  const { hasMMA, hasBoxeo, hasFullAccess, isLoading } = useUserDisciplineAccess();
+  const toastShown = useRef(false);
+
+  const hasAccess = hasFullAccess || (discipline === 'MMA' ? hasMMA : hasBoxeo);
+
+  useEffect(() => {
+    if (!isLoading && !hasAccess && !toastShown.current) {
+      toastShown.current = true;
+      toast.error(`No tienes acceso al panel de ${discipline}`);
+    }
+  }, [isLoading, hasAccess, discipline]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return <Navigate to="/admin" replace />;
+  }
 
   const label = discipline === 'MMA' ? 'Panel MMA' : 'Panel Boxeo';
 
