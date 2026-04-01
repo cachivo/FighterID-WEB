@@ -86,6 +86,7 @@ const Station3RoundControl = lazy(() => import('@/pages/station/Station3RoundCon
 
 // Admin pages
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
+const DisciplineDashboard = lazy(() => import("./pages/admin/DisciplineDashboard"));
 const EventosPelea = lazy(() => import("./pages/admin/EventosPelea"));
 const LiveStreaming = lazy(() => import("./pages/admin/LiveStreaming"));
 const LiveEventsControl = lazy(() => import('./pages/admin/LiveEventsControl'));
