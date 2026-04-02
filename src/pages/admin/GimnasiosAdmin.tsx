@@ -35,22 +35,9 @@ export default function GimnasiosAdmin() {
 
   const filteredGyms = useMemo(() => {
     if (!gyms) return [];
-    let result = gyms;
-    // Filter by discipline context if inside a discipline panel
-    if (disciplineCtx) {
-      result = result.filter(g =>
-        g.disciplinas?.some(d => d === disciplineCtx.discipline)
-      );
-    } else {
-      // Fallback: filter by user discipline access
-      if (!hasFullAccess && allowedDisciplines.length > 0) {
-        result = result.filter(g =>
-          g.disciplinas?.some(d => allowedDisciplines.includes(d as any))
-        );
-      } else if (!hasFullAccess && allowedDisciplines.length === 0) {
-        result = [];
-      }
-    }
+    let result = gyms.filter(g =>
+      g.disciplinas?.some(d => d === discipline)
+    );
     // Then filter by search query
     if (!searchQuery.trim()) return result;
     const q = searchQuery.toLowerCase();
