@@ -560,10 +560,10 @@ img, video {
     pointer-events: none;
     user-select: none;
   }
-  .echo-1 { transform: translate(-0.04em, -0.04em); color: hsl(0 0% 10%); }
-  .echo-2 { transform: translate(-0.08em, -0.08em); color: hsl(0 0% 8%); }
-  .echo-3 { transform: translate(-0.12em, -0.12em); color: hsl(0 0% 7%); }
-  .echo-4 { transform: translate(-0.16em, -0.16em); color: hsl(0 0% 6%); }
+  .echo-1 { transform: translate(-0.04em, -0.04em); color: hsl(0 0% 18%); }
+  .echo-2 { transform: translate(-0.08em, -0.08em); color: hsl(0 0% 22%); }
+  .echo-3 { transform: translate(-0.12em, -0.12em); color: hsl(0 0% 26%); }
+  .echo-4 { transform: translate(-0.16em, -0.16em); color: hsl(0 0% 30%); }
 
   /* Image reveal animation */
   .image-reveal {
