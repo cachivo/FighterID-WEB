@@ -35,20 +35,20 @@ const Footer = () => {
           </div>
           
           <div>
-            <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-accent">Eventos</h4>
-            <ul className="space-y-2 text-gray-300">
-              <li><Link to="/eventos" className="hover:text-accent transition-colors text-sm sm:text-base touch-manipulation">Próximas Batallas</Link></li>
-              <li><Link to="/eventos" className="hover:text-accent transition-colors text-sm sm:text-base touch-manipulation">Calendario</Link></li>
-              <li><Link to="/resultados" className="hover:text-accent transition-colors text-sm sm:text-base touch-manipulation">Resultados</Link></li>
+            <h4 className="text-xs font-bold mb-4 text-[hsl(0_0%_95%/0.4)] uppercase tracking-[0.15em]">Eventos</h4>
+            <ul className="space-y-3 text-[hsl(0_0%_95%/0.6)]">
+              <li><Link to="/eventos" className="hover:text-foreground transition-colors text-sm touch-manipulation">Próximas Batallas</Link></li>
+              <li><Link to="/eventos" className="hover:text-foreground transition-colors text-sm touch-manipulation">Calendario</Link></li>
+              <li><Link to="/resultados" className="hover:text-foreground transition-colors text-sm touch-manipulation">Resultados</Link></li>
             </ul>
           </div>
           
           <div>
-            <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-accent">Comunidad</h4>
-            <ul className="space-y-2 text-gray-300">
-              <li><Link to="/license/auth" className="hover:text-accent transition-colors text-sm sm:text-base touch-manipulation">Licencia de Peleador</Link></li>
-              <li><Link to="/contacto" className="hover:text-accent transition-colors text-sm sm:text-base touch-manipulation">Ser Jurado</Link></li>
-              <li><Link to="/contacto" className="hover:text-accent transition-colors text-sm sm:text-base touch-manipulation">Contacto</Link></li>
+            <h4 className="text-xs font-bold mb-4 text-[hsl(0_0%_95%/0.4)] uppercase tracking-[0.15em]">Comunidad</h4>
+            <ul className="space-y-3 text-[hsl(0_0%_95%/0.6)]">
+              <li><Link to="/license/auth" className="hover:text-foreground transition-colors text-sm touch-manipulation">Licencia de Peleador</Link></li>
+              <li><Link to="/contacto" className="hover:text-foreground transition-colors text-sm touch-manipulation">Ser Jurado</Link></li>
+              <li><Link to="/contacto" className="hover:text-foreground transition-colors text-sm touch-manipulation">Contacto</Link></li>
             </ul>
           </div>
         </div>
