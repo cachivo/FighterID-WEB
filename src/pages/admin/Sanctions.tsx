@@ -176,6 +176,7 @@ export default function Sanctions() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const filtered = sanctions.filter(s => {
+    if (s.discipline && s.discipline !== discipline) return false;
     if (filterType !== 'all' && s.sanction_type !== filterType) return false;
     if (filterStatus !== 'all' && s.status !== filterStatus) return false;
     if (search && !s.reason.toLowerCase().includes(search.toLowerCase()) && !s.target_id.includes(search)) return false;
