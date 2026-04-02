@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useGyms, useCreateGym, useCheckGymDuplicate } from '@/hooks/useGyms';
 import { useAllDisciplines } from '@/hooks/gyms';
-import { useDiscipline, useDisciplineContext } from '@/contexts/DisciplineContext';
+import { useDiscipline } from '@/contexts/DisciplineContext';
 import { AdminGymCard } from '@/components/admin/AdminGymCard';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
-import { useUserDisciplineAccess } from '@/hooks/useUserDisciplineAccess';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -24,8 +23,7 @@ export default function GimnasiosAdmin() {
   const { data: disciplines } = useAllDisciplines();
   const createGym = useCreateGym();
   const { isSuperAdmin } = useSuperAdmin();
-  const { disciplines: allowedDisciplines, hasFullAccess } = useUserDisciplineAccess();
-  const disciplineCtx = useDisciplineContext();
+  const discipline = useDiscipline();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
   const [sendingInvitation, setSendingInvitation] = useState(false);
@@ -37,22 +35,9 @@ export default function GimnasiosAdmin() {
 
   const filteredGyms = useMemo(() => {
     if (!gyms) return [];
-    let result = gyms;
-    // Filter by discipline context if inside a discipline panel
-    if (disciplineCtx) {
-      result = result.filter(g =>
-        g.disciplinas?.some(d => d === disciplineCtx.discipline)
-      );
-    } else {
-      // Fallback: filter by user discipline access
-      if (!hasFullAccess && allowedDisciplines.length > 0) {
-        result = result.filter(g =>
-          g.disciplinas?.some(d => allowedDisciplines.includes(d as any))
-        );
-      } else if (!hasFullAccess && allowedDisciplines.length === 0) {
-        result = [];
-      }
-    }
+    let result = gyms.filter(g =>
+      g.disciplinas?.some(d => d === discipline)
+    );
     // Then filter by search query
     if (!searchQuery.trim()) return result;
     const q = searchQuery.toLowerCase();
@@ -62,7 +47,7 @@ export default function GimnasiosAdmin() {
       g.pais?.toLowerCase().includes(q) ||
       g.disciplinas?.some(d => d.toLowerCase().includes(q))
     );
-  }, [gyms, searchQuery, hasFullAccess, allowedDisciplines, disciplineCtx]);
+  }, [gyms, searchQuery, discipline]);
 
   const toggleDiscipline = (id: string) => {
     setSelectedDisciplines(prev =>

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useDiscipline, useDisciplineContext } from '@/contexts/DisciplineContext';
+import { useDiscipline } from '@/contexts/DisciplineContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, Edit, User, Trash2, Eye, Plus, AlertCircle, ChevronLeft, ChevronRight, Building } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -20,7 +20,7 @@ import { FighterProfile } from '@/hooks/useFighterProfiles';
 import { useRealtimeFighterUpdates } from '@/hooks/useRealtimeFighterUpdates';
 import { useGyms } from '@/hooks/useGyms';
 import { useAddMembership } from '@/hooks/gyms';
-import { WEIGHT_CLASSES, getWeightClassLabel, ENABLED_DISCIPLINES } from '@/lib/constants/disciplines';
+import { WEIGHT_CLASSES, getWeightClassLabel } from '@/lib/constants/disciplines';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 20;
@@ -39,13 +39,12 @@ const getRecordDisplay = (fighter: AdminFighterProfile) => {
 export default function FightersProfiles() {
   const navigate = useNavigate();
   const { fighters, loading, error, fetchFighters } = useAdminFighters();
-  const disciplineCtx = useDisciplineContext();
-  const discipline = disciplineCtx ? disciplineCtx.discipline : undefined;
+  const discipline = useDiscipline();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedWeightClass, setSelectedWeightClass] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
   const [showIncomplete, setShowIncomplete] = useState(false);
-   const selectedDiscipline = discipline ?? 'all';
+   const selectedDiscipline = discipline;
    const [selectedGymFilter, setSelectedGymFilter] = useState<string>('all');
    const [page, setPage] = useState(1);
   const [editingFighter, setEditingFighter] = useState<AdminFighterProfile | null>(null);
@@ -83,7 +82,7 @@ export default function FightersProfiles() {
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
       const matchesWeight = selectedWeightClass === 'all' || fighter.weight_class === selectedWeightClass;
-       const matchesDiscipline = selectedDiscipline === 'all' || fighter.discipline === selectedDiscipline;
+       const matchesDiscipline = fighter.discipline === selectedDiscipline;
       const completionScore = (fighter as any).completion_score || 0;
       const matchesCompletion = !showIncomplete || completionScore < 70;
       
@@ -199,21 +198,6 @@ export default function FightersProfiles() {
                 />
               </div>
             </div>
-             {!disciplineCtx && (
-               <Select value={selectedDiscipline} onValueChange={() => {}}>
-                 <SelectTrigger className="w-full md:w-40">
-                   <SelectValue placeholder="Disciplina" />
-                 </SelectTrigger>
-                 <SelectContent>
-                   <SelectItem value="all">Todas</SelectItem>
-                   {ENABLED_DISCIPLINES.map(d => (
-                     <SelectItem key={d.value} value={d.value}>
-                       {d.label}
-                     </SelectItem>
-                   ))}
-                 </SelectContent>
-               </Select>
-             )}
              <Select value={selectedWeightClass} onValueChange={handleFilterChange(setSelectedWeightClass)}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Categoría" />
