@@ -20,7 +20,7 @@ import { FighterProfile } from '@/hooks/useFighterProfiles';
 import { useRealtimeFighterUpdates } from '@/hooks/useRealtimeFighterUpdates';
 import { useGyms } from '@/hooks/useGyms';
 import { useAddMembership } from '@/hooks/gyms';
-import { WEIGHT_CLASSES, getWeightClassLabel, ENABLED_DISCIPLINES } from '@/lib/constants/disciplines';
+import { WEIGHT_CLASSES, getWeightClassLabel } from '@/lib/constants/disciplines';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 20;
