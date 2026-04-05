@@ -38,13 +38,12 @@ const getRecordDisplay = (fighter: AdminFighterProfile) => {
 
 export default function FightersProfiles() {
   const navigate = useNavigate();
-  const { fighters, loading, error, fetchFighters } = useAdminFighters();
   const discipline = useDiscipline();
+  const { fighters, loading, error, fetchFighters } = useAdminFighters(discipline);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedWeightClass, setSelectedWeightClass] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
   const [showIncomplete, setShowIncomplete] = useState(false);
-   const selectedDiscipline = discipline;
    const [selectedGymFilter, setSelectedGymFilter] = useState<string>('all');
    const [page, setPage] = useState(1);
   const [editingFighter, setEditingFighter] = useState<AdminFighterProfile | null>(null);
