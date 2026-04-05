@@ -87,7 +87,18 @@ serve(async (req) => {
         return json({ error: 'fight_id inválido — la pelea no existe' }, 400);
       }
 
-      // 1b. Lifecycle estricto — solo scheduled/ready pueden iniciar
+      // 1b. Validate fighters are assigned
+      if (!ctx.fighter_a_id || !ctx.fighter_b_id) {
+        return json({
+          error: 'No se puede iniciar — la pelea no tiene ambos peleadores asignados.',
+          missing: {
+            fighter_a: !ctx.fighter_a_id,
+            fighter_b: !ctx.fighter_b_id,
+          },
+        }, 422);
+      }
+
+      // 1c. Lifecycle estricto — solo scheduled/ready pueden iniciar
       const allowedStartStatuses = ['scheduled', 'ready', 'active'];
       if (!allowedStartStatuses.includes(ctx.status)) {
         return json({ error: `No se puede iniciar pelea con status '${ctx.status}'.` }, 409);
