@@ -177,6 +177,7 @@ serve(async (req) => {
             nickname: ctx.fighter_a_nickname || null,
             record: formatRecord(ctx.fighter_a_wins, ctx.fighter_a_losses, ctx.fighter_a_draws),
             weight_class: ctx.fighter_a_weight || null,
+            avatar_url: ctx.fighter_a_avatar || null,
           },
           blue: {
             id: ctx.fighter_b_id || null,
@@ -184,6 +185,7 @@ serve(async (req) => {
             nickname: ctx.fighter_b_nickname || null,
             record: formatRecord(ctx.fighter_b_wins, ctx.fighter_b_losses, ctx.fighter_b_draws),
             weight_class: ctx.fighter_b_weight || null,
+            avatar_url: ctx.fighter_b_avatar || null,
           },
         },
         event: {
