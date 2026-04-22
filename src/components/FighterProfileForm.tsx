@@ -40,9 +40,9 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
     nickname: '',
     country: 'Honduras',
     weight_class: '',
-    height_cm: undefined,
-    weight_kg: undefined,
-    reach_cm: undefined,
+    height_cm: null,
+    weight_kg: null,
+    reach_cm: null,
     fighting_style: '',
     gym_name: '',
     gym_id: null,
@@ -128,7 +128,7 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
   const handleChange = (field: keyof FighterProfileData, value: string | number | undefined | null) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value === '' ? undefined : value
+      [field]: value === '' || value === undefined ? null : value
     }));
   };
 
@@ -363,7 +363,8 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
                 type="number"
                 value={formData.height_cm || ''}
                 onChange={(e) => {
-                  const height = parseInt(e.target.value) || undefined;
+                  const parsed = parseInt(e.target.value);
+                  const height = Number.isFinite(parsed) ? parsed : null;
                   setFormData(prev => ({
                     ...prev,
                     height_cm: height,
@@ -382,7 +383,10 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
                 type="number"
                 step="0.1"
                 value={formData.weight_kg || ''}
-                onChange={(e) => handleChange('weight_kg', parseFloat(e.target.value) || undefined)}
+                onChange={(e) => {
+                  const parsed = parseFloat(e.target.value);
+                  handleChange('weight_kg', Number.isFinite(parsed) ? parsed : null);
+                }}
                 placeholder="70.5"
               />
             </div>
@@ -393,7 +397,10 @@ export function FighterProfileForm({ existingProfile, onSuccess, onCancel }: Fig
                 id="reach_cm"
                 type="number"
                 value={formData.reach_cm || ''}
-                onChange={(e) => handleChange('reach_cm', parseInt(e.target.value) || undefined)}
+                onChange={(e) => {
+                  const parsed = parseInt(e.target.value);
+                  handleChange('reach_cm', Number.isFinite(parsed) ? parsed : null);
+                }}
                 placeholder="185"
               />
               <p className="text-xs text-muted-foreground mt-1">

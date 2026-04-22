@@ -68,10 +68,8 @@ export const FighterDetailModal = ({ fighterId, open, onClose }: FighterDetailMo
   // Fetch data when modal opens with a fighterId
   useEffect(() => {
     if (open && fighterId && !data) {
-      console.log('Modal opened, fetching data for fighter:', fighterId);
       fetchDetailedData(fighterId);
     } else if (!open) {
-      console.log('Modal closed, clearing data');
       clearData();
     }
   }, [open, fighterId, fetchDetailedData, clearData, data]);

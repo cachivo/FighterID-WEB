@@ -50,7 +50,6 @@ const VerifyLicense = lazy(() => import('./pages/VerifyLicense'));
 const HudPublicDisplay = lazy(() => import("./pages/HudPublicDisplay"));
 const HudDemoDisplay = lazy(() => import("./pages/HudDemoDisplay"));
 const ImportEvent = lazy(() => import("./pages/ImportEvent"));
-const TestNewsFunction = lazy(() => import("./pages/TestNewsFunction"));
 const PublicFightResults = lazy(() => import('./pages/FightResults'));
 const AIStrikeOverlay = lazy(() => import('./pages/AIStrikeOverlay'));
 
@@ -187,7 +186,6 @@ const App = () => {
               <Route path="/social/notifications" element={<Notifications />} />
               <Route path="/social/profile" element={<SocialProfile />} />
               <Route path="/social/profile/:id" element={<SocialUserProfile />} />
-              <Route path="/test-news" element={<TestNewsFunction />} />
               <Route path="/verify/license/:licenseNumber" element={<VerifyLicense />} />
               <Route path="/import-event" element={<ImportEvent />} />
               <Route path="/predicciones" element={<Predicciones />} />

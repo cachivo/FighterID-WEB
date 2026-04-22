@@ -341,8 +341,6 @@ export function UserFighterProfileEditForm({ profile, onSuccess, onCancel }: Use
           if (phoneError) throw phoneError;
         }
 
-        console.log("[SUCCESS] Immediate updates applied, gamification score updated via trigger");
-        
         // Invalidate all related caches for immediate UI sync
         queryClient.invalidateQueries({ queryKey: ['fighters'] });
         queryClient.invalidateQueries({ queryKey: ['fighter', profileId] });

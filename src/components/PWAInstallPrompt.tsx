@@ -54,8 +54,7 @@ const PWAInstallPrompt = () => {
     if (deferredPrompt) {
       // Use native prompt if available
       deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response to install prompt: ${outcome}`);
+      await deferredPrompt.userChoice;
       setDeferredPrompt(null);
       setShowPrompt(false);
     } else {

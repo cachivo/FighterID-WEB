@@ -712,8 +712,8 @@ const DebugEventButton = ({ eventId }: { eventId: string }) => {
       if (error) throw error;
 
       console.group('🔍 Event Diagnostic Report');
-      console.log('Event ID:', eventId);
-      console.log('Total Fights:', fights?.length || 0);
+      console.info('Event ID:', eventId);
+      console.info('Total Fights:', fights?.length || 0);
       console.table(
         fights?.map(f => ({
           'Fight #': f.fight_number,
@@ -727,14 +727,14 @@ const DebugEventButton = ({ eventId }: { eventId: string }) => {
       // Detalles de rounds
       fights?.forEach(f => {
         if (f.fight_rounds && f.fight_rounds.length > 0) {
-          console.log(`\nRounds for Fight #${f.fight_number}:`, f.fight_rounds);
+          console.info(`Rounds for Fight #${f.fight_number}:`, f.fight_rounds);
         }
       });
 
       // Detalles de officials
       fights?.forEach(f => {
         if (f.fight_officials && f.fight_officials.length > 0) {
-          console.log(`\nOfficials for Fight #${f.fight_number}:`, f.fight_officials);
+          console.info(`Officials for Fight #${f.fight_number}:`, f.fight_officials);
         }
       });
       

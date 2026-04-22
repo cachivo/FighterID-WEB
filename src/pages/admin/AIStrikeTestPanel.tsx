@@ -37,8 +37,6 @@ export default function AIStrikeTestPanel() {
         title: "✅ Éxito",
         description: data.message || "Acción completada",
       });
-
-      console.log('Simulator response:', data);
     } catch (error) {
       console.error('Error calling simulator:', error);
       toast({

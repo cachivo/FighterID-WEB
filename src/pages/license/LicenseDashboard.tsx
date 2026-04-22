@@ -121,7 +121,6 @@ export default function LicenseDashboard() {
     setIsUpdating(true);
     
     try {
-      console.log('[Dashboard] Edit success - forcing license update...');
       // Force update context first
       await forceLicenseUpdate();
       // Then refresh local data

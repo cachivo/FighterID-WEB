@@ -203,7 +203,6 @@ export default function LicenseOnboarding() {
     if (result.success) {
       // Clear the draft after successful submission
       localStorage.removeItem('license_onboarding_draft');
-      console.log('Profile created successfully!');
     } else {
       console.error('Profile creation failed:', result.error);
     }

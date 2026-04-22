@@ -93,22 +93,9 @@ const EventDetail = () => {
   } = useFights(eventId);
   const [event, setEvent] = useState(null);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('EventDetail - Debug Info:', {
-      eventId,
-      eventsLoading,
-      fightsLoading,
-      fightsError,
-      eventsCount: events.length,
-      fightsCount: fights.length,
-      fights: fights
-    });
-  }, [eventId, events, fights, eventsLoading, fightsLoading, fightsError]);
   useEffect(() => {
     if (eventId && events.length > 0) {
       const foundEvent = events.find(e => e.id === eventId);
-      console.log('EventDetail - Found event:', foundEvent);
       setEvent(foundEvent || null);
     }
   }, [eventId, events]);

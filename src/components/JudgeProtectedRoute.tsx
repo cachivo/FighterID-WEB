@@ -16,8 +16,6 @@ export function JudgeProtectedRoute({ children }: { children: React.ReactNode })
     }
 
     const checkJudgeAccess = async () => {
-      console.log('[JUDGE AUTH] Verificando acceso para:', user.email);
-      
       try {
         // PASO 1: Verificar rol en user_roles usando función is_judge
         const { data: hasJudgeRole, error: roleError } = await supabase
@@ -31,7 +29,6 @@ export function JudgeProtectedRoute({ children }: { children: React.ReactNode })
         }
 
         if (!hasJudgeRole) {
-          console.log('[JUDGE AUTH] Usuario no tiene rol de juez');
           setIsJudge(false);
           return;
         }
@@ -51,20 +48,17 @@ export function JudgeProtectedRoute({ children }: { children: React.ReactNode })
         }
 
         if (!judgeProfile) {
-          console.log('[JUDGE AUTH] No se encontró perfil de juez');
           toast.error('No tienes perfil de juez configurado');
           setIsJudge(false);
           return;
         }
 
         if (!judgeProfile.active) {
-          console.log('[JUDGE AUTH] Perfil de juez inactivo');
           toast.error('Tu perfil de juez está inactivo');
           setIsJudge(false);
           return;
         }
 
-        console.log('[JUDGE AUTH] Acceso concedido:', judgeProfile);
         setIsJudge(true);
 
       } catch (error) {

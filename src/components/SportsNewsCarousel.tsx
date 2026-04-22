@@ -45,7 +45,6 @@ const SportsNewsCarousel = () => {
   // Auto-refresh news every 10 minutes
   useEffect(() => {
     const refreshInterval = setInterval(() => {
-      console.log('Auto-refreshing sports news...');
       handleAutoRefresh();
     }, 10 * 60 * 1000); // 10 minutes
 

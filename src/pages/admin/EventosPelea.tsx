@@ -74,8 +74,6 @@ export default function EventosPelea() {
     const discipline = useDiscipline();
     const { events, loading, createEvent, updateEvent, updateEventState, updateEventMeta, togglePublishEvent, deleteEvent, refreshEvents } = useEvents(discipline);
     
-    console.log('[EventosPelea] loading:', loading, 'events:', events?.length);
-    
     // Branding modal state
     const [showBrandingModal, setShowBrandingModal] = useState(false);
     const [brandingEvent, setBrandingEvent] = useState<BdgEvent | null>(null);
@@ -237,17 +235,8 @@ export default function EventosPelea() {
    });
  
    useEffect(() => {
-     console.log('[EventosPelea] Component mounted, fetching fighters');
      fetchFighters();
    }, []);
- 
-   useEffect(() => {
-     console.log('[EventosPelea] events updated:', events);
-   }, [events]);
- 
-   useEffect(() => {
-     console.log('[EventosPelea] loading state changed:', loading);
-   }, [loading]);
  
    const fetchFighters = async () => {
      try {

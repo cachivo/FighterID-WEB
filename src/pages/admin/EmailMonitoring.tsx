@@ -90,8 +90,6 @@ export default function EmailMonitoring() {
         title: "Correo de prueba enviado",
         description: `El correo se envió exitosamente a ${currentUser.email}. Revisa tu bandeja de entrada.`,
       });
-
-      console.log("[TEST EMAIL] Success:", data);
     } catch (error: any) {
       console.error("[TEST EMAIL] Error:", error);
       toast({

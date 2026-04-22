@@ -81,9 +81,9 @@ export interface FighterProfileData {
   nickname?: string;
   country?: string;
   weight_class: string;
-  height_cm?: number;
-  weight_kg?: number;
-  reach_cm?: number;
+  height_cm?: number | null;
+  weight_kg?: number | null;
+  reach_cm?: number | null;
   fighting_style?: string;
   gym_name?: string;
   gym_id?: string | null;

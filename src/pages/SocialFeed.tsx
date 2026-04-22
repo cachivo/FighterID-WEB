@@ -62,7 +62,6 @@ export default function SocialFeed() {
 
   // Load posts based on active tab
   useEffect(() => {
-    console.log('🔄 [SOCIAL FEED] Tab changed to:', activeTab);
     if (activeTab === 'friends') {
       fetchFriendsPosts();
     } else {
@@ -72,8 +71,6 @@ export default function SocialFeed() {
 
   // Realtime subscription at page level, respects activeTab
   useEffect(() => {
-    console.log('🔌 [SOCIAL FEED] Setting up realtime for tab:', activeTab);
-    
     const channel = supabase
       .channel('social-posts-page-rt')
       .on(
@@ -83,8 +80,7 @@ export default function SocialFeed() {
           schema: 'public',
           table: 'social_posts'
         },
-        (payload) => {
-          console.log('📥 [REALTIME] Nuevo post detectado:', payload.new);
+        () => {
           // Refetch según tab actual
           if (activeTab === 'friends') {
             fetchFriendsPosts();
@@ -100,8 +96,7 @@ export default function SocialFeed() {
           schema: 'public',
           table: 'social_posts'
         },
-        (payload) => {
-          console.log('📝 [REALTIME] Post actualizado:', payload.new);
+        () => {
           if (activeTab === 'friends') {
             fetchFriendsPosts();
           } else {
@@ -112,7 +107,6 @@ export default function SocialFeed() {
       .subscribe();
 
     return () => {
-      console.log('🔌 [SOCIAL FEED] Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [activeTab, fetchPosts, fetchFriendsPosts]);
@@ -147,13 +141,6 @@ export default function SocialFeed() {
   };
 
   const handleCreatePost = async (postData: any) => {
-    console.log('🔍 [SOCIAL FEED] handleCreatePost iniciado');
-    console.log('🔍 [SOCIAL FEED] user:', user?.id);
-    console.log('🔍 [SOCIAL FEED] appUser:', appUser);
-    console.log('🔍 [SOCIAL FEED] isAdmin:', isAdmin);
-    console.log('🔍 [SOCIAL FEED] userFighter:', userFighter);
-    console.log('🔍 [SOCIAL FEED] postAsAdmin:', postAsAdmin);
-    
     if (!user || !appUser) {
       console.error('❌ [SOCIAL FEED] No user or appUser');
       toast.error('Debes iniciar sesión para publicar');
@@ -166,21 +153,17 @@ export default function SocialFeed() {
     if (isAdmin && postAsAdmin) {
       authorType = 'admin';
       authorId = appUser.id;
-      console.log('📝 [SOCIAL FEED] Posteando como ADMIN:', authorId);
     } else if (userFighter) {
       authorType = 'fighter';
       authorId = userFighter.id;
-      console.log('📝 [SOCIAL FEED] Posteando como FIGHTER:', authorId);
     } else {
       authorType = 'user';
       authorId = appUser.id;
-      console.log('📝 [SOCIAL FEED] Posteando como USER:', authorId);
     }
 
     const result = await createPost(postData, authorType, authorId);
     
     if (result) {
-      console.log('✅ [SOCIAL FEED] Post creado exitosamente');
       setShowCreateForm(false);
       // NO refetch explícito - dejamos que optimistic update + realtime hagan el trabajo
     } else {
@@ -294,7 +277,6 @@ export default function SocialFeed() {
                           console.error('Error publishing news:', publishError);
                           toast.error('Error al publicar noticias');
                         } else {
-                          console.log('📰 News published:', data);
                           toast.success(`Noticias actualizadas: ${data?.postsCreated || 0} posts creados`);
                           // Refresh posts after publishing
                           setTimeout(() => fetchPosts(), 1000);
@@ -429,7 +411,6 @@ export default function SocialFeed() {
                 <div className="flex justify-center pt-6">
                   <Button 
                     onClick={() => {
-                      console.log('🔄 [LOAD MORE] Tab activo:', activeTab);
                       if (activeTab === 'friends') {
                         fetchFriendsPosts(10, posts.length);
                       } else {
