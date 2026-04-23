@@ -119,6 +119,14 @@ export default function GimnasiosAdmin() {
             {gyms && (
               <Badge variant="secondary" className="ml-2">{gyms.length}</Badge>
             )}
+            {pendingCount > 0 && (
+              <Badge
+                variant="outline"
+                className="ml-2 border-yellow-500/50 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+              >
+                {pendingCount} pendiente{pendingCount === 1 ? '' : 's'}
+              </Badge>
+            )}
           </p>
         </div>
 
@@ -240,15 +248,28 @@ export default function GimnasiosAdmin() {
         )}
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por nombre, ciudad o disciplina..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-        />
+      {/* Search + Status filter */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nombre, ciudad o disciplina..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los estados</SelectItem>
+            <SelectItem value="approved">Solo aprobados</SelectItem>
+            <SelectItem value="pending">Solo pendientes</SelectItem>
+            <SelectItem value="rejected">Solo rechazados</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Grid */}

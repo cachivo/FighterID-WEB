@@ -11,6 +11,7 @@ import { DeleteGymDialog } from './DeleteGymDialog';
 import { AssignFighterToGymModal } from './AssignFighterToGymModal';
 import { AssignGymOwnerModal } from './AssignGymOwnerModal';
 import { supabase } from '@/integrations/supabase/client';
+import { ModerationStatusBadge } from './ModerationStatusBadge';
 import type { Gym } from '@/types/gyms';
 
 interface AdminGymCardProps {
@@ -100,6 +101,7 @@ export function AdminGymCard({ gym, readOnly = false }: AdminGymCardProps) {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-1">
+            <ModerationStatusBadge status={gym.moderation_status} />
             {!gym.owner_id && (
               <Badge variant="destructive" className="flex items-center gap-1 text-[10px]">
                 <AlertCircle className="h-3 w-3" />
