@@ -1,229 +1,159 @@
-# Sistema de Sesiones + RAG para Workflow de Licencias Fighter ID
+# System Polish — Round 1: Seguridad real + arreglos arquitectónicos
 
-## Mapeo conceptual al stack actual
+Filtré los 14 puntos del audit. Ataco los **arreglos reales y de alto valor** + auditoría RLS profunda (que es lo único realmente crítico, porque la anon key publishable es pública por diseño).
 
-Tu spec genérica → tabla real Fighter ID:
+---
 
-| Spec genérica | Fighter ID |
+## Parte A — Seguridad RLS (CRÍTICO, lo único urgente del audit)
+
+El scan encontró **291 hallazgos** (gran parte ruido del linter), pero **8 errores críticos reales** de RLS que sí permiten ataques. Estos son los que arreglo en migraciones SQL:
+
+### A1. `fighter_profiles` expone datos médicos al público
+Policy actual `Anonymous can view basic fighter info` (`USING active = true`) deja leer `medical_conditions`, `medical_allergies`, `blood_type`, `birthdate`, `document_number`, `document_image_url`, `emergency_contact_*`, `insurance_*` a cualquier visitante anónimo. Confirmado con datos reales (ej. "Bipolaridad afectiva").
+
+**Fix**: Crear vista `public.fighter_profiles_public` con `security_invoker=on` que solo expone campos no-sensibles (id, names, nickname, avatar, weight_class, level, records, gym_id). Reemplazar el policy anónimo por `USING (false)` en las columnas sensibles via revoke + nueva policy auth-only para owner/admin. Migrar todas las queries públicas a la vista.
+
+### A2. `fights` permite write sin ownership
+Policies INSERT/UPDATE/DELETE con `USING true` para cualquier authenticated. Cualquier usuario logueado puede inventar peleas, sobrescribir resultados, borrar registros.
+
+**Fix**: Restringir INSERT/UPDATE/DELETE a `has_role(auth.uid(),'admin')` OR `has_role(auth.uid(),'super_admin')` OR `event_id IN (SELECT id FROM bdg_event WHERE created_by = auth.uid())`.
+
+### A3. `license_verification_tokens` enumeración pública
+SELECT con `USING true` permite a anónimos enumerar todos los tokens y suplantar verificaciones de licencia.
+
+**Fix**: Eliminar el policy público. Crear edge function `verify-license-token` que recibe el token, valida server-side y devuelve solo el resultado (válida/inválida + datos públicos del fighter).
+
+### A4. `bet_delay_queue` manipulable por cualquier user
+Policy `auth.uid() IS NOT NULL` para ALL operations. Cualquier authenticated borra/modifica settlements pendientes.
+
+**Fix**: Restringir ALL ops a `has_role(auth.uid(),'admin')` o service_role solamente.
+
+### A5. `judges` / `officials` exponen email + teléfono + document_id
+Policies públicas o authenticated leen contactos privados de oficiales.
+
+**Fix**: Crear vistas `judges_public` / `officials_public` (solo nombre, certificación, foto). Restringir tabla base a admin o self.
+
+### A6. `coaches` y `gyms` exponen email/telefono/whatsapp públicamente
+Mismo patrón que A5 pero con severidad warn.
+
+**Fix**: Vistas públicas sin contacto. Contacto solo para auth users con relación legítima (ej. fighter con membresía en ese gym).
+
+### A7. `post_comments` UPDATE sin ownership check
+Policy verifica que existe app_user pero no que `user_id = post_comments.user_id`. Cualquier user reescribe comentarios de otros.
+
+**Fix**: Cambiar `USING` a `app_user.id = post_comments.user_id AND app_user.auth_user_id = auth.uid()`.
+
+### A8. `station_rate_limits` borrable por anónimos (rate limit bypass)
+Policy `ALL USING true` para anon. Atacante bloqueado por intentos de PIN borra su registro y reanuda brute-force.
+
+**Fix**: Anon solo puede INSERT. UPDATE/DELETE solo service_role.
+
+### A9. Telemetry session tokens públicos (`fight_telemetry_sessions`, `vision_sync_sessions`)
+Tokens leíbles por cualquiera, permiten inyectar telemetría falsa.
+
+**Fix**: Restringir SELECT del campo `session_token` a service_role. Crear vistas sin el token para reads públicos.
+
+### A10. Realtime channels sin authorization
+`realtime.messages` sin RLS — cualquier authenticated se suscribe a `fighter_licenses`, `doping_tests`, `audit_log`, `notifications`.
+
+**Fix**: Agregar RLS a `realtime.messages` scopeada por topic + auth.uid().
+
+### A11. `configuracion_sitio`, `servicios`, `testimonios`, `partners` writables por todos
+Policies `WITH CHECK true` para authenticated.
+
+**Fix**: Restringir write a `has_role(auth.uid(),'admin')`.
+
+### A12. `station_access_log` writable por anon con PIN en claro
+PINs intentados se loggean sin sanitización; anon puede flood el log.
+
+**Fix**: INSERT solo via edge function con service_role; hashear `pin_attempted` antes de guardar.
+
+---
+
+## Parte B — Arreglos arquitectónicos reales
+
+### B1. Refactor `App.tsx`: extraer `<AdminDisciplineRoutes />`
+Las rutas `/admin/mma` y `/admin/boxeo` son copy-paste idénticos (~35 líneas duplicadas).
+
+**Fix**: Crear `src/routes/AdminDisciplineRoutes.tsx` que recibe `discipline: 'MMA'|'Boxeo'` y renderiza el bloque `<Route>...children</Route>`. Reduce ~70 líneas en App.tsx.
+
+### B2. Limpiar lockfiles duplicados
+`bun.lock` + `bun.lockb` + `package-lock.json` coexisten. Lovable usa Bun.
+
+**Fix**: Borrar `package-lock.json` y `bun.lockb` (legacy binary). Mantener solo `bun.lock`.
+
+### B3. `package.json` identity
+Cambiar `"name": "vite_react_shadcn_ts"` → `"fighter-id"` y `"version": "0.0.0"` → `"1.0.0"`.
+
+### B4. Quitar import React redundante en App.tsx
+Línea 17: `import React from 'react';` no se usa (Vite SWC + JSX runtime). Borrar.
+
+### B5. Mejorar global error handler
+Actual silencia rejections con `event.preventDefault()` sin reportar.
+
+**Fix**: Mantener `preventDefault` para evitar crash, pero loggear a tabla `client_error_log` (con RLS append-only) via edge function fire-and-forget. Toast genérico si error es de UI.
+
+### B6. Vitest + tests base
+No hay testing. Usuario confirmó en memory que el standard es Vitest + RTL.
+
+**Fix**: Instalar `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`. Configurar `vitest.config.ts`. Añadir 3 tests seed:
+- `src/system/events/event.logger.test.ts` — whitelist enforcement
+- `src/lib/scoring-utils.test.ts` — cálculo puntos
+- `src/lib/fighterDataFilter.test.ts` — filter sensitive fields
+
+### B7. Validación de route params (zod)
+Rutas `/fighter/:id`, `/evento/:eventId` no validan UUID.
+
+**Fix**: Helper `useUuidParam(name)` que valida con `z.string().uuid()` y redirige a `/404` si inválido. Aplicar en `FighterProfile`, `EventDetail`, `LicenseDashboard`, `GymDashboard`, todas las páginas de station/judge.
+
+---
+
+## Parte C — Lo que NO toco y por qué
+
+| Punto audit | Razón |
 |---|---|
-| `expediente_id` | `fighter_profiles.id` (perfil del peleador) |
-| `phase_id` | `fighter_licenses.status` (`pending`, `active`, `suspended`, `expired`) + `completion_level` del perfil |
-| `workflow engine` | Reglas existentes en `useLicenseSystem`, `license_audit_log`, triggers SQL ya en BD |
-| `db.session.create` (Prisma) | `supabase.from('work_sessions').insert(...)` |
-| `openai.embeddings.create` | Lovable AI Gateway (`text-embedding-004` vía `LOVABLE_API_KEY`) |
+| #1 Anon key en .env / client.ts | Es publishable key, **diseñada** para ir al browser. Seguridad real está en RLS (Parte A). Rotarla no aporta nada. |
+| #1 .env en git | Lovable gestiona el repo y `.env` solo contiene claves públicas. |
+| #4 Bundle bloat (Radix, transformers) | Ronda separada — requiere análisis de bundle real con `rollup-plugin-visualizer`. No es seguridad. |
+| #5 Lockfiles | Sí lo arreglo (B2). |
+| #7 Commit messages | Lovable los autogenera. Fuera de scope. |
+| #11 sw.js falta | Verificado: **sí existe** `public/sw.js` (lo vi). Falsa alarma. |
+| #12 lovable-tagger | Necesario mientras estés en Lovable. |
+| #13 AI Vision README | Es doc aspiracional, fuera de scope code. |
+| #14 Provider nesting | 5 providers anidados es estándar React. Cosmético. |
 
-No vamos a construir un workflow engine paralelo: ya existe (`license_audit_log`, `moderation_status`, triggers de fight result). El nuevo sistema **observa y registra**, no decide transiciones de estado por su cuenta — solo sugiere `can_advance` consultando reglas existentes.
+---
 
-## Alcance (acordado)
+## Detalle técnico — orden de ejecución
 
-Solo backend + hooks. Cero UI nueva en este PR. Esto deja la infraestructura lista para que después se agreguen widgets de "actividad reciente", panel admin de auditoría, búsqueda RAG, etc.
+1. **Migración SQL** con todos los fixes A1–A12 (un solo migration file por atomicidad)
+2. **Edge function** `verify-license-token` para reemplazar enumeración pública
+3. **Vistas públicas** seguras (`fighter_profiles_public`, `judges_public`, `officials_public`, `coaches_public`, `gyms_public`)
+4. **Refactor frontend**: actualizar todos los `from('fighter_profiles')` públicos → `from('fighter_profiles_public')`
+5. **Refactor App.tsx** (B1, B4) + nuevo `AdminDisciplineRoutes.tsx`
+6. **Cleanup** lockfiles + package.json (B2, B3)
+7. **Vitest setup** + 3 tests seed (B6)
+8. **`useUuidParam` hook** + aplicar en páginas (B7)
+9. **Error logger** mejorado (B5)
+10. **Update memory**: nueva entrada `mem://security/rls-hardening-round-1` + actualizar security-memory
 
-## 1. Migración SQL
+## Archivos afectados (estimado)
 
-Cuatro tablas nuevas + extensión `pgvector` (ya disponible en Supabase).
+**Nuevos**:
+- `supabase/migrations/<ts>_rls_hardening_round1.sql`
+- `supabase/functions/verify-license-token/index.ts`
+- `src/routes/AdminDisciplineRoutes.tsx`
+- `src/hooks/useUuidParam.ts`
+- `vitest.config.ts`, `src/test/setup.ts`
+- 3 archivos de test
+- `mem://security/rls-hardening-round-1`
 
-```sql
--- Habilitar pgvector si no está
-CREATE EXTENSION IF NOT EXISTS vector;
+**Editados**:
+- `src/App.tsx` (refactor rutas + import React + error handler)
+- `package.json` (name, version, devDeps vitest)
+- ~15 archivos de hooks/pages que consultan tablas afectadas (cambio de tabla → vista)
+- `.gitignore` (sumar `bun.lockb` ya borrado)
 
--- Sesiones de trabajo (devs, admins, fighters, gyms)
-CREATE TABLE public.work_sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  app_user_id UUID NOT NULL REFERENCES public.app_user(id) ON DELETE CASCADE,
-  fighter_profile_id UUID REFERENCES public.fighter_profiles(id) ON DELETE SET NULL, -- opcional: el "expediente"
-  context TEXT NOT NULL, -- 'admin_panel' | 'license_onboarding' | 'profile_setup' | 'gym_dashboard' | etc.
-  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  ended_at TIMESTAMPTZ,
-  client_meta JSONB DEFAULT '{}'::jsonb -- userAgent, viewport, route inicial
-);
-CREATE INDEX ON public.work_sessions (app_user_id, started_at DESC);
-CREATE INDEX ON public.work_sessions (fighter_profile_id) WHERE fighter_profile_id IS NOT NULL;
-
--- Eventos significativos (whitelist controlada, NO ruido)
-CREATE TABLE public.work_session_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES public.work_sessions(id) ON DELETE CASCADE,
-  event_type TEXT NOT NULL, -- 'document_uploaded' | 'profile_field_updated' | 'license_submitted' | 'fighter_approved' | etc.
-  payload JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX ON public.work_session_events (session_id, created_at);
-
--- Resúmenes de trabajo por sesión (tareas completadas + notas)
-CREATE TABLE public.work_updates (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL UNIQUE REFERENCES public.work_sessions(id) ON DELETE CASCADE,
-  fighter_profile_id UUID REFERENCES public.fighter_profiles(id) ON DELETE SET NULL,
-  current_phase TEXT, -- snapshot del license.status / completion_level al cerrar
-  completed_tasks JSONB DEFAULT '[]'::jsonb,
-  summary TEXT NOT NULL,
-  can_advance BOOLEAN DEFAULT false,
-  blocking_reasons TEXT[],
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- Embeddings RAG (append-only, nunca UPDATE)
-CREATE TABLE public.knowledge_embeddings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  source_type TEXT NOT NULL, -- 'work_update' | 'license_audit' | 'profile_change'
-  source_id UUID NOT NULL,
-  fighter_profile_id UUID REFERENCES public.fighter_profiles(id) ON DELETE CASCADE,
-  content TEXT NOT NULL,
-  embedding vector(768), -- text-embedding-004 dimensions
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX ON public.knowledge_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
-CREATE INDEX ON public.knowledge_embeddings (fighter_profile_id, source_type);
-```
-
-**RLS** (sigue patrón del proyecto, `has_role` ya existe):
-- `work_sessions` / `work_session_events` / `work_updates`: SELECT propio (`app_user_id = current app_user`) o admin/super_admin. INSERT propio. UPDATE solo del `ended_at` por dueño.
-- `knowledge_embeddings`: SELECT solo admin/super_admin (info sensible agregada). INSERT solo via service role (edge function).
-
-**RPC `match_knowledge_embeddings`** (security definer) para búsqueda vectorial filtrada por `fighter_profile_id` y rol.
-
-## 2. Edge Function `session-embed`
-
-`supabase/functions/session-embed/index.ts`
-
-- Recibe `{ source_type, source_id, fighter_profile_id, content }`.
-- Llama Lovable AI Gateway: `POST https://ai.gateway.lovable.dev/v1/embeddings` con `model: "google/text-embedding-004"`.
-- Inserta en `knowledge_embeddings` usando service role.
-- Maneja 429/402 devolviendo error claro.
-- Validación con Zod, CORS estándar, JWT validado en código (verifica que el caller es admin o dueño del perfil).
-
-## 3. Estructura de archivos
-
-```text
-src/system/
-  session/
-    session.types.ts       # Tipos TS (Session, SessionEvent, WorkUpdate, EventType union)
-    session.service.ts     # startSession, endSession, getCurrentSession (Supabase client)
-    useSession.tsx         # Hook React: auto-inicia al montar, auto-cierra en unmount/beforeunload
-  events/
-    event.logger.ts        # logEvent(sessionId, type, payload) + EVENT_TYPES whitelist
-    event.types.ts         # Union literal de todos los event_type permitidos
-  rag/
-    embedding.service.ts   # Cliente que invoca edge function session-embed
-    retrieval.service.ts   # retrieveRelevantContext(query, fighterProfileId) vía RPC
-  workflow/
-    workflow.adapter.ts    # getNextActions / extractCompletedTasks / generateSummary
-                           # Lee fighter_licenses + completion_score, NO escribe
-```
-
-## 4. Detalles clave de implementación
-
-### `event.types.ts` — whitelist estricta (regla "no ruido")
-
-```ts
-export const EVENT_TYPES = [
-  // Profile
-  'profile_field_updated', 'profile_setup_completed', 'avatar_uploaded',
-  // License flow
-  'license_document_uploaded', 'license_submitted', 'license_approved', 'license_rejected',
-  // Admin actions
-  'admin_fighter_created', 'admin_fighter_edited', 'admin_moderation_decision',
-  // Gym flow
-  'gym_membership_changed', 'gym_invite_sent',
-  // Fight
-  'fight_result_recorded',
-] as const;
-export type EventType = typeof EVENT_TYPES[number];
-```
-
-`logEvent` rechaza tipos fuera de la whitelist en runtime → fuerza disciplina.
-
-### `useSession` — auto-lifecycle
-
-Hook que al montarse en una ruta pivote (Admin layout, ProfileSetup, GymDashboard, LicenseOnboarding) hace `startSession` con el `context` correcto y guarda el `session_id` en un Context React. Al desmontar / `beforeunload` / cambio de ruta a fuera del contexto → `endSession`.
-
-`endSession` llama a un RPC `close_work_session(session_id)` que en una sola transacción:
-1. Setea `ended_at = now()`.
-2. Lee todos los `work_session_events` de la sesión.
-3. Llama función PL/pgSQL `extract_completed_tasks(session_id)` → JSON.
-4. Genera `summary` text.
-5. Inserta `work_updates`.
-6. Devuelve `{ work_update_id, summary, fighter_profile_id }`.
-
-Después, el cliente invoca la edge function `session-embed` con ese summary para crear el embedding (regla: "no embeddings sin summary"). Si no hay tareas significativas, `summary` queda vacío y NO se genera embedding.
-
-### `workflow.adapter.ts` — read-only
-
-```ts
-export async function getNextActions(fighterProfileId: string) {
-  // Lee fighter_profiles.completion_score, fighter_licenses.status,
-  // license_documents requeridos vs subidos.
-  // Devuelve { can_advance, blocking, available_transitions } SIN mutar nada.
-}
-
-export async function extractCompletedTasks(events) {
-  // Mapea events → tareas semánticas (mismo shape de tu spec)
-}
-
-export function generateSummary(tasks) {
-  // Texto plano corto en español (lo que va a embeddings)
-}
-```
-
-**No hay `advancePhase()` automático.** La transición de estado de licencia se sigue haciendo a través de `useLicenseSystem` y triggers SQL existentes (`save_fight_result`, `license_audit_log`). El sistema solo *reporta* `can_advance: true`. Esto evita race conditions y respeta la arquitectura ya validada.
-
-## 5. Integración mínima en el app (ejemplos)
-
-Tres puntos de wiring iniciales, suficientes para empezar a generar datos:
-
-| Componente | Acción |
-|---|---|
-| `AdminLayout` | `useSession({ context: 'admin_panel' })` |
-| `AdminFighterForm` (al guardar) | `logEvent(sid, 'admin_fighter_edited', { profileId, changedFields })` |
-| `ProfileSetup` (al completar) | `logEvent(sid, 'profile_setup_completed', { score })` |
-| `LicenseOnboarding` (subida doc) | `logEvent(sid, 'license_document_uploaded', { docType })` |
-
-El resto de integraciones (gym, fight, etc.) se van agregando incrementalmente sin tocar la infraestructura.
-
-## 6. Reglas no-negociables (codificadas)
-
-| Regla del spec | Cómo se cumple |
-|---|---|
-| No ruido | Whitelist `EVENT_TYPES` + runtime check |
-| Toda sesión termina | `useSession` cierra en `beforeunload` + cleanup React. RPC idempotente |
-| No embeddings sin resumen | `endSession` solo invoca `session-embed` si `summary !== ''` |
-| Siempre adjuntar `fighter_profile_id` | Columna en `work_sessions`, propagada a `work_updates` y `knowledge_embeddings` |
-| Embeddings append-only | RLS sin policy de UPDATE/DELETE en `knowledge_embeddings` |
-
-## 7. Lo que NO entra en este PR
-
-- UI de visualización (timeline, panel auditoría, búsqueda RAG): se hace después.
-- Wiring exhaustivo en cada componente: solo los 4 puntos pivote arriba.
-- Trigger automático de `advancePhase`: la decisión sigue siendo manual/por reglas existentes.
-- Migración de datos históricos a `knowledge_embeddings`: se puede hacer en script aparte después.
-
-## 8. Riesgo y demo
-
-- **Cero impacto en flujos visibles.** Todo es observación pasiva. Si algo falla, las sesiones quedan abiertas pero no rompen UX (try/catch silencioso en `logEvent`).
-- Recomendación: hacer merge de la migración + edge function antes del demo, pero **dejar los hooks `useSession` desactivados con un feature flag** (`localStorage.SESSIONS_ENABLED === 'true'`) hasta validar post-demo. Así la BD queda lista pero no hay sorpresas.
-
-## Archivos a crear/editar
-
-**Migración SQL** (1 archivo): tablas + RLS + RPC `close_work_session` + RPC `match_knowledge_embeddings` + función `extract_completed_tasks`.
-
-**Edge function**: `supabase/functions/session-embed/index.ts` + entrada en `supabase/config.toml`.
-
-**Frontend nuevo**:
-- `src/system/session/session.types.ts`
-- `src/system/session/session.service.ts`
-- `src/system/session/useSession.tsx` (+ Context provider)
-- `src/system/events/event.logger.ts`
-- `src/system/events/event.types.ts`
-- `src/system/rag/embedding.service.ts`
-- `src/system/rag/retrieval.service.ts`
-- `src/system/workflow/workflow.adapter.ts`
-
-**Frontend editado** (mínimo viable):
-- `src/components/AdminLayout.tsx` — montar `SessionProvider`
-- `src/components/admin/AdminFighterForm.tsx` — `logEvent` al guardar
-- `src/pages/profile/ProfileSetup.tsx` — `logEvent` al completar
-- `src/pages/license/LicenseOnboarding.tsx` — `logEvent` al subir doc
-
-**Memoria de proyecto**:
-- Nuevo `mem://architecture/session-and-rag-system` documentando la convención (whitelist de eventos, regla read-only del workflow adapter, append-only embeddings).
-- Update a `mem://index.md` agregando la referencia.
+**Borrados**:
+- `package-lock.json`
+- `bun.lockb`
