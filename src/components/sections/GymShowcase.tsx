@@ -107,8 +107,9 @@ const GymShowcase = () => {
             </Card>
           ))}
         </div>
-      </div>
-    </section>
+        </div>
+      </section>
+    </>
   );
 };
 
