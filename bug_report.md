@@ -1,23 +1,23 @@
 # Bug Hunter Report
 
-_Files scanned: **436** · Auto-fixes applied: **0**_
+_Files scanned: **437** · Auto-fixes applied: **0**_
 
 ## Summary
 
 | Severity | Count | Status |
 |----------|-------|--------|
 | 🔴 Critical | 1 | Fix immediately |
-| 🟠 High | 25 | Fix this sprint |
+| 🟠 High | 8 | Fix this sprint |
 | 🟡 Medium | 493 | Fix next sprint |
-| 🔵 Low | 274 | Fix when convenient |
+| 🔵 Low | 271 | Fix when convenient |
 
 ## By category
 
 | Category | Count |
 |----------|-------|
-| typescript | 351 |
+| typescript | 348 |
 | react | 71 |
-| security | 24 |
+| security | 7 |
 | logic | 78 |
 | a11y | 269 |
 
@@ -34,24 +34,12 @@ _Files scanned: **436** · Auto-fixes applied: **0**_
   → _Remove from git history and add to .gitignore._
 
 
-## 🟠 High (25)
+## 🟠 High (8)
 
 
 ### security
 
-- **Wildcard CORS in edge function** — `supabase/functions/admin-ai-assistant/index.ts:6`
-  ```
-  'Access-Control-Allow-Origin': '*',
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
 - **Wildcard CORS in edge function** — `supabase/functions/ai-strike-ingest/index.ts:5`
-  ```
-  'Access-Control-Allow-Origin': '*',
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/ai-strike-test-simulator/index.ts:5`
   ```
   'Access-Control-Allow-Origin': '*',
   ```
@@ -63,103 +51,13 @@ _Files scanned: **436** · Auto-fixes applied: **0**_
   ```
   → _Restrict Access-Control-Allow-Origin to your domain(s)._
 
-- **Wildcard CORS in edge function** — `supabase/functions/check-email-exists/index.ts:4`
-  ```
-  "Access-Control-Allow-Origin": "*",
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/delete-user/index.ts:4`
-  ```
-  'Access-Control-Allow-Origin': '*',
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/fetch-link-metadata/index.ts:5`
-  ```
-  'Access-Control-Allow-Origin': '*',
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/fetch-sports-news/index.ts:6`
-  ```
-  'Access-Control-Allow-Origin': '*',
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
 - **Wildcard CORS in edge function** — `supabase/functions/finalize-fight-auto/index.ts:5`
   ```
   "Access-Control-Allow-Origin": "*",
   ```
   → _Restrict Access-Control-Allow-Origin to your domain(s)._
 
-- **Wildcard CORS in edge function** — `supabase/functions/notify-admin-pending/index.ts:7`
-  ```
-  'Access-Control-Allow-Origin': '*',
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/populate-batalla-gimnasios/index.ts:5`
-  ```
-  'Access-Control-Allow-Origin': '*',
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
 - **Wildcard CORS in edge function** — `supabase/functions/process-email-queue/index.ts:11`
-  ```
-  "Access-Control-Allow-Origin": "*",
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/publish-news-to-social/index.ts:4`
-  ```
-  'Access-Control-Allow-Origin': '*',
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/receive-contact/index.ts:10`
-  ```
-  "Access-Control-Allow-Origin": "*",
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/remove-image-background/index.ts:4`
-  ```
-  'Access-Control-Allow-Origin': '*',
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/send-fighter-invitation/index.ts:9`
-  ```
-  "Access-Control-Allow-Origin": "*",
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/send-gym-invitation/index.ts:9`
-  ```
-  "Access-Control-Allow-Origin": "*",
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/send-license-approval/index.ts:11`
-  ```
-  "Access-Control-Allow-Origin": "*",
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/send-mass-email/index.ts:11`
-  ```
-  "Access-Control-Allow-Origin": "*",
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/send-password-recovery/index.ts:11`
-  ```
-  "Access-Control-Allow-Origin": "*",
-  ```
-  → _Restrict Access-Control-Allow-Origin to your domain(s)._
-
-- **Wildcard CORS in edge function** — `supabase/functions/send-signup-confirmation/index.ts:8`
   ```
   "Access-Control-Allow-Origin": "*",
   ```
@@ -843,9 +741,9 @@ _Files scanned: **436** · Auto-fixes applied: **0**_
   ```
   → _Consider splitting into smaller focused components/hooks (<300 LOC)._
 
-- **Component file too long (684 LOC)** — `src/pages/EventDetail.tsx:1`
+- **Component file too long (685 LOC)** — `src/pages/EventDetail.tsx:1`
   ```
-  684 lines
+  685 lines
   ```
   → _Consider splitting into smaller focused components/hooks (<300 LOC)._
 
@@ -2766,79 +2664,79 @@ _Files scanned: **436** · Auto-fixes applied: **0**_
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:133`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:131`
   ```
   async function searchFighters(criteria: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:165`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:163`
   ```
   async function advancedSearchFighters(criteria: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:272`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:270`
   ```
   async function updateFighterProfile(fighterId: string, updates: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:277`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:275`
   ```
   const sanitizedUpdates: any = {};
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:352`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:350`
   ```
   async function createTournament(tournamentData: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:629`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:627`
   ```
   async function generateComprehensiveReport(filters?: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:727`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:725`
   ```
   async function createFighter(fighterData: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:753`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:751`
   ```
   async function updateFighterComplete(fighterId: string, updates: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:797`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:795`
   ```
   async function generateFilteredReport(filters: any = {}) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:803`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:801`
   ```
   const stats: any = {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:812`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:810`
   ```
   fighters.forEach((f: any) => {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:896`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:894`
   ```
   async function handleFunctionCall(functionName: string, args: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:985`
+- **Explicit `any` annotation** — `supabase/functions/admin-ai-assistant/index.ts:984`
   ```
   ...conversation_history.map((msg: any) => ({
   ```
@@ -2886,25 +2784,25 @@ _Files scanned: **436** · Auto-fixes applied: **0**_
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/fetch-link-metadata/index.ts:81`
+- **Explicit `any` annotation** — `supabase/functions/fetch-link-metadata/index.ts:80`
   ```
   const metadata: any = {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/fetch-link-metadata/index.ts:122`
+- **Explicit `any` annotation** — `supabase/functions/fetch-link-metadata/index.ts:121`
   ```
   } catch (error: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/fetch-sports-news/index.ts:217`
+- **Explicit `any` annotation** — `supabase/functions/fetch-sports-news/index.ts:215`
   ```
   const items: any[] = [];
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/fetch-sports-news/index.ts:334`
+- **Explicit `any` annotation** — `supabase/functions/fetch-sports-news/index.ts:333`
   ```
   const allNewsItems: any[] = [];
   ```
@@ -3012,13 +2910,13 @@ _Files scanned: **436** · Auto-fixes applied: **0**_
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/notify-admin-pending/index.ts:79`
+- **Explicit `any` annotation** — `supabase/functions/notify-admin-pending/index.ts:78`
   ```
   } catch (emailError: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/notify-admin-pending/index.ts:111`
+- **Explicit `any` annotation** — `supabase/functions/notify-admin-pending/index.ts:110`
   ```
   } catch (error: any) {
   ```
@@ -3048,103 +2946,103 @@ _Files scanned: **436** · Auto-fixes applied: **0**_
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/publish-news-to-social/index.ts:136`
+- **Explicit `any` annotation** — `supabase/functions/publish-news-to-social/index.ts:135`
   ```
   function shouldCreatePost(newsItem: any): boolean {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/publish-news-to-social/index.ts:156`
+- **Explicit `any` annotation** — `supabase/functions/publish-news-to-social/index.ts:155`
   ```
   function createPostContent(newsItem: any): string {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/receive-contact/index.ts:98`
+- **Explicit `any` annotation** — `supabase/functions/receive-contact/index.ts:97`
   ```
   } catch (error: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-fighter-invitation/index.ts:219`
+- **Explicit `any` annotation** — `supabase/functions/send-fighter-invitation/index.ts:218`
   ```
   } catch (emailError: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-fighter-invitation/index.ts:283`
+- **Explicit `any` annotation** — `supabase/functions/send-fighter-invitation/index.ts:282`
   ```
   } catch (emailError: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-fighter-invitation/index.ts:299`
+- **Explicit `any` annotation** — `supabase/functions/send-fighter-invitation/index.ts:298`
   ```
   } catch (error: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-gym-invitation/index.ts:100`
+- **Explicit `any` annotation** — `supabase/functions/send-gym-invitation/index.ts:99`
   ```
   let activeInvitation: any;
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-gym-invitation/index.ts:196`
+- **Explicit `any` annotation** — `supabase/functions/send-gym-invitation/index.ts:195`
   ```
   } catch (emailError: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-gym-invitation/index.ts:210`
+- **Explicit `any` annotation** — `supabase/functions/send-gym-invitation/index.ts:209`
   ```
   } catch (error: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-license-approval/index.ts:160`
+- **Explicit `any` annotation** — `supabase/functions/send-license-approval/index.ts:159`
   ```
   } catch (error: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-mass-email/index.ts:35`
+- **Explicit `any` annotation** — `supabase/functions/send-mass-email/index.ts:32`
   ```
   emailData: any,
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-mass-email/index.ts:41`
+- **Explicit `any` annotation** — `supabase/functions/send-mass-email/index.ts:38`
   ```
   } catch (error: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-mass-email/index.ts:253`
+- **Explicit `any` annotation** — `supabase/functions/send-mass-email/index.ts:251`
   ```
   const queueItems: any[] = [];
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-mass-email/index.ts:329`
+- **Explicit `any` annotation** — `supabase/functions/send-mass-email/index.ts:327`
   ```
   } catch (error: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-mass-email/index.ts:410`
+- **Explicit `any` annotation** — `supabase/functions/send-mass-email/index.ts:408`
   ```
   } catch (error: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-password-recovery/index.ts:255`
+- **Explicit `any` annotation** — `supabase/functions/send-password-recovery/index.ts:254`
   ```
   } catch (error: any) {
   ```
   → _Replace `any` with the actual type or `unknown` + narrowing._
 
-- **Explicit `any` annotation** — `supabase/functions/send-signup-confirmation/index.ts:262`
+- **Explicit `any` annotation** — `supabase/functions/send-signup-confirmation/index.ts:261`
   ```
   } catch (error: any) {
   ```
@@ -3163,7 +3061,7 @@ _Files scanned: **436** · Auto-fixes applied: **0**_
   → _Re-enable noImplicitAny to force explicit parameter types._
 
 
-## 🔵 Low (274)
+## 🔵 Low (271)
 
 
 ### a11y
@@ -3786,55 +3684,55 @@ _Files scanned: **436** · Auto-fixes applied: **0**_
   ```
   → _Add type="button" to avoid unintended form submissions._
 
-- **<button> missing type** — `src/pages/EventDetail.tsx:153`
+- **<button> missing type** — `src/pages/EventDetail.tsx:154`
   ```
   <Button asChild variant="outline">
   ```
   → _Add type="button" to avoid unintended form submissions._
 
-- **<button> missing type** — `src/pages/EventDetail.tsx:159`
+- **<button> missing type** — `src/pages/EventDetail.tsx:160`
   ```
   <Button asChild>
   ```
   → _Add type="button" to avoid unintended form submissions._
 
-- **<button> missing type** — `src/pages/EventDetail.tsx:203`
+- **<button> missing type** — `src/pages/EventDetail.tsx:204`
   ```
   <Button variant="ghost" size="sm" asChild>
   ```
   → _Add type="button" to avoid unintended form submissions._
 
-- **<button> missing type** — `src/pages/EventDetail.tsx:209`
+- **<button> missing type** — `src/pages/EventDetail.tsx:210`
   ```
   <Button variant="ghost" size="sm" asChild>
   ```
   → _Add type="button" to avoid unintended form submissions._
 
-- **<button> missing type** — `src/pages/EventDetail.tsx:257`
+- **<button> missing type** — `src/pages/EventDetail.tsx:258`
   ```
   <Button asChild size="lg" className="bg-destructive hover:bg-destructive/90 animate-pulse">
   ```
   → _Add type="button" to avoid unintended form submissions._
 
-- **<button> missing type** — `src/pages/EventDetail.tsx:264`
+- **<button> missing type** — `src/pages/EventDetail.tsx:265`
   ```
   <Button size="lg" className="animate-pulse">
   ```
   → _Add type="button" to avoid unintended form submissions._
 
-- **<img> missing loading="lazy"** — `src/pages/EventDetail.tsx:324`
+- **<img> missing loading="lazy"** — `src/pages/EventDetail.tsx:325`
   ```
   <img src={getEventBranding(event).watermark_url || '/lovable-uploads/ucc-logo-transparent.png'} alt="Watermark" className="w-64 h-64 object-contain" />
   ```
   → _Add loading="lazy" for non-hero images._
 
-- **<img> missing loading="lazy"** — `src/pages/EventDetail.tsx:395`
+- **<img> missing loading="lazy"** — `src/pages/EventDetail.tsx:396`
   ```
   <img src={getEventBranding(event).watermark_url || '/lovable-uploads/ucc-logo-transparent.png'} alt="VS" className="w-10 h-10 opacity-70" />
   ```
   → _Add loading="lazy" for non-hero images._
 
-- **<img> missing loading="lazy"** — `src/pages/EventDetail.tsx:539`
+- **<img> missing loading="lazy"** — `src/pages/EventDetail.tsx:540`
   ```
   <img alt="VS" className="w-16 h-16 md:w-24 md:h-24 opacity-80 animate-pulse" src="/lovable-uploads/8d2ed2c0-f2be-4577-9514-8e96c6c99034.png" />
   ```
@@ -4796,25 +4694,4 @@ _Files scanned: **436** · Auto-fixes applied: **0**_
   const element = document.getElementById(id);
   ```
   → _Use a ref or React state instead of direct DOM manipulation when possible._
-
-
-### typescript
-
-- **useState without generic** — `src/components/EventImporter.tsx:11`
-  ```
-  const [result, setResult] = useState(null);
-  ```
-  → _Add a type: useState<YourType>(null)._
-
-- **useState without generic** — `src/components/FighterIDModal.tsx:18`
-  ```
-  const [fighterProfile, setFighterProfile] = useState(null);
-  ```
-  → _Add a type: useState<YourType>(null)._
-
-- **useState without generic** — `src/pages/EventDetail.tsx:92`
-  ```
-  const [event, setEvent] = useState(null);
-  ```
-  → _Add a type: useState<YourType>(null)._
 

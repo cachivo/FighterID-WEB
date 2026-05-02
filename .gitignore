@@ -26,3 +26,6 @@ dist-ssr
 # Bug-fix toolkit artifacts
 react_fixes_patches/
 react_fixes_report.md
+
+# Local env (managed by Lovable; never commit)
+.env

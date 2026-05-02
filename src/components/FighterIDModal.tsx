@@ -15,7 +15,7 @@ interface FighterIDModalProps {
 export function FighterIDModal({ open, onOpenChange }: FighterIDModalProps) {
   const { user } = useLicenseAuth();
   const { getUserFighterProfile } = useFighterProfiles();
-  const [fighterProfile, setFighterProfile] = useState(null);
+  const [fighterProfile, setFighterProfile] = useState<Awaited<ReturnType<typeof getUserFighterProfile>> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

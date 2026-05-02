@@ -2,10 +2,8 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
+// corsHeaders is now computed per-request via buildCorsHeaders(req)
 
 // RSS Feed sources - Expanded for better coverage
 const RSS_FEEDS = [
@@ -319,6 +317,7 @@ async function parseRSSFeed(feedUrl: string, category: string, source: string) {
 }
 
 serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });

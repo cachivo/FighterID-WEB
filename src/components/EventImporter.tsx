@@ -8,7 +8,13 @@ import { useToast } from '@/hooks/use-toast';
 
 const EventImporter = () => {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  type ImportResult = {
+    event_id?: string;
+    fighters_created?: number;
+    fights_created?: number;
+    [key: string]: unknown;
+  };
+  const [result, setResult] = useState<ImportResult | null>(null);
   const { toast } = useToast();
 
   const importBatallaGimnasios = async () => {

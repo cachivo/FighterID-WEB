@@ -3,14 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "npm:resend@2.0.0";
 import { sendEmailWithFallback, EmailTemplates, getEmailFrom } from "../_shared/email-config.ts";
 
+import { buildCorsHeaders } from "../_shared/cors.ts";
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// corsHeaders is now computed per-request via buildCorsHeaders(req)
 
 interface LicenseApprovalRequest {
   license_id: string;
@@ -22,6 +20,7 @@ interface LicenseApprovalRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = buildCorsHeaders(req);
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

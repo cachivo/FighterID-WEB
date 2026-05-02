@@ -89,7 +89,8 @@ const EventDetail = () => {
     loading: fightsLoading,
     error: fightsError
   } = useFights(eventId);
-  const [event, setEvent] = useState(null);
+  type EventItem = (typeof events)[number];
+  const [event, setEvent] = useState<EventItem | null>(null);
 
   useEffect(() => {
     if (eventId && events.length > 0) {

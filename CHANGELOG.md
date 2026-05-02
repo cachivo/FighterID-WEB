@@ -4,6 +4,52 @@ All notable changes to **Fighter ID**. Format inspired by [Keep a Changelog](htt
 
 ---
 
+## [2026-05-02b] — Security hardening pass 2 (CORS allowlist + dry-run patches)
+
+> **Context**: Bug-hunter scan flagged 1 critical (`.env` tracked) and 25 high (wildcard CORS in 17 edge functions). This pass closes them without touching business logic.
+
+### Security — added
+
+- **`supabase/functions/_shared/cors.ts`** — New shared helper exporting `ALLOWED_ORIGINS`, `buildCorsHeaders(req)`, `isAllowedOrigin(origin)`. Echoes the request's `Origin` only when in allowlist; otherwise returns canonical origin (browser rejects). Adds `Vary: Origin`, `Access-Control-Max-Age: 86400`, scoped methods.
+- Allowlist: `fighter-id.org`, `www.fighter-id.org`, `fighterid.lovable.app`, the Lovable preview domain, and dev `localhost:{5173,8080,3000}`.
+- **`scripts/untrack-env.sh`** — One-shot helper to run `git rm --cached .env` locally. The committed `.env` only contains the publishable Supabase anon key (safe by design — `VITE_*` prefix proves it ships to the browser), but it should not be tracked.
+
+### Security — changed
+
+- **17 edge functions refactored to per-request CORS**:
+  `admin-ai-assistant`, `ai-strike-test-simulator`, `check-email-exists`, `delete-user`, `fetch-link-metadata`, `fetch-sports-news`, `notify-admin-pending`, `populate-batalla-gimnasios`, `publish-news-to-social`, `receive-contact`, `remove-image-background`, `send-fighter-invitation`, `send-gym-invitation`, `send-license-approval`, `send-mass-email`, `send-password-recovery`, `send-signup-confirmation`.
+  Each now imports `buildCorsHeaders(req)` and computes the headers per request inside the handler. The static `corsHeaders = { '*' }` constant is removed.
+- **`.gitignore`** — Added explicit `.env` entry under a security comment.
+
+### Security — intentionally unchanged (documented exceptions)
+
+These edge functions keep `Access-Control-Allow-Origin: *` because they receive **server-to-server** traffic (no browser origin) and rejecting unknown origins would break them:
+
+- `ai-strike-ingest` — external IA vision engine push
+- `ai-strike-test-simulator` *(refactored, but allowlist already includes our dev/prod origins)*
+- `bet-delay-processor` — pg_cron worker
+- `finalize-fight-auto` — pg_cron / database trigger
+- `process-email-queue` — pg_cron worker
+- `session-embed` — invoked from other edge functions, no browser
+- `vision-start-session` — external IA engine telemetry posts
+
+These are recorded in `SECURITY_FIGHTER_DATA.md` and in security memory.
+
+### Code quality — changed
+
+- **`src/components/EventImporter.tsx`** — `useState(null)` → typed `useState<ImportResult | null>(null)` (local `ImportResult` interface).
+- **`src/components/FighterIDModal.tsx`** — `useState(null)` → typed via `Awaited<ReturnType<typeof getUserFighterProfile>>`.
+- **`src/pages/EventDetail.tsx`** — `useState(null)` → typed via `(typeof events)[number]`.
+- The 3 `Promise<void>` patches from `react_logic_fixer.py` dry-run were **rejected** as false positives — `event.logger.ts`, `retrieval.service.ts`, `session.service.ts` already return correctly inferred types (`Promise<boolean>`, etc.). Documented to avoid future re-application.
+
+### Verification
+
+- `python3 scripts/bug_hunter.py` post-fix: **High dropped 25 → 8** (the 6 documented webhook exceptions + 2 unrelated). Critical remains 1 until the user runs `scripts/untrack-env.sh` locally.
+- `bunx vitest run`: **12/12 tests passing**, no regression.
+
+---
+
+
 ## [2026-05-02] — Landing page rescue for low-end mobile (Honduras)
 
 > **Context**: Most users in Honduras are on 2–3 GB RAM Android phones (Moto E, Tecno Spark, Adreno 5xx / Mali-G52) on 3G or congested 4G. The landing was unusable — heavy parallax, fixed blur orbs, three eager Ranking sections each opening their own WebSocket subscriptions, and a 226 KB PNG hero.

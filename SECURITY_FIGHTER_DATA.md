@@ -200,3 +200,46 @@ For security concerns or questions:
 
 **Last Updated**: 2025-09-30
 **Security Model Version**: 1.0
+
+---
+
+## Edge Function CORS policy (2026-05-02)
+
+All browser-facing edge functions use the shared helper at
+`supabase/functions/_shared/cors.ts`, which validates the request `Origin`
+against this allowlist:
+
+- `https://fighter-id.org` (production custom domain)
+- `https://www.fighter-id.org`
+- `https://fighterid.lovable.app` (Lovable production URL)
+- `https://id-preview--c4add1c8-f68d-4715-9b10-5a9613b9085b.lovable.app` (preview)
+- `http://localhost:5173`, `http://localhost:8080`, `http://localhost:3000` (dev)
+
+Disallowed origins receive the canonical origin in `Access-Control-Allow-Origin`,
+which the browser rejects (no credentials leak, no implicit `*`).
+
+### Functions intentionally exempt (server-to-server)
+
+The following functions keep `Access-Control-Allow-Origin: *` because they are
+called by server-to-server clients with no browser `Origin` header. Locking the
+origin would break them:
+
+| Function | Caller |
+|---|---|
+| `ai-strike-ingest` | External IA vision engine (push) |
+| `bet-delay-processor` | `pg_cron` worker |
+| `finalize-fight-auto` | `pg_cron` / DB trigger |
+| `process-email-queue` | `pg_cron` worker |
+| `session-embed` | Invoked from other edge functions |
+| `vision-start-session` (telemetry path) | External IA vision engine |
+
+These do their own auth (service-role key, JWT, or shared secret) and are
+documented as intentional exceptions in `mem://security/`.
+
+## Note on `.env`
+
+The committed `.env` file contains only the **publishable Supabase anon key**
+(`SUPABASE_PUBLISHABLE_KEY` / `VITE_SUPABASE_PUBLISHABLE_KEY`). This key is
+designed to ship to browsers — RLS and edge function auth enforce all access
+control. There is no secret leakage, but the file is still untracked from git
+(`scripts/untrack-env.sh`) to avoid noise from generic secret scanners.
