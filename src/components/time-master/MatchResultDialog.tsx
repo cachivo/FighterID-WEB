@@ -80,6 +80,31 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
           <DialogDescription>Registra el resultado para la pelea terminada en Round {currentRound}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
+          {rounds.length > 0 && (
+            <div className="rounded-md border border-border p-3 space-y-2">
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Resumen por Round</p>
+              <div className="space-y-1 text-sm">
+                {rounds.map((r) => (
+                  <div key={r.roundNumber} className="flex items-center justify-between font-mono">
+                    <span className="text-muted-foreground">R{r.roundNumber}</span>
+                    <span className={cn(r.scoreA - r.knockdownsA > r.scoreB - r.knockdownsB && "text-fighter-danger font-bold")}>
+                      {r.scoreA - r.knockdownsA}
+                    </span>
+                    <span className="text-muted-foreground">-</span>
+                    <span className={cn(r.scoreB - r.knockdownsB > r.scoreA - r.knockdownsA && "text-fighter-info font-bold")}>
+                      {r.scoreB - r.knockdownsB}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between pt-2 border-t border-border font-bold">
+                  <span>Total</span>
+                  <span className="text-fighter-danger">{totalScoreA}</span>
+                  <span className="text-muted-foreground">-</span>
+                  <span className="text-fighter-info">{totalScoreB}</span>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5"><Trophy className="h-4 w-4" /> Tipo de Resultado</Label>
             <RadioGroup value={resultType} onValueChange={(v) => setResultType(v as MatchResultType)} className="space-y-1">
