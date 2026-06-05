@@ -334,11 +334,11 @@ export function useTimeMaster() {
         const updates: Promise<unknown>[] = [];
         if (fighterAId) {
           const { data } = await supabase.from('fighter_profiles').select('record_draws').eq('id', fighterAId).single();
-          updates.push(supabase.from('fighter_profiles').update({ record_draws: (data?.record_draws || 0) + 1 }).eq('id', fighterAId));
+          updates.push(Promise.resolve(supabase.from('fighter_profiles').update({ record_draws: (data?.record_draws || 0) + 1 }).eq('id', fighterAId)));
         }
         if (fighterBId) {
           const { data } = await supabase.from('fighter_profiles').select('record_draws').eq('id', fighterBId).single();
-          updates.push(supabase.from('fighter_profiles').update({ record_draws: (data?.record_draws || 0) + 1 }).eq('id', fighterBId));
+          updates.push(Promise.resolve(supabase.from('fighter_profiles').update({ record_draws: (data?.record_draws || 0) + 1 }).eq('id', fighterBId)));
         }
         await Promise.all(updates);
       } else if (result.winnerId) {
