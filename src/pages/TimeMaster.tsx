@@ -296,9 +296,10 @@ export default function TimeMaster() {
                 </Button>
               )}
               {tm.phase === 'finished' && (
-                <Button size="lg" onClick={tm.resetMatch} className="min-h-[48px]">
+                <Button size="lg" onClick={tm.resetMatch} disabled={recordDialogOpen} className="min-h-[48px]">
                   <RefreshCw className="h-5 w-5 mr-2" /> Nueva Pelea
                 </Button>
+
               )}
               {tm.phase !== 'setup' && tm.phase !== 'finished' && (
                 <Button size="lg" variant="ghost" onClick={tm.resetMatch} className="min-h-[48px]">
