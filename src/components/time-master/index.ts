@@ -7,5 +7,3 @@ export { RecordUpdateDialog } from "./RecordUpdateDialog";
 export { TimeMasterLayout } from "./TimeMasterLayout";
 export { AlertSettingsPanel } from "./AlertSettingsPanel";
 export { AlertTestPanel } from "./AlertTestPanel";
-export { PresenceBar } from "./PresenceBar";
-export { JudgeVerdictPanel } from "./JudgeVerdictPanel";
