@@ -66,6 +66,7 @@ export function useTimeMaster() {
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
   const [fighterProfiles, setFighterProfiles] = useState<FighterOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [alertSettings, setAlertSettingsState] = useState<AlertSettings>(() => loadAlertSettings());
 
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
@@ -73,8 +74,19 @@ export function useTimeMaster() {
   const restIntervalRef = useRef<ReturnType<typeof setInterval>>();
   const timeMsRef = useRef<number>(0);
   const alertsFiredRef = useRef<Set<string>>(new Set());
+  const alertSettingsRef = useRef<AlertSettings>(alertSettings);
 
   useEffect(() => { timeMsRef.current = timeMs; }, [timeMs]);
+  useEffect(() => { alertSettingsRef.current = alertSettings; }, [alertSettings]);
+
+  const setAlertSettings = useCallback((s: AlertSettings) => {
+    setAlertSettingsState(s);
+    saveAlertSettings(s);
+  }, []);
+
+  const fire = useCallback((kind: 'bell' | 'warning' | 'rest') => {
+    playAlert(kind, alertSettingsRef.current);
+  }, []);
 
   const canStartMatch = useMemo(
     () => !!fighterAId && !!fighterBId && fighterAId !== fighterBId && phase === 'setup',
