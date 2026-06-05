@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Trophy, FileText, Swords } from "lucide-react";
+import { Trophy, FileText, Swords, AlertCircle } from "lucide-react";
 
 export type MatchResultType =
   | 'ko' | 'tko'
@@ -20,6 +20,13 @@ interface RoundSummary {
   knockdownsB: number;
 }
 
+const RESULT_TYPES_REQUIRING_ALL_ROUNDS: MatchResultType[] = [
+  'decision_unanimous',
+  'decision_split',
+  'decision_majority',
+  'draw',
+];
+
 interface MatchResultDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,6 +34,7 @@ interface MatchResultDialogProps {
   fighterA: { id: string; name: string };
   fighterB: { id: string; name: string };
   currentRound: number;
+  totalRounds: number;
   rounds?: RoundSummary[];
   totalScoreA?: number;
   totalScoreB?: number;
@@ -43,10 +51,11 @@ const RESULT_OPTIONS: Array<{ value: MatchResultType; label: string }> = [
   { value: 'no_contest', label: 'No Contest' },
 ];
 
-export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighterB, currentRound, rounds = [], totalScoreA = 0, totalScoreB = 0 }: MatchResultDialogProps) {
+export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighterB, currentRound, totalRounds, rounds = [], totalScoreA = 0, totalScoreB = 0 }: MatchResultDialogProps) {
   const [resultType, setResultType] = useState<MatchResultType>('decision_unanimous');
   const [winnerId, setWinnerId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -62,6 +71,7 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
         setWinnerId(null);
       }
       setNotes('');
+      setValidationError(null);
     }
   }, [isOpen, rounds.length, totalScoreA, totalScoreB, fighterA.id, fighterB.id]);
 
@@ -70,7 +80,9 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
   }, [resultType]);
 
   const needsWinner = resultType !== 'draw' && resultType !== 'no_contest';
-  const canSubmit = !needsWinner || winnerId !== null;
+  const resultRequiresAllRounds = RESULT_TYPES_REQUIRING_ALL_ROUNDS.includes(resultType);
+  const allRoundsCompleted = rounds.length === totalRounds;
+  const canSubmit = (!needsWinner || winnerId !== null) && (!resultRequiresAllRounds || allRoundsCompleted);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -156,9 +168,26 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas adicionales..." className="min-h-[80px] resize-none" />
           </div>
         </div>
+        {validationError && (
+          <div className="flex items-start gap-2 rounded-md border border-fighter-danger/30 bg-fighter-danger/10 p-3 text-sm text-fighter-danger">
+            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+            <span>{validationError}</span>
+          </div>
+        )}
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose} className="min-h-[44px]">Cancelar</Button>
-          <Button onClick={() => onSubmit({ winnerId, resultType, notes: notes || undefined })} disabled={!canSubmit} className="min-h-[44px]">
+          <Button
+            onClick={() => {
+              if (resultRequiresAllRounds && !allRoundsCompleted) {
+                setValidationError(`Debes completar todos los ${totalRounds} rounds antes de registrar una ${RESULT_OPTIONS.find(o => o.value === resultType)?.label.toLowerCase()}.`);
+                return;
+              }
+              setValidationError(null);
+              onSubmit({ winnerId, resultType, notes: notes || undefined });
+            }}
+            disabled={!canSubmit}
+            className="min-h-[44px]"
+          >
             <Trophy className="h-4 w-4 mr-2" /> Confirmar Resultado
           </Button>
         </DialogFooter>

@@ -293,6 +293,7 @@ export default function TimeMaster() {
         fighterA={{ id: tm.fighterAId ?? '', name: tm.fighterAName }}
         fighterB={{ id: tm.fighterBId ?? '', name: tm.fighterBName }}
         currentRound={tm.currentRound}
+        totalRounds={tm.roundConfig}
         rounds={tm.roundsCompleted}
         totalScoreA={tm.totalScoreA}
         totalScoreB={tm.totalScoreB}
