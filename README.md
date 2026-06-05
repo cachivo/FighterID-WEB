@@ -45,7 +45,7 @@ Each `app_user` row can own multiple roles simultaneously (`fighter`, `gym`, `ju
 ┌──────────────────────────── Client (React 18 + Vite 5) ────────────────────────────┐
 │                                                                                    │
 │  Routes (React Router)        Hooks layer            UI (shadcn + Tailwind)        │
-│  ├─ /                         useAuth                Swiss-Brutalist tokens        │
+│  ├─ /                         useAuth                Editorial Sports v2           │
 │  ├─ /fighter/:id              useFighterByIdQuery    Hero · Ranking · HUD          │
 │  ├─ /events/:id               useFightTelemetry      LazyMount, useInView          │
 │  ├─ /admin/* (MMA · Boxing)   useDiscipline          Mobile-first grids            │
