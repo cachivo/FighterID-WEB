@@ -51,10 +51,11 @@ const RESULT_OPTIONS: Array<{ value: MatchResultType; label: string }> = [
   { value: 'no_contest', label: 'No Contest' },
 ];
 
-export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighterB, currentRound, rounds = [], totalScoreA = 0, totalScoreB = 0 }: MatchResultDialogProps) {
+export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighterB, currentRound, totalRounds, rounds = [], totalScoreA = 0, totalScoreB = 0 }: MatchResultDialogProps) {
   const [resultType, setResultType] = useState<MatchResultType>('decision_unanimous');
   const [winnerId, setWinnerId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -70,6 +71,7 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
         setWinnerId(null);
       }
       setNotes('');
+      setValidationError(null);
     }
   }, [isOpen, rounds.length, totalScoreA, totalScoreB, fighterA.id, fighterB.id]);
 
@@ -78,7 +80,9 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
   }, [resultType]);
 
   const needsWinner = resultType !== 'draw' && resultType !== 'no_contest';
-  const canSubmit = !needsWinner || winnerId !== null;
+  const resultRequiresAllRounds = RESULT_TYPES_REQUIRING_ALL_ROUNDS.includes(resultType);
+  const allRoundsCompleted = rounds.length === totalRounds;
+  const canSubmit = (!needsWinner || winnerId !== null) && (!resultRequiresAllRounds || allRoundsCompleted);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
