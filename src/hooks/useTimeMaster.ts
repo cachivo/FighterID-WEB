@@ -234,7 +234,7 @@ export function useTimeMaster() {
       setTimeMs(totalRoundMs);
       timeMsRef.current = totalRoundMs;
       setIsRunning(false);
-      fire('bell');
+      fire('bell', 'end');
       setRoundsCompleted((prev) => [
         ...prev,
         { roundNumber: currentRound, durationMs: totalRoundMs, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
