@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Swords, Play, Pause, RotateCcw, StopCircle, FastForward, Trophy, RefreshCw, Volume2, VolumeX } from "lucide-react";
+import { Swords, Play, Pause, RotateCcw, StopCircle, FastForward, Trophy, RefreshCw, Volume2, VolumeX, Timer } from "lucide-react";
 import {
   TimeMasterLayout, FighterSelector, MatchConfig, TimerDisplay, RoundTracker,
   MatchResultDialog, RecordUpdateDialog, AlertSettingsPanel, AlertTestPanel, type MatchResultType,
