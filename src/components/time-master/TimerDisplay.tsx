@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatRoundTime } from "@/lib/scoring-utils";
 import { cn } from "@/lib/utils";
 import { Timer, Pause, Play, CheckCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface TimerDisplayProps {
   timeMs: number;
@@ -12,9 +13,14 @@ interface TimerDisplayProps {
   totalRounds: number;
   phase: string;
   restTimeMs?: number;
+  fighterAName?: string;
+  fighterBName?: string;
 }
 
-export function TimerDisplay({ timeMs, roundDuration, isRunning, isPaused, currentRound, totalRounds, phase, restTimeMs = 0 }: TimerDisplayProps) {
+export function TimerDisplay({
+  timeMs, roundDuration, isRunning, isPaused, currentRound, totalRounds, phase, restTimeMs = 0,
+  fighterAName, fighterBName,
+}: TimerDisplayProps) {
   const totalMs = roundDuration * 1000;
   const elapsedMs = Math.min(timeMs, totalMs);
   const remainingMs = totalMs - elapsedMs;
@@ -56,51 +62,101 @@ export function TimerDisplay({ timeMs, roundDuration, isRunning, isPaused, curre
   const p = getPhase();
   const PhaseIcon = p.icon;
 
-  const size = 320;
-  const strokeWidth = 10;
+  // Responsive size based on container width
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState(280);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = el.clientWidth;
+      // Reserve room for side fighter columns on wide screens
+      const next = Math.max(180, Math.min(360, w < 520 ? w - 32 : w * 0.45));
+      setSize(Math.round(next));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const strokeWidth = Math.max(6, Math.round(size * 0.03));
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - Math.min(Math.max(progress, 0), 1));
 
   const displayMs = isRest ? restTimeMs : elapsedMs;
-  const displayLabel = isRest ? 'TIEMPO DE DESCANSO' : 'TIEMPO TRANSCURRIDO';
+  const displayLabel = isRest ? 'DESCANSO' : 'TRANSCURRIDO';
+
+  const FighterTag = ({ name, corner }: { name?: string; corner: 'red' | 'blue' }) => (
+    <div className={cn(
+      "flex-1 min-w-0 flex flex-col items-center text-center px-2 py-2 rounded border-2",
+      corner === 'red' ? 'border-fighter-danger/60 bg-fighter-danger/5' : 'border-blue-500/60 bg-blue-500/5'
+    )}>
+      <span className={cn(
+        "text-[10px] uppercase tracking-widest font-semibold",
+        corner === 'red' ? 'text-fighter-danger' : 'text-blue-400'
+      )}>
+        {corner === 'red' ? 'Roja' : 'Azul'}
+      </span>
+      <span className="text-sm sm:text-base font-bold leading-tight break-words line-clamp-2">
+        {name || '—'}
+      </span>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex flex-col items-center gap-2">
+    <div ref={containerRef} className="w-full flex flex-col items-center gap-4">
+      {/* Round headline - main info */}
+      <div className="flex flex-col items-center gap-2 w-full">
         <Badge variant="outline" className="px-3 py-1 gap-1.5">
           <PhaseIcon className="h-3.5 w-3.5" />
           {p.label}
         </Badge>
-        <p className="text-sm text-muted-foreground font-medium">
-          Round {currentRound} de {totalRounds}
-        </p>
-      </div>
-
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90">
-          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth={strokeWidth} />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={getStrokeColor()}
-            strokeWidth={strokeWidth}
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 0.2s linear, stroke 0.3s' }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className={cn("text-6xl md:text-7xl font-mono font-bold tabular-nums", getTimerColor())}>
-            {formatRoundTime(displayMs)}
-          </div>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground mt-2">
-            {displayLabel}
+        <div className="text-center">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">Round</div>
+          <div className="text-5xl sm:text-6xl font-black tabular-nums leading-none text-primary">
+            {currentRound}
+            <span className="text-2xl sm:text-3xl text-muted-foreground font-bold"> / {totalRounds}</span>
           </div>
         </div>
+      </div>
+
+      {/* Fighters + timer in one display, responsive */}
+      <div className="w-full flex flex-row items-center justify-center gap-3 sm:gap-4">
+        <FighterTag name={fighterAName} corner="red" />
+
+        <div className="relative shrink-0" style={{ width: size, height: size }}>
+          <svg width={size} height={size} className="-rotate-90">
+            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth={strokeWidth} />
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke={getStrokeColor()}
+              strokeWidth={strokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              style={{ transition: 'stroke-dashoffset 0.2s linear, stroke 0.3s' }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div
+              className={cn("font-mono font-bold tabular-nums", getTimerColor())}
+              style={{ fontSize: Math.round(size * 0.22) }}
+            >
+              {formatRoundTime(displayMs)}
+            </div>
+            <div className="text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground mt-1">
+              {displayLabel}
+            </div>
+          </div>
+        </div>
+
+        <FighterTag name={fighterBName} corner="blue" />
       </div>
     </div>
   );
