@@ -7,9 +7,10 @@ import { Check, Clock, Zap } from "lucide-react";
 interface RoundTrackerProps {
   totalRounds: number;
   currentRound: number;
-  roundsCompleted: Array<{ roundNumber: number; durationMs: number }>;
+  roundsCompleted: Array<{ roundNumber: number; durationMs: number; scoreA?: number; scoreB?: number; knockdownsA?: number; knockdownsB?: number }>;
   isRestPeriod: boolean;
   restTimeMs: number;
+  onEditRound?: (roundNumber: number) => void;
 }
 
 const fmt = (ms: number) => {
@@ -19,7 +20,7 @@ const fmt = (ms: number) => {
   return `${m.toString().padStart(2, '0')}:${r.toString().padStart(2, '0')}`;
 };
 
-export function RoundTracker({ totalRounds, currentRound, roundsCompleted, isRestPeriod, restTimeMs }: RoundTrackerProps) {
+export function RoundTracker({ totalRounds, currentRound, roundsCompleted, isRestPeriod, restTimeMs, onEditRound }: RoundTrackerProps) {
   return (
     <Card>
       <CardHeader>
