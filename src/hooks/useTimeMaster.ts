@@ -68,6 +68,7 @@ export function useTimeMaster() {
   const [fighterProfiles, setFighterProfiles] = useState<FighterOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [alertSettings, setAlertSettingsState] = useState<AlertSettings>(() => loadAlertSettings());
+  const [silentMode, setSilentMode] = useState(false);
 
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
@@ -76,6 +77,7 @@ export function useTimeMaster() {
   const timeMsRef = useRef<number>(0);
   const alertsFiredRef = useRef<Set<string>>(new Set());
   const alertSettingsRef = useRef<AlertSettings>(alertSettings);
+  const silentModeRef = useRef(silentMode);
 
   useEffect(() => { timeMsRef.current = timeMs; }, [timeMs]);
   useEffect(() => { alertSettingsRef.current = alertSettings; }, [alertSettings]);
