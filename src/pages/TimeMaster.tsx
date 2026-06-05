@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ export default function TimeMaster() {
   const [roundScoreOpen, setRoundScoreOpen] = useState(false);
   const [editingRound, setEditingRound] = useState<number | null>(null);
   const lastCompletedCountRef = useRef(0);
+  const autoOpenedRef = useRef(false);
 
   useEffect(() => { tm.loadFighters(); }, [tm.loadFighters]);
 
@@ -34,6 +36,28 @@ export default function TimeMaster() {
     }
     lastCompletedCountRef.current = tm.roundsCompleted.length;
   }, [tm.roundsCompleted]);
+
+  // Reset auto-open guard when a new match begins
+  useEffect(() => {
+    if (tm.phase === 'setup') autoOpenedRef.current = false;
+  }, [tm.phase]);
+
+  // Auto-launch result dialog when the full fight finishes and all rounds scored
+  useEffect(() => {
+    if (
+      tm.phase === 'finished' &&
+      !autoOpenedRef.current &&
+      !pendingResult &&
+      !resultDialogOpen &&
+      !recordDialogOpen &&
+      !roundScoreOpen &&
+      tm.roundsCompleted.length >= tm.roundConfig
+    ) {
+      autoOpenedRef.current = true;
+      setResultDialogOpen(true);
+    }
+  }, [tm.phase, tm.roundsCompleted.length, tm.roundConfig, pendingResult, resultDialogOpen, recordDialogOpen, roundScoreOpen]);
+
 
 
   const phaseLocked = tm.phase !== 'setup';
@@ -63,6 +87,7 @@ export default function TimeMaster() {
       notes: pendingResult.notes,
     });
     setRecordDialogOpen(false);
+    toast.success("Récords actualizados");
   };
 
   const handleDeclineRecord = async () => {
@@ -76,7 +101,9 @@ export default function TimeMaster() {
       }, false);
     }
     setRecordDialogOpen(false);
+    toast("Resultado firmado sin actualizar récords");
   };
+
 
   return (
     <TimeMasterLayout>
@@ -269,9 +296,10 @@ export default function TimeMaster() {
                 </Button>
               )}
               {tm.phase === 'finished' && (
-                <Button size="lg" onClick={tm.resetMatch} className="min-h-[48px]">
+                <Button size="lg" onClick={tm.resetMatch} disabled={recordDialogOpen} className="min-h-[48px]">
                   <RefreshCw className="h-5 w-5 mr-2" /> Nueva Pelea
                 </Button>
+
               )}
               {tm.phase !== 'setup' && tm.phase !== 'finished' && (
                 <Button size="lg" variant="ghost" onClick={tm.resetMatch} className="min-h-[48px]">
