@@ -167,27 +167,44 @@ export default function TimeMaster() {
           </CardContent>
         </Card>
 
-        {/* Config */}
-        <MatchConfig
-          roundConfig={tm.roundConfig}
-          onRoundConfigChange={tm.setRoundConfig}
-          roundDuration={tm.roundDuration}
-          onRoundDurationChange={tm.setRoundDuration}
-          disabled={phaseLocked}
-        />
-
-        {/* Test alerts */}
-        <AlertTestPanel
-          settings={tm.alertSettings}
-          onPreview={tm.previewAlert}
-        />
-
-        {/* Alert settings */}
-        <AlertSettingsPanel
-          settings={tm.alertSettings}
-          onChange={tm.setAlertSettings}
-          onPreview={tm.previewAlert}
-        />
+        {/* Hidden menu: configuration & test options */}
+        <Collapsible>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="w-full flex items-center justify-between p-4 hover:bg-muted/40 transition-colors rounded-t-md group"
+                aria-label="Opciones de prueba y configuración"
+              >
+                <div className="flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">Opciones de prueba y configuración</span>
+                </div>
+                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 pt-0 space-y-4 border-t">
+                <MatchConfig
+                  roundConfig={tm.roundConfig}
+                  onRoundConfigChange={tm.setRoundConfig}
+                  roundDuration={tm.roundDuration}
+                  onRoundDurationChange={tm.setRoundDuration}
+                  disabled={phaseLocked}
+                />
+                <AlertTestPanel
+                  settings={tm.alertSettings}
+                  onPreview={tm.previewAlert}
+                />
+                <AlertSettingsPanel
+                  settings={tm.alertSettings}
+                  onChange={tm.setAlertSettings}
+                  onPreview={tm.previewAlert}
+                />
+              </div>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Timer */}
         <Card>
@@ -201,6 +218,8 @@ export default function TimeMaster() {
               totalRounds={tm.roundConfig}
               phase={tm.phase}
               restTimeMs={tm.restTimeMs}
+              fighterAName={tm.fighterAName}
+              fighterBName={tm.fighterBName}
             />
           </CardContent>
         </Card>
