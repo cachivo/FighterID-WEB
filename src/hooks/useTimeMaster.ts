@@ -318,7 +318,7 @@ export function useTimeMaster() {
       ...prev,
       { roundNumber: currentRound, durationMs: finalTime, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
     ]);
-    fire('bell');
+    fire('bell', 'end');
     if (currentRound >= roundConfig) {
       setPhase('finished');
       toast({ title: 'Pelea terminada', description: 'Todos los rounds completados.' });
