@@ -23,6 +23,7 @@ export default function TimeMaster() {
   const [roundScoreOpen, setRoundScoreOpen] = useState(false);
   const [editingRound, setEditingRound] = useState<number | null>(null);
   const lastCompletedCountRef = useRef(0);
+  const autoOpenedRef = useRef(false);
 
   useEffect(() => { tm.loadFighters(); }, [tm.loadFighters]);
 
@@ -35,6 +36,28 @@ export default function TimeMaster() {
     }
     lastCompletedCountRef.current = tm.roundsCompleted.length;
   }, [tm.roundsCompleted]);
+
+  // Reset auto-open guard when a new match begins
+  useEffect(() => {
+    if (tm.phase === 'setup') autoOpenedRef.current = false;
+  }, [tm.phase]);
+
+  // Auto-launch result dialog when the full fight finishes and all rounds scored
+  useEffect(() => {
+    if (
+      tm.phase === 'finished' &&
+      !autoOpenedRef.current &&
+      !pendingResult &&
+      !resultDialogOpen &&
+      !recordDialogOpen &&
+      !roundScoreOpen &&
+      tm.roundsCompleted.length >= tm.roundConfig
+    ) {
+      autoOpenedRef.current = true;
+      setResultDialogOpen(true);
+    }
+  }, [tm.phase, tm.roundsCompleted.length, tm.roundConfig, pendingResult, resultDialogOpen, recordDialogOpen, roundScoreOpen]);
+
 
 
   const phaseLocked = tm.phase !== 'setup';
