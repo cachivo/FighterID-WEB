@@ -51,9 +51,20 @@ export default function TimeMaster() {
             </div>
             <p className="text-sm text-muted-foreground mt-1">Cronómetro profesional de boxeo y gestión de pelea</p>
           </div>
-          <Badge variant="outline" className="self-start sm:self-end uppercase tracking-wider">
-            {tm.phase}
-          </Badge>
+          <div className="flex items-center gap-2 self-start sm:self-end">
+            <Button
+              variant={tm.silentMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => tm.setSilentMode((v) => !v)}
+              title={tm.silentMode ? "Desactivar modo silencioso" : "Activar modo silencioso (solo vibración)"}
+            >
+              {tm.silentMode ? <VolumeX className="h-4 w-4 mr-1" /> : <Volume2 className="h-4 w-4 mr-1" />}
+              {tm.silentMode ? "Silencio" : "Sonido"}
+            </Button>
+            <Badge variant="outline" className="uppercase tracking-wider">
+              {tm.phase}
+            </Badge>
+          </div>
         </div>
 
         {/* Fighter selection */}
