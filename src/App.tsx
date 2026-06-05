@@ -78,6 +78,7 @@ const JudgeOnboarding = lazy(() => import("./pages/judge/JudgeOnboarding"));
 
 // Time Master
 const TimeMaster = lazy(() => import("./pages/TimeMaster"));
+const TimeMasterJoin = lazy(() => import("./pages/TimeMasterJoin"));
 
 // Stations
 const StationPinLogin = lazy(() => import('@/components/station/StationPinLogin').then(m => ({ default: m.StationPinLogin })));
@@ -214,6 +215,7 @@ const App = () => {
 
               {/* Time Master */}
               <Route path="/time-master" element={<ProtectedRoute><TimeMaster /></ProtectedRoute>} />
+              <Route path="/time-master/join" element={<ProtectedRoute><TimeMasterJoin /></ProtectedRoute>} />
 
               {/* Stations */}
               <Route path="/estacion/:stationNumber" element={<StationPinLogin />} />
