@@ -215,7 +215,7 @@ const App = () => {
 
               {/* Time Master */}
               <Route path="/time-master" element={<ProtectedRoute><TimeMaster /></ProtectedRoute>} />
-              <Route path="/time-master/join" element={<ProtectedRoute><TimeMasterJoin /></ProtectedRoute>} />
+              
 
               {/* Stations */}
               <Route path="/estacion/:stationNumber" element={<StationPinLogin />} />
