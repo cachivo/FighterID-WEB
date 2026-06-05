@@ -420,6 +420,6 @@ export function useTimeMaster() {
     startMatch, startRound, pauseRound, resumeRound, endRound, resetCurrentRound, skipRestPeriod,
     finishMatch, resetMatch, updateFighterRecords,
     alertSettings, setAlertSettings, previewAlert: fire,
-    silentMode, setSilentMode,
+    silentMode, setSilentMode, silentModeRemainingSec,
   };
 }
