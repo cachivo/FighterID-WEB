@@ -6361,6 +6361,201 @@ export type Database = {
         }
         Relationships: []
       }
+      tm_match: {
+        Row: {
+          blue_fighter_id: string
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          judge_fighter_id: string
+          notes: string | null
+          phase: string
+          records_updated: boolean
+          red_fighter_id: string
+          result_type: string | null
+          round_config: number
+          round_duration_sec: number
+          updated_at: string
+          winner_fighter_id: string | null
+        }
+        Insert: {
+          blue_fighter_id: string
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          judge_fighter_id: string
+          notes?: string | null
+          phase?: string
+          records_updated?: boolean
+          red_fighter_id: string
+          result_type?: string | null
+          round_config: number
+          round_duration_sec: number
+          updated_at?: string
+          winner_fighter_id?: string | null
+        }
+        Update: {
+          blue_fighter_id?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          judge_fighter_id?: string
+          notes?: string | null
+          phase?: string
+          records_updated?: boolean
+          red_fighter_id?: string
+          result_type?: string | null
+          round_config?: number
+          round_duration_sec?: number
+          updated_at?: string
+          winner_fighter_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tm_match_blue_fighter_id_fkey"
+            columns: ["blue_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighter_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tm_match_blue_fighter_id_fkey"
+            columns: ["blue_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "incomplete_fighter_profiles"
+            referencedColumns: ["fighter_id"]
+          },
+          {
+            foreignKeyName: "tm_match_blue_fighter_id_fkey"
+            columns: ["blue_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "v_fighters_current_gym"
+            referencedColumns: ["fighter_id"]
+          },
+          {
+            foreignKeyName: "tm_match_blue_fighter_id_fkey"
+            columns: ["blue_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "vision_fight_context"
+            referencedColumns: ["fighter_a_id"]
+          },
+          {
+            foreignKeyName: "tm_match_blue_fighter_id_fkey"
+            columns: ["blue_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "vision_fight_context"
+            referencedColumns: ["fighter_b_id"]
+          },
+          {
+            foreignKeyName: "tm_match_judge_fighter_id_fkey"
+            columns: ["judge_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighter_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tm_match_judge_fighter_id_fkey"
+            columns: ["judge_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "incomplete_fighter_profiles"
+            referencedColumns: ["fighter_id"]
+          },
+          {
+            foreignKeyName: "tm_match_judge_fighter_id_fkey"
+            columns: ["judge_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "v_fighters_current_gym"
+            referencedColumns: ["fighter_id"]
+          },
+          {
+            foreignKeyName: "tm_match_judge_fighter_id_fkey"
+            columns: ["judge_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "vision_fight_context"
+            referencedColumns: ["fighter_a_id"]
+          },
+          {
+            foreignKeyName: "tm_match_judge_fighter_id_fkey"
+            columns: ["judge_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "vision_fight_context"
+            referencedColumns: ["fighter_b_id"]
+          },
+          {
+            foreignKeyName: "tm_match_red_fighter_id_fkey"
+            columns: ["red_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighter_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tm_match_red_fighter_id_fkey"
+            columns: ["red_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "incomplete_fighter_profiles"
+            referencedColumns: ["fighter_id"]
+          },
+          {
+            foreignKeyName: "tm_match_red_fighter_id_fkey"
+            columns: ["red_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "v_fighters_current_gym"
+            referencedColumns: ["fighter_id"]
+          },
+          {
+            foreignKeyName: "tm_match_red_fighter_id_fkey"
+            columns: ["red_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "vision_fight_context"
+            referencedColumns: ["fighter_a_id"]
+          },
+          {
+            foreignKeyName: "tm_match_red_fighter_id_fkey"
+            columns: ["red_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "vision_fight_context"
+            referencedColumns: ["fighter_b_id"]
+          },
+          {
+            foreignKeyName: "tm_match_winner_fighter_id_fkey"
+            columns: ["winner_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighter_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tm_match_winner_fighter_id_fkey"
+            columns: ["winner_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "incomplete_fighter_profiles"
+            referencedColumns: ["fighter_id"]
+          },
+          {
+            foreignKeyName: "tm_match_winner_fighter_id_fkey"
+            columns: ["winner_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "v_fighters_current_gym"
+            referencedColumns: ["fighter_id"]
+          },
+          {
+            foreignKeyName: "tm_match_winner_fighter_id_fkey"
+            columns: ["winner_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "vision_fight_context"
+            referencedColumns: ["fighter_a_id"]
+          },
+          {
+            foreignKeyName: "tm_match_winner_fighter_id_fkey"
+            columns: ["winner_fighter_id"]
+            isOneToOne: false
+            referencedRelation: "vision_fight_context"
+            referencedColumns: ["fighter_b_id"]
+          },
+        ]
+      }
       trending_hashtags: {
         Row: {
           count: number | null
@@ -7851,6 +8046,16 @@ export type Database = {
       }
       suspend_license: {
         Args: { p_license_id: string; p_reason: string; p_until?: string }
+        Returns: undefined
+      }
+      tm_submit_verdict: {
+        Args: {
+          _match_id: string
+          _notes: string
+          _result_type: string
+          _update_records: boolean
+          _winner: string
+        }
         Returns: undefined
       }
       update_fighter_ranking_level: {
