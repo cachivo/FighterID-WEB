@@ -1,33 +1,49 @@
-## Goal
+# Per-Round Results & Final Verdict
 
-Make Time Master work for anyone on any device with zero coordination: whoever opens Time Master IS the judge. They pick the two fighters, run the timer, and submit the verdict — their authenticated user id + timestamp is the digital signature on the record. Admins can later edit/delete results from the admin panel.
+Add the ability for the Judge to record per-round scores/notes during a fight, so the final verdict (and uploaded audit record) reflects the round-by-round outcome.
 
-## Changes
+## What we'll build
 
-### 1. UI — `src/pages/TimeMaster.tsx`
-- Remove the "Juez" fighter selector, the "Sala multi-dispositivo" card, room code copy, `PresenceBar`, and all `useTimeMasterMatch` wiring.
-- Add a compact "Juez" header strip showing the current authenticated user (name + avatar) with the line "Actúas como juez oficial. Tu firma digital quedará registrada al subir el resultado." If not logged in, show a CTA to log in — uploading records requires auth.
-- Keep Red/Blue fighter selectors, config, timer, controls, result dialog, record-update dialog exactly as they are.
+1. **Per-round score entry (UI)**
+   - When a round ends (phase becomes `between_rounds` or `finished`), open a quick "Round X Result" dialog where the judge enters:
+     - Score for Red corner (default 10)
+     - Score for Blue corner (default 9) — 10-point must system
+     - Knockdowns Red / Blue (numeric)
+     - Warnings Red / Blue (numeric)
+     - Optional note
+   - Dialog can be reopened later from the `RoundTracker` (click any completed round → edit).
+   - The judge can also skip and just confirm `10-9 Red` / `10-9 Blue` / `10-10` via quick-pick buttons.
 
-### 2. Verdict persistence — `src/hooks/useTimeMaster.ts`
-- In `finishMatch` (or a new `submitVerdict`), when the user confirms "update records", write one row to a new `tm_verdict` table with: `judge_user_id = auth.uid()`, `red_fighter_id`, `blue_fighter_id`, `winner_fighter_id`, `result_type`, `round_number`, `notes`, `round_config`, `round_duration_sec`, `records_updated`, `signed_at = now()`. This row is the digital signature + timestamp audit log; the existing `fighter_profiles` win/loss/draw update continues to run alongside.
-- If the judge declines to upload, still insert the `tm_verdict` row with `records_updated = false` so we have a full audit trail (optional — confirm in step 4).
+2. **State + hook changes (`useTimeMaster.ts`)**
+   - Extend `RoundResult` with `scoreA`, `scoreB`, `note`.
+   - New action `setRoundScore(roundNumber, partial)` — merges into the existing entry in `roundsCompleted`.
+   - On `endRound` / auto-end, push the round with default `10-9` favoring no one (judge fills in next).
+   - Derive `totalScoreA` / `totalScoreB` selectors for the verdict dialog.
 
-### 3. Database — new migration
-- Create `public.tm_verdict` with the columns above and standard `id/created_at/updated_at`.
-- GRANT `SELECT, INSERT` to `authenticated`, `ALL` to `service_role`. No anon access.
-- Enable RLS. Policies:
-  - INSERT: `auth.uid() = judge_user_id`.
-  - SELECT: the judge can read their own rows; admins (via existing `has_role(auth.uid(),'admin')` / `super_admin`) can read all.
-  - UPDATE/DELETE: admins only — this is what powers "admin can later edit/delete mistakes".
-- Drop the unused multi-device pieces: `DROP FUNCTION public.tm_submit_verdict`, `DROP TABLE public.tm_match` (created in the previous migration, never adopted in the simplified flow).
+3. **Final verdict dialog (`MatchResultDialog`)**
+   - Show a round-by-round score table (read-only summary).
+   - Pre-suggest winner + `decision_unanimous` when totals differ; suggest `draw` when equal.
+   - Judge still confirms manually.
 
-### 4. Cleanup — remove dead multi-device code
-- Delete `src/pages/TimeMasterJoin.tsx`, `src/hooks/useTimeMasterMatch.ts`, `src/components/time-master/PresenceBar.tsx`, `src/components/time-master/JudgeVerdictPanel.tsx`.
-- Remove the `/time-master/join` route from `src/App.tsx` and the exports from `src/components/time-master/index.ts`.
+4. **Persistence (`tm_verdict`)**
+   - Add column `rounds jsonb` storing `[{round, scoreA, scoreB, knockdownsA, knockdownsB, warningsA, warningsB, note, durationMs}]`.
+   - `insertVerdict` writes the array along with the existing fields.
+   - Migration: `ALTER TABLE public.tm_verdict ADD COLUMN rounds jsonb NOT NULL DEFAULT '[]'::jsonb;` (no new RLS needed).
 
-### 5. Admin edit/delete (scaffolding only, full UI later)
-- Note in the plan that the admin panel page to list/edit/delete `tm_verdict` rows is a follow-up; this plan only ships the table + RLS so admins can already manage rows from the Supabase dashboard. Confirm if you want the admin UI now or as a separate task.
+5. **Admin review (out of scope here)** — existing admin panel will surface the new `rounds` column later; not part of this change.
 
-## Open question
-- Should a declined upload still write a `tm_verdict` row (full audit) or write nothing (only signed updates are stored)?
+## Files touched
+
+- `supabase/migrations/<new>.sql` — add `rounds jsonb` to `tm_verdict`.
+- `src/hooks/useTimeMaster.ts` — extend `RoundResult`, add `setRoundScore`, include `rounds` in `insertVerdict`.
+- `src/components/time-master/RoundScoreDialog.tsx` *(new)* — per-round entry.
+- `src/components/time-master/RoundTracker.tsx` — clickable rounds + show `10-9` chips.
+- `src/components/time-master/MatchResultDialog.tsx` — summary table + auto-suggest winner.
+- `src/components/time-master/index.ts` — export new dialog.
+- `src/pages/TimeMaster.tsx` — open `RoundScoreDialog` after each round end; pass rounds to verdict dialog.
+
+## Technical notes
+
+- 10-point must system defaults: winner 10, loser 9; KD = -1 (down to 8); even round = 10-10.
+- All new state lives in the existing hook — no realtime/multi-device sync needed (single-judge model).
+- `rounds` defaults to `[]` so existing verdict rows remain valid.
