@@ -1,6 +1,23 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
+const HERO_FALLBACK_STYLE = {
+  background:
+    'radial-gradient(ellipse 60% 40% at 20% 0%, rgba(220,38,38,0.06), transparent 60%), radial-gradient(ellipse 50% 50% at 80% 100%, rgba(220,38,38,0.04), transparent 65%), #0A0A0A',
+} as const;
+
+function hasWebGL(): boolean {
+  try {
+    const canvas = document.createElement('canvas');
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * HeroCanvas — animated Perlin-noise grain field rendered into a fullscreen
  * WebGL triangle. Background runs only while the canvas is in viewport.
@@ -93,6 +110,10 @@ void main() {
 `;
 
 export default function HeroCanvas() {
+  if (!hasWebGL()) {
+    return <div className="absolute inset-0 z-0" style={HERO_FALLBACK_STYLE} aria-hidden />;
+  }
+
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {

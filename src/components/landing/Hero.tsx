@@ -7,6 +7,16 @@ import { Button } from '@/components/ui/button';
 import HeroCanvas from './HeroCanvas';
 import StatCounter from './StatCounter';
 
+function isMobileViewport(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+const HERO_FALLBACK_STYLE = {
+  background:
+    'radial-gradient(ellipse 60% 40% at 20% 0%, rgba(220,38,38,0.06), transparent 60%), radial-gradient(ellipse 50% 50% at 80% 100%, rgba(220,38,38,0.04), transparent 65%), #0A0A0A',
+} as const;
+
 export default function LandingHero() {
   const { stats } = useRealTimeStats();
   const { user } = useAuth();
@@ -21,18 +31,13 @@ export default function LandingHero() {
 
   const liveEvent = stats?.liveEvents?.[0];
   const nextEvent = (stats as any)?.nextEvent;
+  const useFallback = isLowEnd || isMobileViewport();
 
   return (
     <section className={`relative min-h-screen flex flex-col items-center justify-center overflow-hidden ${mounted ? 'fid-animate' : ''}`}>
       {/* Background */}
-      {isLowEnd ? (
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            background:
-              'radial-gradient(ellipse 60% 40% at 20% 0%, rgba(220,38,38,0.06), transparent 60%), radial-gradient(ellipse 50% 50% at 80% 100%, rgba(220,38,38,0.04), transparent 65%), #0A0A0A',
-          }}
-        />
+      {useFallback ? (
+        <div className="absolute inset-0 z-0" style={HERO_FALLBACK_STYLE} />
       ) : (
         <HeroCanvas />
       )}
