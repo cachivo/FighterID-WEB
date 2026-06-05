@@ -1,51 +1,36 @@
-# Time Master — Boxing Round Timer
+## Plan: Use custom bell sounds in Time Master
 
-A new authenticated-only page at `/time-master` providing a professional boxing match timer with fighter selection, configurable rounds/durations, bell + warning audio, result declaration, and optional record sync to `fighter_profiles`.
+Replace the synthesized "bell" tone with the two uploaded MP3 files, used only in the Time Master feature.
 
-## Scope
+### Mapping
+- **1 Bell.mp3** → plays at **round start** (`startRound`)
+- **3 Bell.mp3** → plays at **round end** (timer expiry in `timerLoop` and manual `endRound`)
+- "warning" (60s/30s/10s) and "rest" alerts keep their current synthesized tones — user only specified bell sounds.
 
-- New page accessible from header nav (registered users only)
-- Fighter dropdowns populated from `fighter_profiles` (active only)
-- Match config: 3/5/8 rounds × 2min/3min
-- Timer with Start / Pause / Resume / End / Reset
-- 60s rest between rounds, bell sound, alerts at 1min/30s/10s remaining
-- Result dialog (KO, TKO, Decisions, Draw, DQ, No Contest)
-- Yes/No popup to optionally sync win/loss/draw to DB (sparring mode = skip)
+### Steps
 
-## Files to create
+1. **Upload MP3s as Lovable Assets** (CDN-hosted, not committed as binaries):
+   - `src/assets/time-master-bell-1.mp3.asset.json`
+   - `src/assets/time-master-bell-3.mp3.asset.json`
 
-```text
-src/hooks/useTimeMaster.ts
-src/pages/TimeMaster.tsx
-src/components/time-master/
-  FighterSelector.tsx
-  MatchConfig.tsx
-  TimerDisplay.tsx
-  RoundTracker.tsx
-  MatchResultDialog.tsx
-  RecordUpdateDialog.tsx
-  TimeMasterLayout.tsx
-  index.ts
-```
+2. **Extend `src/lib/timeMasterAlerts.ts`**:
+   - Add a new `AlertKind` variant or sub-type `'bell-start' | 'bell-end'` (replacing the single `'bell'`), OR keep `'bell'` and add a `variant?: 'start' | 'end'` parameter to `playAlert`. Recommend the parameter approach to minimize churn in settings UI (still one "Campana" toggle controlling both).
+   - Preload two `HTMLAudioElement` instances pointing at the asset URLs.
+   - In `playAlert`, when `kind === 'bell'` and `cfg.sound` is true, play the appropriate MP3 (clone the audio element so rapid re-triggers work) at `cfg.volume`, instead of `playTone(TONES.bell, ...)`.
+   - Vibration behavior unchanged.
 
-## Files to modify
+3. **Update `src/hooks/useTimeMaster.ts`**:
+   - `startRound` → `fire('bell', 'start')`
+   - `timerLoop` expiry branch → `fire('bell', 'end')`
+   - `endRound` → `fire('bell', 'end')`
+   - `previewAlert` from the test panel → keep playing the "start" sound by default (or play both sequentially — will use the "start" sound for the preview button since it's the more recognizable single ring).
 
-- `src/App.tsx` — add lazy import + `<Route path="/time-master" element={<ProtectedRoute><TimeMaster /></ProtectedRoute>} />`
-- `src/components/Header.tsx` — add "Time Master" nav entry (mobile + desktop + user dropdown) using `Timer` icon from lucide
+4. **No UI changes** to `AlertSettingsPanel` or `AlertTestPanel` — the single "Campana" toggle keeps controlling both start and end bell sounds.
 
-## Technical notes
+### Files touched
+- `src/assets/time-master-bell-1.mp3.asset.json` (new, via `lovable-assets`)
+- `src/assets/time-master-bell-3.mp3.asset.json` (new, via `lovable-assets`)
+- `src/lib/timeMasterAlerts.ts` (edit)
+- `src/hooks/useTimeMaster.ts` (edit `fire` signature + 3 call sites)
 
-- Hook `useTimeMaster` owns all state (phase machine: setup → ready → fighting → between_rounds → finished), uses `requestAnimationFrame` for the round timer and `setInterval` for the 60s rest period. Refs hold start/pause timestamps to keep timing accurate across pause/resume.
-- Bell uses Web Audio API (`OscillatorNode`) — no audio asset needed.
-- Fighter loading: `supabase.from('fighter_profiles').select(...).eq('active', true).order('last_name')`.
-- Record sync: read-modify-write on `record_wins` / `record_losses` / `record_draws`. Draw / No Contest increments both fighters' `record_draws`.
-- Uses semantic tokens (`fighter-danger`, `fighter-info`, `primary`, `muted-foreground`) consistent with existing design system. Will verify these tokens exist in `index.css` / `tailwind.config.ts` and fall back to existing tokens if not.
-- All shadcn components used (Select, Dialog, AlertDialog, RadioGroup, Card, Button, Badge, ScrollArea, Textarea, Skeleton) are already installed.
-- The user's provided source had a few minor syntax artifacts (stray `</body>` in an import, missing JSX in some snippets). I'll clean those up while keeping behavior identical.
-- Route is gated by existing `ProtectedRoute`, so only authenticated users reach it.
-
-## Out of scope
-
-- No DB schema changes (only reads + updates to existing `fighter_profiles` columns).
-- No knockdown/warning counters in UI v1 (kept in data model with zeros so it can be extended later).
-- No persistence of match history — single in-memory session.
+Scope is limited to Time Master; no other feature uses these alert utilities.

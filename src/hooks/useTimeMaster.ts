@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   type AlertSettings, loadAlertSettings, saveAlertSettings, playAlert,
 } from '@/lib/timeMasterAlerts';
-import type { AlertKind } from '@/lib/timeMasterAlerts';
+import type { AlertKind, BellVariant } from '@/lib/timeMasterAlerts';
 
 export type MatchPhase = 'setup' | 'ready' | 'fighting' | 'between_rounds' | 'finished';
 
@@ -124,7 +124,7 @@ export function useTimeMaster() {
     }
   }, [clearSilentModeTimer]);
 
-  const fire = useCallback((kind: AlertKind) => {
+  const fire = useCallback((kind: AlertKind, variant: BellVariant = 'start') => {
     const base = alertSettingsRef.current;
     if (silentModeRef.current) {
       const muted: AlertSettings = {
@@ -132,9 +132,9 @@ export function useTimeMaster() {
         warning: { ...base.warning, sound: false },
         rest:    { ...base.rest,    sound: false },
       };
-      playAlert(kind, muted);
+      playAlert(kind, muted, variant);
     } else {
-      playAlert(kind, base);
+      playAlert(kind, base, variant);
     }
   }, []);
 
@@ -234,7 +234,7 @@ export function useTimeMaster() {
       setTimeMs(totalRoundMs);
       timeMsRef.current = totalRoundMs;
       setIsRunning(false);
-      fire('bell');
+      fire('bell', 'end');
       setRoundsCompleted((prev) => [
         ...prev,
         { roundNumber: currentRound, durationMs: totalRoundMs, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
@@ -293,7 +293,7 @@ export function useTimeMaster() {
     setIsRunning(true);
     setIsPaused(false);
     setPhase('fighting');
-    fire('bell');
+    fire('bell', 'start');
   }, []);
 
   const pauseRound = useCallback(() => {
@@ -318,7 +318,7 @@ export function useTimeMaster() {
       ...prev,
       { roundNumber: currentRound, durationMs: finalTime, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
     ]);
-    fire('bell');
+    fire('bell', 'end');
     if (currentRound >= roundConfig) {
       setPhase('finished');
       toast({ title: 'Pelea terminada', description: 'Todos los rounds completados.' });
