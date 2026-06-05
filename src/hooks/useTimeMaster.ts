@@ -293,7 +293,7 @@ export function useTimeMaster() {
     setIsRunning(true);
     setIsPaused(false);
     setPhase('fighting');
-    fire('bell');
+    fire('bell', 'start');
   }, []);
 
   const pauseRound = useCallback(() => {
