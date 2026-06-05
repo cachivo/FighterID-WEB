@@ -269,8 +269,22 @@ export default function TimeMaster() {
           roundsCompleted={tm.roundsCompleted}
           isRestPeriod={tm.isRestPeriod}
           restTimeMs={tm.restTimeMs}
+          onEditRound={(n) => { setEditingRound(n); setRoundScoreOpen(true); }}
         />
       </div>
+
+      <RoundScoreDialog
+        isOpen={roundScoreOpen}
+        onClose={() => setRoundScoreOpen(false)}
+        roundNumber={editingRound ?? tm.currentRound}
+        fighterAName={tm.fighterAName}
+        fighterBName={tm.fighterBName}
+        initial={editingRound ? tm.roundsCompleted.find((r) => r.roundNumber === editingRound) : undefined}
+        onSubmit={(v: RoundScoreValue) => {
+          if (editingRound != null) tm.setRoundScore(editingRound, v);
+          setRoundScoreOpen(false);
+        }}
+      />
 
       <MatchResultDialog
         isOpen={resultDialogOpen}
@@ -279,6 +293,9 @@ export default function TimeMaster() {
         fighterA={{ id: tm.fighterAId ?? '', name: tm.fighterAName }}
         fighterB={{ id: tm.fighterBId ?? '', name: tm.fighterBName }}
         currentRound={tm.currentRound}
+        rounds={tm.roundsCompleted}
+        totalScoreA={tm.totalScoreA}
+        totalScoreB={tm.totalScoreB}
       />
 
       <RecordUpdateDialog
