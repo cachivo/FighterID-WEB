@@ -27,6 +27,9 @@ export interface RoundResult {
   knockdownsB: number;
   warningsA: number;
   warningsB: number;
+  scoreA: number;
+  scoreB: number;
+  note?: string;
 }
 
 export interface MatchResult {
@@ -237,7 +240,7 @@ export function useTimeMaster() {
       fire('bell', 'end');
       setRoundsCompleted((prev) => [
         ...prev,
-        { roundNumber: currentRound, durationMs: totalRoundMs, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
+        { roundNumber: currentRound, durationMs: totalRoundMs, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0, scoreA: 10, scoreB: 10 },
       ]);
       if (currentRound >= roundConfig) {
         setPhase('finished');
@@ -316,7 +319,7 @@ export function useTimeMaster() {
     const finalTime = timeMsRef.current;
     setRoundsCompleted((prev) => [
       ...prev,
-      { roundNumber: currentRound, durationMs: finalTime, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
+      { roundNumber: currentRound, durationMs: finalTime, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0, scoreA: 10, scoreB: 10 },
     ]);
     fire('bell', 'end');
     if (currentRound >= roundConfig) {
@@ -379,6 +382,13 @@ export function useTimeMaster() {
     toast({ title: 'Reiniciado', description: 'Configuración eliminada.' });
   }, [toast]);
 
+  const setRoundScore = useCallback((roundNumber: number, partial: Partial<RoundResult>) => {
+    setRoundsCompleted((prev) => prev.map((r) => r.roundNumber === roundNumber ? { ...r, ...partial } : r));
+  }, []);
+
+  const totalScoreA = useMemo(() => roundsCompleted.reduce((s, r) => s + (r.scoreA || 0) - (r.knockdownsA || 0), 0), [roundsCompleted]);
+  const totalScoreB = useMemo(() => roundsCompleted.reduce((s, r) => s + (r.scoreB || 0) - (r.knockdownsB || 0), 0), [roundsCompleted]);
+
   const insertVerdict = useCallback(async (result: MatchResult, recordsUpdated: boolean) => {
     try {
       const { data: auth } = await supabase.auth.getUser();
@@ -399,6 +409,7 @@ export function useTimeMaster() {
         round_config: roundConfig,
         round_duration_sec: roundDuration,
         records_updated: recordsUpdated,
+        rounds: roundsCompleted as unknown as never,
       });
       if (error) {
         toast({ title: 'Error firmando veredicto', description: error.message, variant: 'destructive' });
@@ -410,7 +421,7 @@ export function useTimeMaster() {
       toast({ title: 'Error', description: msg, variant: 'destructive' });
       return { success: false };
     }
-  }, [fighterAId, fighterBId, roundConfig, roundDuration, toast]);
+  }, [fighterAId, fighterBId, roundConfig, roundDuration, roundsCompleted, toast]);
 
   const updateFighterRecords = useCallback(async (result: MatchResult) => {
     try {
@@ -449,9 +460,9 @@ export function useTimeMaster() {
     phase, fighterAId, fighterBId, fighterAName, fighterBName,
     roundConfig, roundDuration, currentRound, timeMs, isRunning, isPaused,
     restTimeMs, isRestPeriod, roundsCompleted, matchResult, fighterProfiles, isLoading,
-    canStartMatch,
+    canStartMatch, totalScoreA, totalScoreB,
     loadFighters, selectFighterA, selectFighterB,
-    setRoundConfig, setRoundDuration,
+    setRoundConfig, setRoundDuration, setRoundScore,
     startMatch, startRound, pauseRound, resumeRound, endRound, resetCurrentRound, skipRestPeriod,
     finishMatch, resetMatch, updateFighterRecords, insertVerdict,
     alertSettings, setAlertSettings, previewAlert: fire,

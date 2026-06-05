@@ -6374,6 +6374,7 @@ export type Database = {
           round_config: number
           round_duration_sec: number
           round_number: number
+          rounds: Json
           signed_at: string
           updated_at: string
           winner_fighter_id: string | null
@@ -6390,6 +6391,7 @@ export type Database = {
           round_config: number
           round_duration_sec: number
           round_number: number
+          rounds?: Json
           signed_at?: string
           updated_at?: string
           winner_fighter_id?: string | null
@@ -6406,6 +6408,7 @@ export type Database = {
           round_config?: number
           round_duration_sec?: number
           round_number?: number
+          rounds?: Json
           signed_at?: string
           updated_at?: string
           winner_fighter_id?: string | null

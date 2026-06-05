@@ -1,0 +1,1 @@
+ALTER TABLE public.tm_verdict ADD COLUMN IF NOT EXISTS rounds jsonb NOT NULL DEFAULT '[]'::jsonb;
