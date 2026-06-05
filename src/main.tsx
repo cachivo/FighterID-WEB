@@ -1,6 +1,13 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
+
+// Expose Geist as CSS custom properties for tailwind/global use.
+document.documentElement.style.setProperty('--font-geist-sans', GeistSans.style.fontFamily)
+document.documentElement.style.setProperty('--font-geist-mono', GeistMono.style.fontFamily)
+document.documentElement.classList.add(GeistSans.variable, GeistMono.variable)
 
 // Register/Manage Service Worker
 if ('serviceWorker' in navigator) {
