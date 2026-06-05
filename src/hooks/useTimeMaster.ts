@@ -269,6 +269,7 @@ export function useTimeMaster() {
   useEffect(() => () => {
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     if (restIntervalRef.current) clearInterval(restIntervalRef.current);
+    if (silentModeIntervalRef.current) clearInterval(silentModeIntervalRef.current);
   }, []);
 
   const startMatch = useCallback(() => {
