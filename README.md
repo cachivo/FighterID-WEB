@@ -116,7 +116,8 @@ src/
 ├─ assets/                   # Optimized WebP/JPG (≤30KB hero on mobile)
 ├─ components/
 │  ├─ ui/                    # shadcn primitives
-│  ├─ landing/               # Hero, HowItWorks, QuickStats
+│  ├─ landing/               # Hero, HeroCanvas, HowItWorks, QuickStats
+│  ├─ time-master/           # TimerDisplay, RoundTracker, MatchConfig
 │  ├─ sections/Ranking.tsx   # Mobile-tuned ranking blocks
 │  ├─ LazyMount.tsx          # IntersectionObserver wrapper
 │  └─ UrbanDecorations.tsx   # CSS-only background (no blur orbs)
@@ -124,12 +125,14 @@ src/
 ├─ hooks/
 │  ├─ useAuth, useAdmin, useUserRole, useDiscipline
 │  ├─ useUuidParam           # Zod-validated route params
+│  ├─ useTimeMaster          # Timer state + round management
 │  ├─ fighters/, gyms/       # Domain-grouped React Query hooks
 │  └─ useDeviceCapability    # isLowEnd, prefers-reduced-motion
 ├─ pages/
 │  ├─ admin/                 # Federation admin (MMA + Boxing segregated)
 │  ├─ license/               # Fighter licensing flow (FFid)
 │  ├─ gym/, judge/, station/ # Role-specific dashboards
+│  ├─ TimeMaster.tsx         # Live timer / round control
 │  └─ Index.tsx              # Landing — hero + 1 eager Ranking, rest lazy
 ├─ routes/
 │  └─ adminDisciplineRoutes.tsx  # Shared MMA/Boxing admin subtree
