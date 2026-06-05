@@ -159,6 +159,70 @@ export default function TimeMaster() {
                 disabled={phaseLocked}
               />
             </div>
+
+            {/* Judge */}
+            <div className="mt-4 rounded-lg border border-border border-l-4 border-l-primary p-4 bg-card">
+              <p className="text-xs uppercase tracking-wider font-semibold text-primary mb-3">Juez</p>
+              <select
+                value={judgeId ?? ''}
+                onChange={(e) => selectJudge(e.target.value)}
+                disabled={phaseLocked || !!room.match}
+                className="w-full min-h-[44px] rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">Selecciona juez</option>
+                {tm.fighterProfiles
+                  .filter((f) => f.id !== tm.fighterAId && f.id !== tm.fighterBId)
+                  .map((f) => (
+                    <option key={f.id} value={f.id}>{f.displayName} — {f.record}</option>
+                  ))}
+              </select>
+              {judgeConflict && (
+                <p className="text-xs text-fighter-danger mt-2">El juez no puede ser un peleador del combate.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Multi-device room */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Radio className="h-5 w-5 text-primary" /> Sala multi-dispositivo
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!room.match ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Crea una sala para que Red, Blue y el Juez se unan desde sus propios dispositivos en <span className="font-mono">/time-master/join</span>.
+                </p>
+                <Button onClick={handleCreateRoom} disabled={!canCreateRoom || creating} className="min-h-[44px]">
+                  {creating ? 'Creando…' : 'Crear sala'}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs uppercase tracking-wider text-muted-foreground">Código</span>
+                  <code className="text-lg font-mono font-bold bg-muted px-3 py-1 rounded">{room.match.code}</code>
+                  <Button size="sm" variant="outline" onClick={copyCode}><Copy className="h-3 w-3 mr-1" />Copiar</Button>
+                  <Button size="sm" variant="ghost" onClick={room.leave}>Cerrar sala</Button>
+                </div>
+                <PresenceBar
+                  presence={room.presence}
+                  redName={tm.fighterAName}
+                  blueName={tm.fighterBName}
+                  judgeName={judgeName}
+                />
+                {room.match.result_type && (
+                  <div className="text-sm">
+                    <Badge variant={room.match.records_updated ? 'default' : 'secondary'}>
+                      Veredicto: {room.match.result_type} {room.match.records_updated ? '(récords actualizados)' : '(sin actualizar)'}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
