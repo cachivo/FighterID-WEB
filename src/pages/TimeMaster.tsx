@@ -13,11 +13,65 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function TimeMaster() {
   const tm = useTimeMaster();
+  const room = useTimeMasterMatch();
+  const { toast } = useToast();
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
   const [pendingResult, setPendingResult] = useState<{ winnerId: string | null; resultType: MatchResultType; notes?: string } | null>(null);
+  const [judgeId, setJudgeId] = useState<string | null>(null);
+  const [judgeName, setJudgeName] = useState('');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => { tm.loadFighters(); }, [tm.loadFighters]);
+
+  // Broadcast timer state to connected role devices when a match is active
+  useEffect(() => {
+    if (!room.match) return;
+    room.broadcastTimer({
+      phase: tm.phase,
+      currentRound: tm.currentRound,
+      timeMs: tm.timeMs,
+      isRunning: tm.isRunning,
+      isPaused: tm.isPaused,
+      restTimeMs: tm.restTimeMs,
+      isRestPeriod: tm.isRestPeriod,
+    });
+  }, [room, tm.phase, tm.currentRound, tm.timeMs, tm.isRunning, tm.isPaused, tm.restTimeMs, tm.isRestPeriod]);
+
+  const selectJudge = (id: string) => {
+    setJudgeId(id);
+    setJudgeName(tm.fighterProfiles.find((f) => f.id === id)?.displayName || '');
+  };
+
+  const judgeConflict = !!judgeId && (judgeId === tm.fighterAId || judgeId === tm.fighterBId);
+  const canCreateRoom = !!tm.fighterAId && !!tm.fighterBId && !!judgeId && !judgeConflict && !room.match;
+
+  const handleCreateRoom = async () => {
+    if (!canCreateRoom) return;
+    setCreating(true);
+    try {
+      const m = await room.createMatch({
+        red_fighter_id: tm.fighterAId!,
+        blue_fighter_id: tm.fighterBId!,
+        judge_fighter_id: judgeId!,
+        round_config: tm.roundConfig,
+        round_duration_sec: tm.roundDuration,
+      });
+      room.attachAsOperator(m);
+      toast({ title: 'Sala creada', description: `Código: ${m.code}` });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const copyCode = () => {
+    if (!room.match) return;
+    navigator.clipboard.writeText(room.match.code);
+    toast({ title: 'Código copiado', description: room.match.code });
+  };
 
   const phaseLocked = tm.phase !== 'setup';
   const winnerName = pendingResult?.winnerId
