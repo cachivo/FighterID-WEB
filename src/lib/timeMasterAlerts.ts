@@ -94,9 +94,25 @@ function playTone(tone: Tone, volume: number) {
   } catch { /* silent */ }
 }
 
-export function playAlert(kind: AlertKind, settings: AlertSettings) {
+const BELL_URLS: Record<BellVariant, string> = {
+  start: bell1Asset.url,
+  end: bell3Asset.url,
+};
+
+function playBell(variant: BellVariant, volume: number) {
+  try {
+    const audio = new Audio(BELL_URLS[variant]);
+    audio.volume = Math.max(0, Math.min(1, volume));
+    void audio.play().catch(() => { /* ignore autoplay errors */ });
+  } catch { /* ignore */ }
+}
+
+export function playAlert(kind: AlertKind, settings: AlertSettings, variant: BellVariant = 'start') {
   const cfg = settings[kind];
   if (!cfg) return;
-  if (cfg.sound) playTone(TONES[kind], cfg.volume);
+  if (cfg.sound) {
+    if (kind === 'bell') playBell(variant, cfg.volume);
+    else playTone(TONES[kind], cfg.volume);
+  }
   if (cfg.vibrate) vibrate(VIBRATION[kind]);
 }
