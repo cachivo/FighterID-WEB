@@ -240,7 +240,7 @@ export function useTimeMaster() {
       fire('bell', 'end');
       setRoundsCompleted((prev) => [
         ...prev,
-        { roundNumber: currentRound, durationMs: totalRoundMs, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
+        { roundNumber: currentRound, durationMs: totalRoundMs, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0, scoreA: 10, scoreB: 10 },
       ]);
       if (currentRound >= roundConfig) {
         setPhase('finished');
@@ -319,7 +319,7 @@ export function useTimeMaster() {
     const finalTime = timeMsRef.current;
     setRoundsCompleted((prev) => [
       ...prev,
-      { roundNumber: currentRound, durationMs: finalTime, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
+      { roundNumber: currentRound, durationMs: finalTime, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0, scoreA: 10, scoreB: 10 },
     ]);
     fire('bell', 'end');
     if (currentRound >= roundConfig) {
