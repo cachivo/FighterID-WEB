@@ -78,7 +78,7 @@ const JudgeOnboarding = lazy(() => import("./pages/judge/JudgeOnboarding"));
 
 // Time Master
 const TimeMaster = lazy(() => import("./pages/TimeMaster"));
-const TimeMasterJoin = lazy(() => import("./pages/TimeMasterJoin"));
+
 
 // Stations
 const StationPinLogin = lazy(() => import('@/components/station/StationPinLogin').then(m => ({ default: m.StationPinLogin })));
