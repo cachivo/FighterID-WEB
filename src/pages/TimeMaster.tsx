@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Swords, Play, Pause, RotateCcw, StopCircle, FastForward, Trophy, RefreshCw } from "lucide-react";
 import {
   TimeMasterLayout, FighterSelector, MatchConfig, TimerDisplay, RoundTracker,
-  MatchResultDialog, RecordUpdateDialog, type MatchResultType,
+  MatchResultDialog, RecordUpdateDialog, AlertSettingsPanel, type MatchResultType,
 } from "@/components/time-master";
 import { useTimeMaster } from "@/hooks/useTimeMaster";
 
@@ -96,6 +96,15 @@ export default function TimeMaster() {
           onRoundDurationChange={tm.setRoundDuration}
           disabled={phaseLocked}
         />
+
+        {/* Alert settings */}
+        <AlertSettingsPanel
+          settings={tm.alertSettings}
+          onChange={tm.setAlertSettings}
+          onPreview={tm.previewAlert}
+        />
+
+
 
         {/* Timer */}
         <Card>

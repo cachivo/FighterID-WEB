@@ -1,6 +1,9 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import {
+  type AlertSettings, loadAlertSettings, saveAlertSettings, playAlert,
+} from '@/lib/timeMasterAlerts';
 
 export type MatchPhase = 'setup' | 'ready' | 'fighting' | 'between_rounds' | 'finished';
 
@@ -41,25 +44,7 @@ export interface FighterOption {
   record: string;
 }
 
-const playBellSound = () => {
-  try {
-    const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
-    const audioCtx = new Ctx();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 1.5);
-    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
-    oscillator.start(audioCtx.currentTime);
-    oscillator.stop(audioCtx.currentTime + 1.5);
-  } catch {
-    // silent
-  }
-};
+// Alert playback is handled by src/lib/timeMasterAlerts.ts
 
 export function useTimeMaster() {
   const { toast } = useToast();
@@ -81,6 +66,7 @@ export function useTimeMaster() {
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
   const [fighterProfiles, setFighterProfiles] = useState<FighterOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [alertSettings, setAlertSettingsState] = useState<AlertSettings>(() => loadAlertSettings());
 
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
@@ -88,8 +74,19 @@ export function useTimeMaster() {
   const restIntervalRef = useRef<ReturnType<typeof setInterval>>();
   const timeMsRef = useRef<number>(0);
   const alertsFiredRef = useRef<Set<string>>(new Set());
+  const alertSettingsRef = useRef<AlertSettings>(alertSettings);
 
   useEffect(() => { timeMsRef.current = timeMs; }, [timeMs]);
+  useEffect(() => { alertSettingsRef.current = alertSettings; }, [alertSettings]);
+
+  const setAlertSettings = useCallback((s: AlertSettings) => {
+    setAlertSettingsState(s);
+    saveAlertSettings(s);
+  }, []);
+
+  const fire = useCallback((kind: 'bell' | 'warning' | 'rest') => {
+    playAlert(kind, alertSettingsRef.current);
+  }, []);
 
   const canStartMatch = useMemo(
     () => !!fighterAId && !!fighterBId && fighterAId !== fighterBId && phase === 'setup',
@@ -153,7 +150,7 @@ export function useTimeMaster() {
         timeMsRef.current = 0;
         alertsFiredRef.current.clear();
         setPhase('ready');
-        playBellSound();
+        fire('rest');
         toast({ title: 'Descanso terminado', description: 'Listo para el siguiente round' });
       } else {
         setRestTimeMs(remaining);
@@ -169,14 +166,17 @@ export function useTimeMaster() {
     const remainingSec = Math.floor(remainingMs / 1000);
     if (remainingSec === 60 && !alertsFiredRef.current.has('60s')) {
       alertsFiredRef.current.add('60s');
+      fire('warning');
       toast({ title: '1 minuto restante' });
     }
     if (remainingSec === 30 && !alertsFiredRef.current.has('30s')) {
       alertsFiredRef.current.add('30s');
+      fire('warning');
       toast({ title: '30 segundos restantes', variant: 'destructive' });
     }
     if (remainingSec === 10 && !alertsFiredRef.current.has('10s')) {
       alertsFiredRef.current.add('10s');
+      fire('warning');
       toast({ title: '¡10 segundos!', variant: 'destructive' });
     }
 
@@ -184,7 +184,7 @@ export function useTimeMaster() {
       setTimeMs(totalRoundMs);
       timeMsRef.current = totalRoundMs;
       setIsRunning(false);
-      playBellSound();
+      fire('bell');
       setRoundsCompleted((prev) => [
         ...prev,
         { roundNumber: currentRound, durationMs: totalRoundMs, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
@@ -242,7 +242,7 @@ export function useTimeMaster() {
     setIsRunning(true);
     setIsPaused(false);
     setPhase('fighting');
-    playBellSound();
+    fire('bell');
   }, []);
 
   const pauseRound = useCallback(() => {
@@ -267,7 +267,7 @@ export function useTimeMaster() {
       ...prev,
       { roundNumber: currentRound, durationMs: finalTime, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
     ]);
-    playBellSound();
+    fire('bell');
     if (currentRound >= roundConfig) {
       setPhase('finished');
       toast({ title: 'Pelea terminada', description: 'Todos los rounds completados.' });
@@ -368,5 +368,6 @@ export function useTimeMaster() {
     setRoundConfig, setRoundDuration,
     startMatch, startRound, pauseRound, resumeRound, endRound, resetCurrentRound, skipRestPeriod,
     finishMatch, resetMatch, updateFighterRecords,
+    alertSettings, setAlertSettings, previewAlert: fire,
   };
 }
