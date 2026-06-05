@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Swords, Play, Pause, RotateCcw, StopCircle, FastForward, Trophy, RefreshCw, Volume2, VolumeX, Timer, ShieldCheck } from "lucide-react";
 import {
   TimeMasterLayout, FighterSelector, MatchConfig, TimerDisplay, RoundTracker,
-  MatchResultDialog, RecordUpdateDialog, AlertSettingsPanel, AlertTestPanel, type MatchResultType,
+  MatchResultDialog, RecordUpdateDialog, AlertSettingsPanel, AlertTestPanel, RoundScoreDialog,
+  type MatchResultType, type RoundScoreValue,
 } from "@/components/time-master";
 import { useTimeMaster } from "@/hooks/useTimeMaster";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,8 +18,22 @@ export default function TimeMaster() {
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
   const [pendingResult, setPendingResult] = useState<{ winnerId: string | null; resultType: MatchResultType; notes?: string } | null>(null);
+  const [roundScoreOpen, setRoundScoreOpen] = useState(false);
+  const [editingRound, setEditingRound] = useState<number | null>(null);
+  const lastCompletedCountRef = useRef(0);
 
   useEffect(() => { tm.loadFighters(); }, [tm.loadFighters]);
+
+  // When a new round is pushed to roundsCompleted, prompt for its score
+  useEffect(() => {
+    if (tm.roundsCompleted.length > lastCompletedCountRef.current) {
+      const last = tm.roundsCompleted[tm.roundsCompleted.length - 1];
+      setEditingRound(last.roundNumber);
+      setRoundScoreOpen(true);
+    }
+    lastCompletedCountRef.current = tm.roundsCompleted.length;
+  }, [tm.roundsCompleted]);
+
 
   const phaseLocked = tm.phase !== 'setup';
   const winnerName = pendingResult?.winnerId
