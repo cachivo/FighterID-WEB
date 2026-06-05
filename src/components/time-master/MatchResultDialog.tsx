@@ -20,6 +20,13 @@ interface RoundSummary {
   knockdownsB: number;
 }
 
+const RESULT_TYPES_REQUIRING_ALL_ROUNDS: MatchResultType[] = [
+  'decision_unanimous',
+  'decision_split',
+  'decision_majority',
+  'draw',
+];
+
 interface MatchResultDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,6 +34,7 @@ interface MatchResultDialogProps {
   fighterA: { id: string; name: string };
   fighterB: { id: string; name: string };
   currentRound: number;
+  totalRounds: number;
   rounds?: RoundSummary[];
   totalScoreA?: number;
   totalScoreB?: number;
