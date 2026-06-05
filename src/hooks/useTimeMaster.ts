@@ -87,10 +87,42 @@ export function useTimeMaster() {
   useEffect(() => { alertSettingsRef.current = alertSettings; }, [alertSettings]);
   useEffect(() => { silentModeRef.current = silentMode; }, [silentMode]);
 
+  const SILENT_MODE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
   const setAlertSettings = useCallback((s: AlertSettings) => {
     setAlertSettingsState(s);
     saveAlertSettings(s);
   }, []);
+
+  const clearSilentModeTimer = useCallback(() => {
+    if (silentModeIntervalRef.current) {
+      clearInterval(silentModeIntervalRef.current);
+      silentModeIntervalRef.current = undefined;
+    }
+    silentModeExpiryRef.current = 0;
+    setSilentModeRemainingSec(0);
+  }, []);
+
+  const setSilentMode = useCallback((value: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof value === 'function' ? value(silentModeRef.current) : value;
+    setSilentModeState(next);
+    if (next) {
+      const expiry = Date.now() + SILENT_MODE_DURATION_MS;
+      silentModeExpiryRef.current = expiry;
+      setSilentModeRemainingSec(Math.ceil(SILENT_MODE_DURATION_MS / 1000));
+      if (silentModeIntervalRef.current) clearInterval(silentModeIntervalRef.current);
+      silentModeIntervalRef.current = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((silentModeExpiryRef.current - Date.now()) / 1000));
+        setSilentModeRemainingSec(remaining);
+        if (remaining <= 0) {
+          setSilentModeState(false);
+          clearSilentModeTimer();
+        }
+      }, 1000);
+    } else {
+      clearSilentModeTimer();
+    }
+  }, [clearSilentModeTimer]);
 
   const fire = useCallback((kind: AlertKind) => {
     const base = alertSettingsRef.current;
