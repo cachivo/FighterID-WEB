@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   type AlertSettings, loadAlertSettings, saveAlertSettings, playAlert,
 } from '@/lib/timeMasterAlerts';
+import type { AlertKind } from '@/lib/timeMasterAlerts';
 
 export type MatchPhase = 'setup' | 'ready' | 'fighting' | 'between_rounds' | 'finished';
 
@@ -67,6 +68,7 @@ export function useTimeMaster() {
   const [fighterProfiles, setFighterProfiles] = useState<FighterOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [alertSettings, setAlertSettingsState] = useState<AlertSettings>(() => loadAlertSettings());
+  const [silentMode, setSilentMode] = useState(false);
 
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
@@ -75,17 +77,29 @@ export function useTimeMaster() {
   const timeMsRef = useRef<number>(0);
   const alertsFiredRef = useRef<Set<string>>(new Set());
   const alertSettingsRef = useRef<AlertSettings>(alertSettings);
+  const silentModeRef = useRef(silentMode);
 
   useEffect(() => { timeMsRef.current = timeMs; }, [timeMs]);
   useEffect(() => { alertSettingsRef.current = alertSettings; }, [alertSettings]);
+  useEffect(() => { silentModeRef.current = silentMode; }, [silentMode]);
 
   const setAlertSettings = useCallback((s: AlertSettings) => {
     setAlertSettingsState(s);
     saveAlertSettings(s);
   }, []);
 
-  const fire = useCallback((kind: 'bell' | 'warning' | 'rest') => {
-    playAlert(kind, alertSettingsRef.current);
+  const fire = useCallback((kind: AlertKind) => {
+    const base = alertSettingsRef.current;
+    if (silentModeRef.current) {
+      const muted: AlertSettings = {
+        bell:    { ...base.bell,    sound: false },
+        warning: { ...base.warning, sound: false },
+        rest:    { ...base.rest,    sound: false },
+      };
+      playAlert(kind, muted);
+    } else {
+      playAlert(kind, base);
+    }
   }, []);
 
   const canStartMatch = useMemo(
@@ -369,5 +383,6 @@ export function useTimeMaster() {
     startMatch, startRound, pauseRound, resumeRound, endRound, resetCurrentRound, skipRestPeriod,
     finishMatch, resetMatch, updateFighterRecords,
     alertSettings, setAlertSettings, previewAlert: fire,
+    silentMode, setSilentMode,
   };
 }
