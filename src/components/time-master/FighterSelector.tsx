@@ -1,7 +1,9 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { User } from "lucide-react";
+import { User, ChevronsUpDown, Check } from "lucide-react";
+import { useState } from "react";
 
 interface FighterSelectorProps {
   fighters: Array<{ id: string; displayName: string; record: string }>;
@@ -14,9 +16,12 @@ interface FighterSelectorProps {
 }
 
 export function FighterSelector({ fighters, selectedId, onSelect, label, isLoading, corner, disabled }: FighterSelectorProps) {
+  const [open, setOpen] = useState(false);
   const borderL = corner === 'red' ? 'border-l-fighter-danger' : 'border-l-fighter-info';
   const bg = corner === 'red' ? 'bg-fighter-danger/10' : 'bg-fighter-info/10';
   const text = corner === 'red' ? 'text-fighter-danger' : 'text-fighter-info';
+
+  const selectedFighter = fighters.find((f) => f.id === selectedId);
 
   if (isLoading) {
     return (
@@ -33,25 +38,55 @@ export function FighterSelector({ fighters, selectedId, onSelect, label, isLoadi
         <User className={cn("h-4 w-4", text)} />
         <p className={cn("text-xs uppercase tracking-wider font-semibold", text)}>{label}</p>
       </div>
-      <Select value={selectedId ?? undefined} onValueChange={onSelect} disabled={disabled}>
-        <SelectTrigger className="min-h-[44px]">
-          <SelectValue placeholder="Selecciona peleador" />
-        </SelectTrigger>
-        <SelectContent>
-          {fighters.length === 0 ? (
-            <div className="p-3 text-sm text-muted-foreground">No hay peleadores</div>
-          ) : (
-            fighters.map((f) => (
-              <SelectItem key={f.id} value={f.id}>
-                <div className="flex items-center justify-between gap-3 w-full">
-                  <span>{f.displayName}</span>
-                  <span className="text-xs text-muted-foreground">{f.record}</span>
-                </div>
-              </SelectItem>
-            ))
-          )}
-        </SelectContent>
-      </Select>
+      <Popover open={open && !disabled} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            disabled={disabled}
+            className={cn(
+              "flex h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+              !selectedId && "text-muted-foreground"
+            )}
+          >
+            {selectedFighter ? (
+              <span className="flex items-center gap-2 min-w-0">
+                <span className="truncate">{selectedFighter.displayName}</span>
+                <span className="text-xs text-muted-foreground shrink-0">{selectedFighter.record}</span>
+              </span>
+            ) : (
+              <span>Selecciona peleador</span>
+            )}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Buscar peleador..." />
+            <CommandList>
+              <CommandEmpty>No hay peleadores</CommandEmpty>
+              <CommandGroup>
+                {fighters.map((f) => (
+                  <CommandItem
+                    key={f.id}
+                    value={f.displayName + " " + f.record}
+                    onSelect={() => {
+                      onSelect(f.id);
+                      setOpen(false);
+                    }}
+                    className="flex items-center justify-between gap-3"
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="truncate">{f.displayName}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">{f.record}</span>
+                    </span>
+                    {selectedId === f.id && <Check className="h-4 w-4 shrink-0" />}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
