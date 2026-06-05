@@ -97,6 +97,15 @@ export default function TimeMaster() {
           disabled={phaseLocked}
         />
 
+        {/* Alert settings */}
+        <AlertSettingsPanel
+          settings={tm.alertSettings}
+          onChange={tm.setAlertSettings}
+          onPreview={tm.previewAlert}
+        />
+
+
+
         {/* Timer */}
         <Card>
           <CardContent className="pt-6">
