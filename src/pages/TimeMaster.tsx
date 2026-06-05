@@ -227,7 +227,7 @@ export default function TimeMaster() {
         {/* Controls */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 sm:justify-center [&>button]:w-full sm:[&>button]:w-auto">
               {tm.phase === 'setup' && (
                 <Button size="lg" onClick={tm.startMatch} disabled={!tm.canStartMatch} className="min-h-[48px]">
                   <Play className="h-5 w-5 mr-2" /> Preparar Pelea
