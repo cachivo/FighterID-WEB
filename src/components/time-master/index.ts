@@ -5,3 +5,4 @@ export { RoundTracker } from "./RoundTracker";
 export { MatchResultDialog, type MatchResultType } from "./MatchResultDialog";
 export { RecordUpdateDialog } from "./RecordUpdateDialog";
 export { TimeMasterLayout } from "./TimeMasterLayout";
+export { AlertSettingsPanel } from "./AlertSettingsPanel";
