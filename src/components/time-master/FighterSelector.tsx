@@ -1,7 +1,9 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { User } from "lucide-react";
+import { User, ChevronsUpDown, Check } from "lucide-react";
+import { useState } from "react";
 
 interface FighterSelectorProps {
   fighters: Array<{ id: string; displayName: string; record: string }>;
