@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Swords, Play, Pause, RotateCcw, StopCircle, FastForward, Trophy, RefreshCw, Volume2, VolumeX } from "lucide-react";
+import { Swords, Play, Pause, RotateCcw, StopCircle, FastForward, Trophy, RefreshCw, Volume2, VolumeX, Timer } from "lucide-react";
 import {
   TimeMasterLayout, FighterSelector, MatchConfig, TimerDisplay, RoundTracker,
   MatchResultDialog, RecordUpdateDialog, AlertSettingsPanel, AlertTestPanel, type MatchResultType,
@@ -51,15 +51,22 @@ export default function TimeMaster() {
             </div>
             <p className="text-sm text-muted-foreground mt-1">Cronómetro profesional de boxeo y gestión de pelea</p>
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-end">
+          <div className="flex items-center gap-2 self-start sm:self-end flex-wrap">
             <Button
               variant={tm.silentMode ? "default" : "outline"}
               size="sm"
               onClick={() => tm.setSilentMode((v) => !v)}
               title={tm.silentMode ? "Desactivar modo silencioso" : "Activar modo silencioso (solo vibración)"}
+              className="relative"
             >
               {tm.silentMode ? <VolumeX className="h-4 w-4 mr-1" /> : <Volume2 className="h-4 w-4 mr-1" />}
               {tm.silentMode ? "Silencio" : "Sonido"}
+              {tm.silentMode && tm.silentModeRemainingSec > 0 && (
+                <span className="ml-2 inline-flex items-center gap-1 text-xs font-mono bg-background/20 px-1.5 py-0.5 rounded">
+                  <Timer className="h-3 w-3" />
+                  {`${String(Math.floor(tm.silentModeRemainingSec / 60)).padStart(2, '0')}:${String(tm.silentModeRemainingSec % 60).padStart(2, '0')}`}
+                </span>
+              )}
             </Button>
             <Badge variant="outline" className="uppercase tracking-wider">
               {tm.phase}

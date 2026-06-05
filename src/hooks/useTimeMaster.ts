@@ -68,7 +68,11 @@ export function useTimeMaster() {
   const [fighterProfiles, setFighterProfiles] = useState<FighterOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [alertSettings, setAlertSettingsState] = useState<AlertSettings>(() => loadAlertSettings());
-  const [silentMode, setSilentMode] = useState(false);
+  const [silentMode, setSilentModeState] = useState(false);
+  const [silentModeRemainingSec, setSilentModeRemainingSec] = useState(0);
+
+  const silentModeExpiryRef = useRef<number>(0);
+  const silentModeIntervalRef = useRef<ReturnType<typeof setInterval>>();
 
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
@@ -83,10 +87,42 @@ export function useTimeMaster() {
   useEffect(() => { alertSettingsRef.current = alertSettings; }, [alertSettings]);
   useEffect(() => { silentModeRef.current = silentMode; }, [silentMode]);
 
+  const SILENT_MODE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
   const setAlertSettings = useCallback((s: AlertSettings) => {
     setAlertSettingsState(s);
     saveAlertSettings(s);
   }, []);
+
+  const clearSilentModeTimer = useCallback(() => {
+    if (silentModeIntervalRef.current) {
+      clearInterval(silentModeIntervalRef.current);
+      silentModeIntervalRef.current = undefined;
+    }
+    silentModeExpiryRef.current = 0;
+    setSilentModeRemainingSec(0);
+  }, []);
+
+  const setSilentMode = useCallback((value: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof value === 'function' ? value(silentModeRef.current) : value;
+    setSilentModeState(next);
+    if (next) {
+      const expiry = Date.now() + SILENT_MODE_DURATION_MS;
+      silentModeExpiryRef.current = expiry;
+      setSilentModeRemainingSec(Math.ceil(SILENT_MODE_DURATION_MS / 1000));
+      if (silentModeIntervalRef.current) clearInterval(silentModeIntervalRef.current);
+      silentModeIntervalRef.current = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((silentModeExpiryRef.current - Date.now()) / 1000));
+        setSilentModeRemainingSec(remaining);
+        if (remaining <= 0) {
+          setSilentModeState(false);
+          clearSilentModeTimer();
+        }
+      }, 1000);
+    } else {
+      clearSilentModeTimer();
+    }
+  }, [clearSilentModeTimer]);
 
   const fire = useCallback((kind: AlertKind) => {
     const base = alertSettingsRef.current;
@@ -233,6 +269,7 @@ export function useTimeMaster() {
   useEffect(() => () => {
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     if (restIntervalRef.current) clearInterval(restIntervalRef.current);
+    if (silentModeIntervalRef.current) clearInterval(silentModeIntervalRef.current);
   }, []);
 
   const startMatch = useCallback(() => {
@@ -383,6 +420,6 @@ export function useTimeMaster() {
     startMatch, startRound, pauseRound, resumeRound, endRound, resetCurrentRound, skipRestPeriod,
     finishMatch, resetMatch, updateFighterRecords,
     alertSettings, setAlertSettings, previewAlert: fire,
-    silentMode, setSilentMode,
+    silentMode, setSilentMode, silentModeRemainingSec,
   };
 }
