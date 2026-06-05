@@ -168,9 +168,27 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas adicionales..." className="min-h-[80px] resize-none" />
           </div>
         </div>
+        </div>
+        {validationError && (
+          <div className="flex items-start gap-2 rounded-md border border-fighter-danger/30 bg-fighter-danger/10 p-3 text-sm text-fighter-danger">
+            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+            <span>{validationError}</span>
+          </div>
+        )}
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose} className="min-h-[44px]">Cancelar</Button>
-          <Button onClick={() => onSubmit({ winnerId, resultType, notes: notes || undefined })} disabled={!canSubmit} className="min-h-[44px]">
+          <Button
+            onClick={() => {
+              if (resultRequiresAllRounds && !allRoundsCompleted) {
+                setValidationError(`Debes completar todos los ${totalRounds} rounds antes de registrar una ${RESULT_OPTIONS.find(o => o.value === resultType)?.label.toLowerCase()}.`);
+                return;
+              }
+              setValidationError(null);
+              onSubmit({ winnerId, resultType, notes: notes || undefined });
+            }}
+            disabled={!canSubmit}
+            className="min-h-[44px]"
+          >
             <Trophy className="h-4 w-4 mr-2" /> Confirmar Resultado
           </Button>
         </DialogFooter>
