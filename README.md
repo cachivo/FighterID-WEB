@@ -45,7 +45,7 @@ Each `app_user` row can own multiple roles simultaneously (`fighter`, `gym`, `ju
 ┌──────────────────────────── Client (React 18 + Vite 5) ────────────────────────────┐
 │                                                                                    │
 │  Routes (React Router)        Hooks layer            UI (shadcn + Tailwind)        │
-│  ├─ /                         useAuth                Swiss-Brutalist tokens        │
+│  ├─ /                         useAuth                Editorial Sports v2           │
 │  ├─ /fighter/:id              useFighterByIdQuery    Hero · Ranking · HUD          │
 │  ├─ /events/:id               useFightTelemetry      LazyMount, useInView          │
 │  ├─ /admin/* (MMA · Boxing)   useDiscipline          Mobile-first grids            │
@@ -75,12 +75,12 @@ Each `app_user` row can own multiple roles simultaneously (`fighter`, `gym`, `ju
 | Layer            | Technology                                                              |
 | ---------------- | ----------------------------------------------------------------------- |
 | Framework        | **React 18**, **Vite 5**, **TypeScript 5**                              |
-| Styling          | **Tailwind CSS v3** + shadcn/ui, semantic HSL tokens, Clash + Satoshi   |
+| Styling          | **Tailwind CSS v3** + shadcn/ui, semantic HSL tokens, Geist Sans + Mono |
 | State / data     | **TanStack Query**, Supabase JS v2, Zod for input validation            |
 | Backend          | **Lovable Cloud** (Supabase: Postgres, Auth, Realtime, Edge, Storage)   |
 | AI               | **Lovable AI Gateway** (chat + embeddings → `pgvector`)                 |
 | Auth             | Supabase Auth (email + Google OAuth, PKCE), separate `user_roles` table |
-| Animation        | framer-motion (gated on `useReducedMotion` + `isLowEnd`)                |
+| Animation        | GSAP + Lenis smooth scroll (gated on `useReducedMotion` + `isLowEnd`)  |
 | Mobile shell     | Capacitor (PWA install + native shell ready)                            |
 | Testing          | **Vitest** + React Testing Library, jsdom                               |
 | Email            | Resend via edge functions, custom domain `fighter-id.org`               |
@@ -116,7 +116,8 @@ src/
 ├─ assets/                   # Optimized WebP/JPG (≤30KB hero on mobile)
 ├─ components/
 │  ├─ ui/                    # shadcn primitives
-│  ├─ landing/               # Hero, HowItWorks, QuickStats
+│  ├─ landing/               # Hero, HeroCanvas, HowItWorks, QuickStats
+│  ├─ time-master/           # TimerDisplay, RoundTracker, MatchConfig
 │  ├─ sections/Ranking.tsx   # Mobile-tuned ranking blocks
 │  ├─ LazyMount.tsx          # IntersectionObserver wrapper
 │  └─ UrbanDecorations.tsx   # CSS-only background (no blur orbs)
@@ -124,12 +125,14 @@ src/
 ├─ hooks/
 │  ├─ useAuth, useAdmin, useUserRole, useDiscipline
 │  ├─ useUuidParam           # Zod-validated route params
+│  ├─ useTimeMaster          # Timer state + round management
 │  ├─ fighters/, gyms/       # Domain-grouped React Query hooks
 │  └─ useDeviceCapability    # isLowEnd, prefers-reduced-motion
 ├─ pages/
 │  ├─ admin/                 # Federation admin (MMA + Boxing segregated)
 │  ├─ license/               # Fighter licensing flow (FFid)
 │  ├─ gym/, judge/, station/ # Role-specific dashboards
+│  ├─ TimeMaster.tsx         # Live timer / round control
 │  └─ Index.tsx              # Landing — hero + 1 eager Ranking, rest lazy
 ├─ routes/
 │  └─ adminDisciplineRoutes.tsx  # Shared MMA/Boxing admin subtree
