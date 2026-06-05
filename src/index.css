@@ -4,9 +4,25 @@
 @tailwind components;
 @tailwind utilities;
 
-/* UFC Combat Design System - Black/Red aesthetic
-All colors MUST be HSL.
+/* Fighter ID — Editorial Sports System
+   Background #0A0A0A · Surface #111111 · Crimson #DC2626
+   Geist Sans (display/body) + Geist Mono (labels)
+   All semantic tokens declared in HSL.
 */
+
+/* === Editorial design tokens (raw values, used outside HSL helpers) === */
+:root {
+  --fid-bg: #0A0A0A;
+  --fid-surface: #111111;
+  --fid-border: rgba(255,255,255,0.06);
+  --fid-border-strong: rgba(255,255,255,0.12);
+  --fid-text: #FFFFFF;
+  --fid-text-muted: rgba(255,255,255,0.5);
+  --fid-text-dim: rgba(255,255,255,0.3);
+  --fid-crimson: #DC2626;
+  --fid-crimson-deep: #B91C1C;
+  --fid-crimson-muted: rgba(220,38,38,0.15);
+}
 
 /* Mobile optimization - prevent horizontal scroll */
 * {
@@ -57,38 +73,38 @@ img, video {
 
 @layer base {
   :root {
-    /* UFC Combat palette - Always dark mode */
-    --background: 0 0% 5%;
-    --foreground: 0 0% 95%;
+    /* Editorial dark palette */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 100%;
 
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 95%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 100%;
 
-    /* Primary - UFC Red */
-    --primary: 0 84% 44%;
-    --primary-foreground: 0 0% 98%;
+    /* Primary - Crimson */
+    --primary: 0 72% 51%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Dark steel */
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 0 0% 95%;
+    /* Secondary - Subtle surface */
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
 
     /* Muted tones */
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 50%;
 
-    /* Accent - UFC Red accent */
-    --accent: 0 84% 35%;
-    --accent-foreground: 0 0% 98%;
+    /* Accent - Crimson echo */
+    --accent: 0 72% 45%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 50%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 14%;
-    --ring: 0 84% 44%;
+    --border: 0 0% 12%;
+    --input: 0 0% 10%;
+    --ring: 0 72% 51%;
 
     /* Urban Combat - Red palette */
     --urban-gray: 0 0% 10%;
@@ -196,15 +212,73 @@ img, video {
 
   body {
     @apply bg-background text-foreground font-sans;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-geist-sans, 'Inter'), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Barlow Condensed for headings - UFC style */
+  /* Editorial heading defaults — no forced uppercase. Pages can opt in. */
   h1, h2, h3 {
-    font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-family: var(--font-geist-sans, 'Inter'), sans-serif;
+    letter-spacing: -0.02em;
   }
+
+  /* Landing page scope — overrides for editorial aesthetic */
+  .fid-landing {
+    background: var(--fid-bg);
+    color: var(--fid-text);
+  }
+  .fid-landing .font-display { font-family: var(--font-geist-sans, 'Inter'), sans-serif; letter-spacing: -0.03em; }
+  .fid-landing .font-mono-label {
+    font-family: var(--font-geist-mono, 'JetBrains Mono'), monospace;
+    letter-spacing: 0.08em;
+    text-transform: none;
+  }
+
+  /* Animated hero title */
+  @keyframes fid-slide-up {
+    from { transform: translateY(110%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes fid-underline-scale {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  @keyframes fid-fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fid-pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  .fid-title-mask { display: block; overflow: hidden; line-height: 0.95; }
+  .fid-title-line {
+    display: block;
+    transform: translateY(110%);
+    will-change: transform;
+  }
+  .fid-animate .fid-title-line {
+    animation: fid-slide-up 1.2s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  }
+  .fid-animate .fid-title-line.delay-1 { animation-delay: 0.15s; }
+  .fid-underline {
+    display: block;
+    height: 2px;
+    background: var(--fid-crimson);
+    transform: scaleX(0);
+    transform-origin: left;
+    margin-top: 8px;
+  }
+  .fid-animate .fid-underline {
+    animation: fid-underline-scale 0.6s cubic-bezier(0.76, 0, 0.24, 1) 1s forwards;
+  }
+  .fid-fade-up { opacity: 0; }
+  .fid-animate .fid-fade-up {
+    animation: fid-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .fid-pulse-dot { animation: fid-pulse-dot 1.6s ease-in-out infinite; }
 
   /* Urban animations */
   @keyframes slideUp {
