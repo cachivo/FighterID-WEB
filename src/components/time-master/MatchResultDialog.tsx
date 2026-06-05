@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Trophy, FileText, Swords } from "lucide-react";
+import { Trophy, FileText, Swords, AlertCircle } from "lucide-react";
 
 export type MatchResultType =
   | 'ko' | 'tko'
