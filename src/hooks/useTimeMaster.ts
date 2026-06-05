@@ -150,7 +150,7 @@ export function useTimeMaster() {
         timeMsRef.current = 0;
         alertsFiredRef.current.clear();
         setPhase('ready');
-        fire('bell');
+        fire('rest');
         toast({ title: 'Descanso terminado', description: 'Listo para el siguiente round' });
       } else {
         setRestTimeMs(remaining);
@@ -166,14 +166,17 @@ export function useTimeMaster() {
     const remainingSec = Math.floor(remainingMs / 1000);
     if (remainingSec === 60 && !alertsFiredRef.current.has('60s')) {
       alertsFiredRef.current.add('60s');
+      fire('warning');
       toast({ title: '1 minuto restante' });
     }
     if (remainingSec === 30 && !alertsFiredRef.current.has('30s')) {
       alertsFiredRef.current.add('30s');
+      fire('warning');
       toast({ title: '30 segundos restantes', variant: 'destructive' });
     }
     if (remainingSec === 10 && !alertsFiredRef.current.has('10s')) {
       alertsFiredRef.current.add('10s');
+      fire('warning');
       toast({ title: '¡10 segundos!', variant: 'destructive' });
     }
 
