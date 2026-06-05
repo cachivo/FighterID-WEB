@@ -110,6 +110,10 @@ void main() {
 `;
 
 export default function HeroCanvas() {
+  if (!hasWebGL()) {
+    return <div className="absolute inset-0 z-0" style={HERO_FALLBACK_STYLE} aria-hidden />;
+  }
+
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
