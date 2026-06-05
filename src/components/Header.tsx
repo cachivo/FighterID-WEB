@@ -19,7 +19,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/optimized-dropdown";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Menu, Trophy, Calendar, Home, Users, Shield, LogOut, User, Compass, Bell, Dumbbell, Radio, Building2, LayoutGrid } from "lucide-react";
+import { Menu, Trophy, Calendar, Home, Users, Shield, LogOut, User, Compass, Bell, Dumbbell, Radio, Building2, LayoutGrid, Timer } from "lucide-react";
 import { useSystemAssets } from "@/hooks/useSystemAssets";
 
 const Header = () => {
@@ -60,6 +60,7 @@ const Header = () => {
     { name: "Eventos", href: "/eventos", icon: Calendar },
     { name: "En Vivo", href: "/en-vivo", icon: Radio },
     { name: "Peleadores", href: "/fighters", icon: Trophy },
+    { name: "Time Master", href: "/time-master", icon: Timer },
     { name: "Mi Perfil", href: "/profile", icon: User },
   ];
 
@@ -104,6 +105,12 @@ const Header = () => {
           </Button>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/fighters">Peleadores</Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/time-master" className="flex items-center gap-1.5">
+              <Timer className="h-3.5 w-3.5" />
+              Time Master
+            </Link>
           </Button>
           <Link to="/contacto" className="pill-button px-4 py-1.5 text-xs uppercase tracking-[0.12em] font-medium text-foreground/70 ml-2">
             Contacto
