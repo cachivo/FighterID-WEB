@@ -152,7 +152,7 @@ export default function TimeMaster() {
                 disabled={phaseLocked}
               />
               <div className="flex items-center justify-center">
-                <Badge variant="outline" className="text-base font-bold px-4 py-2">VS</Badge>
+                <Badge variant="outline" className="text-sm sm:text-base font-bold px-3 py-1 sm:px-4 sm:py-2">VS</Badge>
               </div>
               <FighterSelector
                 fighters={tm.fighterProfiles}
