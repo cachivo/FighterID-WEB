@@ -87,6 +87,7 @@ export default function TimeMaster() {
       notes: pendingResult.notes,
     });
     setRecordDialogOpen(false);
+    toast.success("Récords actualizados");
   };
 
   const handleDeclineRecord = async () => {
@@ -100,7 +101,9 @@ export default function TimeMaster() {
       }, false);
     }
     setRecordDialogOpen(false);
+    toast("Resultado firmado sin actualizar récords");
   };
+
 
   return (
     <TimeMasterLayout>
