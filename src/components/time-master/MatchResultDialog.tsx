@@ -12,6 +12,14 @@ export type MatchResultType =
   | 'decision_unanimous' | 'decision_split' | 'decision_majority'
   | 'draw' | 'dq' | 'no_contest';
 
+interface RoundSummary {
+  roundNumber: number;
+  scoreA: number;
+  scoreB: number;
+  knockdownsA: number;
+  knockdownsB: number;
+}
+
 interface MatchResultDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,6 +27,9 @@ interface MatchResultDialogProps {
   fighterA: { id: string; name: string };
   fighterB: { id: string; name: string };
   currentRound: number;
+  rounds?: RoundSummary[];
+  totalScoreA?: number;
+  totalScoreB?: number;
 }
 
 const RESULT_OPTIONS: Array<{ value: MatchResultType; label: string }> = [
@@ -32,18 +43,27 @@ const RESULT_OPTIONS: Array<{ value: MatchResultType; label: string }> = [
   { value: 'no_contest', label: 'No Contest' },
 ];
 
-export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighterB, currentRound }: MatchResultDialogProps) {
+export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighterB, currentRound, rounds = [], totalScoreA = 0, totalScoreB = 0 }: MatchResultDialogProps) {
   const [resultType, setResultType] = useState<MatchResultType>('decision_unanimous');
   const [winnerId, setWinnerId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      setResultType('decision_unanimous');
-      setWinnerId(null);
+      // Auto-suggest based on totals
+      if (rounds.length > 0 && totalScoreA !== totalScoreB) {
+        setResultType('decision_unanimous');
+        setWinnerId(totalScoreA > totalScoreB ? fighterA.id : fighterB.id);
+      } else if (rounds.length > 0 && totalScoreA === totalScoreB) {
+        setResultType('draw');
+        setWinnerId(null);
+      } else {
+        setResultType('decision_unanimous');
+        setWinnerId(null);
+      }
       setNotes('');
     }
-  }, [isOpen]);
+  }, [isOpen, rounds.length, totalScoreA, totalScoreB, fighterA.id, fighterB.id]);
 
   useEffect(() => {
     if (resultType === 'draw' || resultType === 'no_contest') setWinnerId(null);
