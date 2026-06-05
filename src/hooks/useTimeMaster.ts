@@ -150,7 +150,7 @@ export function useTimeMaster() {
         timeMsRef.current = 0;
         alertsFiredRef.current.clear();
         setPhase('ready');
-        playBellSound();
+        fire('bell');
         toast({ title: 'Descanso terminado', description: 'Listo para el siguiente round' });
       } else {
         setRestTimeMs(remaining);
@@ -181,7 +181,7 @@ export function useTimeMaster() {
       setTimeMs(totalRoundMs);
       timeMsRef.current = totalRoundMs;
       setIsRunning(false);
-      playBellSound();
+      fire('bell');
       setRoundsCompleted((prev) => [
         ...prev,
         { roundNumber: currentRound, durationMs: totalRoundMs, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
@@ -239,7 +239,7 @@ export function useTimeMaster() {
     setIsRunning(true);
     setIsPaused(false);
     setPhase('fighting');
-    playBellSound();
+    fire('bell');
   }, []);
 
   const pauseRound = useCallback(() => {
@@ -264,7 +264,7 @@ export function useTimeMaster() {
       ...prev,
       { roundNumber: currentRound, durationMs: finalTime, knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0 },
     ]);
-    playBellSound();
+    fire('bell');
     if (currentRound >= roundConfig) {
       setPhase('finished');
       toast({ title: 'Pelea terminada', description: 'Todos los rounds completados.' });
