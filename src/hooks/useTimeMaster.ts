@@ -27,6 +27,9 @@ export interface RoundResult {
   knockdownsB: number;
   warningsA: number;
   warningsB: number;
+  scoreA: number;
+  scoreB: number;
+  note?: string;
 }
 
 export interface MatchResult {
