@@ -453,8 +453,9 @@ export function useTimeMaster() {
     loadFighters, selectFighterA, selectFighterB,
     setRoundConfig, setRoundDuration,
     startMatch, startRound, pauseRound, resumeRound, endRound, resetCurrentRound, skipRestPeriod,
-    finishMatch, resetMatch, updateFighterRecords,
+    finishMatch, resetMatch, updateFighterRecords, insertVerdict,
     alertSettings, setAlertSettings, previewAlert: fire,
     silentMode, setSilentMode, silentModeRemainingSec,
   };
 }
+
