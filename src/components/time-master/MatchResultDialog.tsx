@@ -168,7 +168,6 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas adicionales..." className="min-h-[80px] resize-none" />
           </div>
         </div>
-        </div>
         {validationError && (
           <div className="flex items-start gap-2 rounded-md border border-fighter-danger/30 bg-fighter-danger/10 p-3 text-sm text-fighter-danger">
             <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
