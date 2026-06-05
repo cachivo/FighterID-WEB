@@ -2,45 +2,41 @@ import { useEffect, lazy, Suspense, memo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import Header from "@/components/Header";
-import Hero from "@/components/Hero";
-import { QuickStats } from "@/components/QuickStats";
+import LandingHeader from "@/components/landing/LandingHeader";
+import LandingHero from "@/components/landing/Hero";
+import QuickStatsStrip from "@/components/landing/QuickStatsStrip";
+import SectionPanel from "@/components/landing/SectionPanel";
 import Ranking from "@/components/sections/Ranking";
-import UrbanDecorations from "@/components/UrbanDecorations";
 import { LazyMount } from "@/components/LazyMount";
 import { SectionDivider } from "@/components/landing/SectionDivider";
+import { useLenisScroll } from "@/hooks/useLenisScroll";
 
-// Lazy-load non-critical below-fold components
 const StrategicAllies = lazy(() => import("@/components/StrategicAllies"));
 const GymShowcase = lazy(() => import("@/components/sections/GymShowcase"));
-const Footer = lazy(() => import("@/components/Footer"));
+const LandingFooter = lazy(() => import("@/components/landing/LandingFooter"));
 const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt"));
 const FighterIDCallToAction = lazy(() =>
   import("@/components/FighterIDCallToAction").then((m) => ({ default: m.FighterIDCallToAction })),
 );
-const HowItWorks = lazy(() => import("@/components/landing/HowItWorks"));
+const HowItWorksNew = lazy(() => import("@/components/landing/HowItWorksNew"));
 
-const MemoHeader = memo(Header);
-const MemoHero = memo(Hero);
+const MemoHeader = memo(LandingHeader);
+const MemoHero = memo(LandingHero);
 
-/**
- * Inline section divider for the Boxeo block. Lives next to its lazy
- * children so the entire block is gated by a single LazyMount and only
- * pays its cost (queries, realtime subs, DOM) once the user scrolls.
- */
 function BoxeoBlock() {
   return (
-    <>
-      <SectionDivider title="Boxeo" subtitle="Liga Nacional Olímpica · Minor League" />
+    <SectionPanel title="Rankings Boxeo" subtitle="Liga Nacional Olímpica · Minor League">
       <Ranking organizationCode="FEDEHBOX" compact />
+      <div className="my-8"><SectionDivider title="Amateur" /></div>
       <Ranking organizationCode="HHF_AMATEUR" compact />
-    </>
+    </SectionPanel>
   );
 }
 
 const Index = () => {
   const queryClient = useQueryClient();
   const { user, loading } = useAuth();
+  useLenisScroll(true);
 
   useEffect(() => {
     queryClient.prefetchQuery({
@@ -78,18 +74,19 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--fid-bg)]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando...</p>
+          <div className="font-display font-bold text-[14px] tracking-[0.12em] animate-pulse">
+            <span className="text-white">FIGHTER</span>
+            <span className="text-[var(--fid-crimson)] ml-1">ID</span>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black urban-home overflow-x-hidden">
-      <UrbanDecorations />
+    <div className="fid-landing min-h-screen overflow-x-hidden">
       <MemoHeader />
       <MemoHero />
 
@@ -99,32 +96,35 @@ const Index = () => {
 
       {!user && (
         <>
-          <QuickStats />
+          <QuickStatsStrip />
           <Suspense fallback={null}>
-            <HowItWorks />
+            <HowItWorksNew />
           </Suspense>
         </>
       )}
 
-      {/* MMA — eager (above the fold of the rankings area) */}
-      <SectionDivider title="MMA" subtitle="Ultimate Combat Championship Honduras" />
-      <Ranking organizationCode="UCC_MMA" compact />
+      <div id="rankings">
+        <SectionPanel title="Rankings MMA" subtitle="Ultimate Combat Championship Honduras">
+          <Ranking organizationCode="UCC_MMA" compact />
+        </SectionPanel>
+      </div>
 
-      {/* Boxeo block — lazy mount only when the user scrolls near it.
-          Saves 2 data fetches + 4 realtime subscriptions on landing for
-          users who never scroll past MMA (most mobile sessions). */}
       <LazyMount placeholderMinHeight={600}>
         <BoxeoBlock />
       </LazyMount>
 
       <Suspense fallback={null}>
         <LazyMount placeholderMinHeight={400}>
-          <GymShowcase />
+          <SectionPanel title="Escuelas de combate" subtitle="Gimnasios afiliados y sus peleadores registrados">
+            <GymShowcase />
+          </SectionPanel>
         </LazyMount>
         <LazyMount placeholderMinHeight={300}>
-          <StrategicAllies />
+          <SectionPanel title="Aliados estratégicos" subtitle="Organizaciones que llevan el combate al siguiente nivel">
+            <StrategicAllies />
+          </SectionPanel>
         </LazyMount>
-        <Footer />
+        <LandingFooter />
         <PWAInstallPrompt />
       </Suspense>
     </div>
