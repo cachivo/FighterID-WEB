@@ -1,4 +1,8 @@
+import bell1Asset from '@/assets/time-master-bell-1.mp3.asset.json';
+import bell3Asset from '@/assets/time-master-bell-3.mp3.asset.json';
+
 export type AlertKind = 'bell' | 'warning' | 'rest';
+export type BellVariant = 'start' | 'end';
 
 export interface AlertChannelSettings {
   sound: boolean;
