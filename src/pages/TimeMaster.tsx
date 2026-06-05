@@ -97,6 +97,12 @@ export default function TimeMaster() {
           disabled={phaseLocked}
         />
 
+        {/* Test alerts */}
+        <AlertTestPanel
+          settings={tm.alertSettings}
+          onPreview={tm.previewAlert}
+        />
+
         {/* Alert settings */}
         <AlertSettingsPanel
           settings={tm.alertSettings}
