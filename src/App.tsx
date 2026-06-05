@@ -76,6 +76,9 @@ const RefereeControlRoom = lazy(() => import('./pages/referee/RefereeControlRoom
 const JudgeScoringPanel = lazy(() => import('./pages/judge/JudgeScoringPanel'));
 const JudgeOnboarding = lazy(() => import("./pages/judge/JudgeOnboarding"));
 
+// Time Master
+const TimeMaster = lazy(() => import("./pages/TimeMaster"));
+
 // Stations
 const StationPinLogin = lazy(() => import('@/components/station/StationPinLogin').then(m => ({ default: m.StationPinLogin })));
 const StationWaiting = lazy(() => import('@/pages/station/StationWaiting'));
@@ -208,6 +211,9 @@ const App = () => {
               <Route path="/hud/demo" element={<HudDemoDisplay />} />
               <Route path="/ai-overlay" element={<AIStrikeOverlay />} />
               <Route path="/ai-strike-overlay" element={<AIStrikeOverlay />} />
+
+              {/* Time Master */}
+              <Route path="/time-master" element={<ProtectedRoute><TimeMaster /></ProtectedRoute>} />
 
               {/* Stations */}
               <Route path="/estacion/:stationNumber" element={<StationPinLogin />} />

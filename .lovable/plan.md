@@ -1,63 +1,51 @@
-## Goal
+# Time Master — Boxing Round Timer
 
-Make every landing-page section share the same title/subtitle pattern as the Boxeo block (the one you said you like):
+A new authenticated-only page at `/time-master` providing a professional boxing match timer with fighter selection, configurable rounds/durations, bell + warning audio, result declaration, and optional record sync to `fighter_profiles`.
+
+## Scope
+
+- New page accessible from header nav (registered users only)
+- Fighter dropdowns populated from `fighter_profiles` (active only)
+- Match config: 3/5/8 rounds × 2min/3min
+- Timer with Start / Pause / Resume / End / Reset
+- 60s rest between rounds, bell sound, alerts at 1min/30s/10s remaining
+- Result dialog (KO, TKO, Decisions, Draw, DQ, No Contest)
+- Yes/No popup to optionally sync win/loss/draw to DB (sparring mode = skip)
+
+## Files to create
 
 ```text
-─────  TÍTULO  ─────
-   subtítulo en mayúsculas
+src/hooks/useTimeMaster.ts
+src/pages/TimeMaster.tsx
+src/components/time-master/
+  FighterSelector.tsx
+  MatchConfig.tsx
+  TimerDisplay.tsx
+  RoundTracker.tsx
+  MatchResultDialog.tsx
+  RecordUpdateDialog.tsx
+  TimeMasterLayout.tsx
+  index.ts
 ```
 
-Reference (already live in `src/pages/Index.tsx`, `BoxeoBlock`):
+## Files to modify
 
-- `<section>` with `border-y border-primary/20`, gradient background
-- `<h2 class="text-3xl md:text-5xl font-black tracking-tighter uppercase">`
-- Horizontal hairlines flanking the title
-- Subtitle: `text-sm md:text-base text-muted-foreground uppercase tracking-widest`
+- `src/App.tsx` — add lazy import + `<Route path="/time-master" element={<ProtectedRoute><TimeMaster /></ProtectedRoute>} />`
+- `src/components/Header.tsx` — add "Time Master" nav entry (mobile + desktop + user dropdown) using `Timer` icon from lucide
 
-Today only the Boxeo block uses it. MMA goes straight into a `Ranking` with no header, and the lower sections (Escuelas de Combate, Aliados, Cómo Funciona) use a different `ufc-label` echo style. Result: inconsistent hierarchy on landing.
+## Technical notes
 
-## Changes
-
-### 1. Create a reusable `SectionDivider` component
-`src/components/landing/SectionDivider.tsx` — extracts the Boxeo header so every section uses one source of truth.
-
-```tsx
-<SectionDivider title="MMA" subtitle="Ultimate Combat Championship · Amateur · Pro" />
-```
-
-Props: `title: string`, `subtitle?: string`, optional `className`.
-
-### 2. Refactor `BoxeoBlock` in `src/pages/Index.tsx`
-Replace the inline `<section>` with `<SectionDivider title="Boxeo" subtitle="Liga Nacional Olímpica · Minor League" />`. Visual output unchanged.
-
-### 3. Add an MMA divider before the MMA ranking in `Index.tsx`
-```tsx
-<SectionDivider title="MMA" subtitle="Ultimate Combat Championship Honduras" />
-<Ranking organizationCode="UCC_MMA" compact />
-```
-Subtitle pulled from the org's `description` field in `ranking_organizations` (verified via DB: `Ultimate Combat Championship Honduras` / `UCC MMA`).
-
-### 4. Unify the lower landing sections
-Replace the `ufc-label` echo-layer headers with `<SectionDivider>` in:
-
-- `src/components/sections/GymShowcase.tsx` — `title="Escuelas de Combate"`, `subtitle="Gimnasios y sus peleadores registrados"` (move current `<p>` into the subtitle slot, drop the duplicate header in the loading state by reusing the same component).
-- `src/components/StrategicAllies.tsx` — `title="Aliados Estratégicos"` (keep existing subtitle text if any, else omit).
-- `src/components/landing/HowItWorks.tsx` — wrap its current `<h2>` with `SectionDivider` using the same copy.
-
-`Hero` (`<h1>`) is the page's only H1 and stays untouched — it's the brand title, not a section divider.
-
-### 5. No DB / route / behavior changes
-Pure presentational refactor. No new dependencies.
-
-## Files touched
-
-- new: `src/components/landing/SectionDivider.tsx`
-- edit: `src/pages/Index.tsx` (add MMA divider, refactor `BoxeoBlock`)
-- edit: `src/components/sections/GymShowcase.tsx`
-- edit: `src/components/StrategicAllies.tsx`
-- edit: `src/components/landing/HowItWorks.tsx`
+- Hook `useTimeMaster` owns all state (phase machine: setup → ready → fighting → between_rounds → finished), uses `requestAnimationFrame` for the round timer and `setInterval` for the 60s rest period. Refs hold start/pause timestamps to keep timing accurate across pause/resume.
+- Bell uses Web Audio API (`OscillatorNode`) — no audio asset needed.
+- Fighter loading: `supabase.from('fighter_profiles').select(...).eq('active', true).order('last_name')`.
+- Record sync: read-modify-write on `record_wins` / `record_losses` / `record_draws`. Draw / No Contest increments both fighters' `record_draws`.
+- Uses semantic tokens (`fighter-danger`, `fighter-info`, `primary`, `muted-foreground`) consistent with existing design system. Will verify these tokens exist in `index.css` / `tailwind.config.ts` and fall back to existing tokens if not.
+- All shadcn components used (Select, Dialog, AlertDialog, RadioGroup, Card, Button, Badge, ScrollArea, Textarea, Skeleton) are already installed.
+- The user's provided source had a few minor syntax artifacts (stray `</body>` in an import, missing JSX in some snippets). I'll clean those up while keeping behavior identical.
+- Route is gated by existing `ProtectedRoute`, so only authenticated users reach it.
 
 ## Out of scope
 
-- Internal page headers (`PageHeader` on routes like `/social/discover`) — those use `<h1>` and a different gradient style appropriate for sub-pages, not landing sections. Happy to unify in a follow-up if you want one global standard.
-- Copy/wording changes beyond what's needed to fit the title/subtitle slots.
+- No DB schema changes (only reads + updates to existing `fighter_profiles` columns).
+- No knockdown/warning counters in UI v1 (kept in data model with zeros so it can be extended later).
+- No persistence of match history — single in-memory session.
