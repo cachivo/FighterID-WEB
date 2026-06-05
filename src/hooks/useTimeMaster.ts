@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   type AlertSettings, loadAlertSettings, saveAlertSettings, playAlert,
 } from '@/lib/timeMasterAlerts';
-import type { AlertKind } from '@/lib/timeMasterAlerts';
+import type { AlertKind, BellVariant } from '@/lib/timeMasterAlerts';
 
 export type MatchPhase = 'setup' | 'ready' | 'fighting' | 'between_rounds' | 'finished';
 
