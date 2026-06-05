@@ -29,7 +29,9 @@ export default {
 		fontFamily: {
 			'inter': ['Inter', 'sans-serif'],
 			'barlow-condensed': ['Barlow Condensed', 'sans-serif'],
-			'mono': ['JetBrains Mono', 'monospace'],
+			'mono': ['Geist Mono', 'JetBrains Mono', 'monospace'],
+			'geist': ['Geist', 'Inter', 'sans-serif'],
+			'geist-mono': ['Geist Mono', 'JetBrains Mono', 'monospace'],
 		},
 			colors: {
 				border: 'hsl(var(--border))',
