@@ -81,14 +81,25 @@ export function useTimeMaster() {
 
   useEffect(() => { timeMsRef.current = timeMs; }, [timeMs]);
   useEffect(() => { alertSettingsRef.current = alertSettings; }, [alertSettings]);
+  useEffect(() => { silentModeRef.current = silentMode; }, [silentMode]);
 
   const setAlertSettings = useCallback((s: AlertSettings) => {
     setAlertSettingsState(s);
     saveAlertSettings(s);
   }, []);
 
-  const fire = useCallback((kind: 'bell' | 'warning' | 'rest') => {
-    playAlert(kind, alertSettingsRef.current);
+  const fire = useCallback((kind: AlertKind) => {
+    const base = alertSettingsRef.current;
+    if (silentModeRef.current) {
+      const muted: AlertSettings = {
+        bell:    { ...base.bell,    sound: false },
+        warning: { ...base.warning, sound: false },
+        rest:    { ...base.rest,    sound: false },
+      };
+      playAlert(kind, muted);
+    } else {
+      playAlert(kind, base);
+    }
   }, []);
 
   const canStartMatch = useMemo(
