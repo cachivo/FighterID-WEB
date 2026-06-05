@@ -75,12 +75,12 @@ Each `app_user` row can own multiple roles simultaneously (`fighter`, `gym`, `ju
 | Layer            | Technology                                                              |
 | ---------------- | ----------------------------------------------------------------------- |
 | Framework        | **React 18**, **Vite 5**, **TypeScript 5**                              |
-| Styling          | **Tailwind CSS v3** + shadcn/ui, semantic HSL tokens, Clash + Satoshi   |
+| Styling          | **Tailwind CSS v3** + shadcn/ui, semantic HSL tokens, Geist Sans + Mono |
 | State / data     | **TanStack Query**, Supabase JS v2, Zod for input validation            |
 | Backend          | **Lovable Cloud** (Supabase: Postgres, Auth, Realtime, Edge, Storage)   |
 | AI               | **Lovable AI Gateway** (chat + embeddings → `pgvector`)                 |
 | Auth             | Supabase Auth (email + Google OAuth, PKCE), separate `user_roles` table |
-| Animation        | framer-motion (gated on `useReducedMotion` + `isLowEnd`)                |
+| Animation        | GSAP + Lenis smooth scroll (gated on `useReducedMotion` + `isLowEnd`)  |
 | Mobile shell     | Capacitor (PWA install + native shell ready)                            |
 | Testing          | **Vitest** + React Testing Library, jsdom                               |
 | Email            | Resend via edge functions, custom domain `fighter-id.org`               |
