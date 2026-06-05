@@ -379,6 +379,39 @@ export function useTimeMaster() {
     toast({ title: 'Reiniciado', description: 'Configuración eliminada.' });
   }, [toast]);
 
+  const insertVerdict = useCallback(async (result: MatchResult, recordsUpdated: boolean) => {
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const judgeId = auth?.user?.id;
+      if (!judgeId) {
+        toast({ title: 'Sesión requerida', description: 'Inicia sesión para firmar el resultado.', variant: 'destructive' });
+        return { success: false };
+      }
+      if (!fighterAId || !fighterBId) return { success: false };
+      const { error } = await supabase.from('tm_verdict').insert({
+        judge_user_id: judgeId,
+        red_fighter_id: fighterAId,
+        blue_fighter_id: fighterBId,
+        winner_fighter_id: result.winnerId,
+        result_type: result.resultType,
+        round_number: result.roundNumber,
+        notes: result.notes ?? null,
+        round_config: roundConfig,
+        round_duration_sec: roundDuration,
+        records_updated: recordsUpdated,
+      });
+      if (error) {
+        toast({ title: 'Error firmando veredicto', description: error.message, variant: 'destructive' });
+        return { success: false };
+      }
+      return { success: true };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+      return { success: false };
+    }
+  }, [fighterAId, fighterBId, roundConfig, roundDuration, toast]);
+
   const updateFighterRecords = useCallback(async (result: MatchResult) => {
     try {
       if (result.resultType === 'draw' || result.resultType === 'no_contest') {
@@ -401,14 +434,16 @@ export function useTimeMaster() {
           await supabase.from('fighter_profiles').update({ record_losses: (loserData?.record_losses || 0) + 1 }).eq('id', loserId);
         }
       }
-      toast({ title: 'Récords actualizados', description: 'Sincronización exitosa.' });
+      await insertVerdict(result, true);
+      toast({ title: 'Récords actualizados', description: 'Veredicto firmado y sincronizado.' });
       return { success: true };
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Failed to update records';
       toast({ title: 'Error', description: msg, variant: 'destructive' });
       return { success: false, error: msg };
     }
-  }, [fighterAId, fighterBId, toast]);
+  }, [fighterAId, fighterBId, toast, insertVerdict]);
+
 
   return {
     phase, fighterAId, fighterBId, fighterAName, fighterBName,
