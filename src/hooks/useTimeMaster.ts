@@ -124,7 +124,7 @@ export function useTimeMaster() {
     }
   }, [clearSilentModeTimer]);
 
-  const fire = useCallback((kind: AlertKind) => {
+  const fire = useCallback((kind: AlertKind, variant: BellVariant = 'start') => {
     const base = alertSettingsRef.current;
     if (silentModeRef.current) {
       const muted: AlertSettings = {
@@ -132,9 +132,9 @@ export function useTimeMaster() {
         warning: { ...base.warning, sound: false },
         rest:    { ...base.rest,    sound: false },
       };
-      playAlert(kind, muted);
+      playAlert(kind, muted, variant);
     } else {
-      playAlert(kind, base);
+      playAlert(kind, base, variant);
     }
   }, []);
 
