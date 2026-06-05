@@ -96,18 +96,18 @@ export default function TimeMaster() {
               size="sm"
               onClick={() => tm.setSilentMode((v) => !v)}
               title={tm.silentMode ? "Desactivar modo silencioso" : "Activar modo silencioso (solo vibración)"}
-              className="relative"
+              className="relative text-xs sm:text-sm px-2 sm:px-3"
             >
-              {tm.silentMode ? <VolumeX className="h-4 w-4 mr-1" /> : <Volume2 className="h-4 w-4 mr-1" />}
-              {tm.silentMode ? "Silencio" : "Sonido"}
+              {tm.silentMode ? <VolumeX className="h-4 w-4 sm:mr-1" /> : <Volume2 className="h-4 w-4 sm:mr-1" />}
+              <span className="hidden sm:inline">{tm.silentMode ? "Silencio" : "Sonido"}</span>
               {tm.silentMode && tm.silentModeRemainingSec > 0 && (
-                <span className="ml-2 inline-flex items-center gap-1 text-xs font-mono bg-background/20 px-1.5 py-0.5 rounded">
+                <span className="ml-1.5 inline-flex items-center gap-1 text-[10px] sm:text-xs font-mono bg-background/20 px-1.5 py-0.5 rounded">
                   <Timer className="h-3 w-3" />
                   {`${String(Math.floor(tm.silentModeRemainingSec / 60)).padStart(2, '0')}:${String(tm.silentModeRemainingSec % 60).padStart(2, '0')}`}
                 </span>
               )}
             </Button>
-            <Badge variant="outline" className="uppercase tracking-wider">
+            <Badge variant="outline" className="uppercase tracking-wider text-[10px] sm:text-xs">
               {tm.phase}
             </Badge>
           </div>
