@@ -86,7 +86,7 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Swords className="h-5 w-5" /> Resultado de la Pelea</DialogTitle>
           <DialogDescription>Registra el resultado para la pelea terminada en Round {currentRound}</DialogDescription>

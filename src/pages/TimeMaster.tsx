@@ -96,18 +96,18 @@ export default function TimeMaster() {
               size="sm"
               onClick={() => tm.setSilentMode((v) => !v)}
               title={tm.silentMode ? "Desactivar modo silencioso" : "Activar modo silencioso (solo vibración)"}
-              className="relative"
+              className="relative text-xs sm:text-sm px-2 sm:px-3"
             >
-              {tm.silentMode ? <VolumeX className="h-4 w-4 mr-1" /> : <Volume2 className="h-4 w-4 mr-1" />}
-              {tm.silentMode ? "Silencio" : "Sonido"}
+              {tm.silentMode ? <VolumeX className="h-4 w-4 sm:mr-1" /> : <Volume2 className="h-4 w-4 sm:mr-1" />}
+              <span className="hidden sm:inline">{tm.silentMode ? "Silencio" : "Sonido"}</span>
               {tm.silentMode && tm.silentModeRemainingSec > 0 && (
-                <span className="ml-2 inline-flex items-center gap-1 text-xs font-mono bg-background/20 px-1.5 py-0.5 rounded">
+                <span className="ml-1.5 inline-flex items-center gap-1 text-[10px] sm:text-xs font-mono bg-background/20 px-1.5 py-0.5 rounded">
                   <Timer className="h-3 w-3" />
                   {`${String(Math.floor(tm.silentModeRemainingSec / 60)).padStart(2, '0')}:${String(tm.silentModeRemainingSec % 60).padStart(2, '0')}`}
                 </span>
               )}
             </Button>
-            <Badge variant="outline" className="uppercase tracking-wider">
+            <Badge variant="outline" className="uppercase tracking-wider text-[10px] sm:text-xs">
               {tm.phase}
             </Badge>
           </div>
@@ -152,7 +152,7 @@ export default function TimeMaster() {
                 disabled={phaseLocked}
               />
               <div className="flex items-center justify-center">
-                <Badge variant="outline" className="text-base font-bold px-4 py-2">VS</Badge>
+                <Badge variant="outline" className="text-sm sm:text-base font-bold px-3 py-1 sm:px-4 sm:py-2">VS</Badge>
               </div>
               <FighterSelector
                 fighters={tm.fighterProfiles}
@@ -227,7 +227,7 @@ export default function TimeMaster() {
         {/* Controls */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 sm:justify-center [&>button]:w-full sm:[&>button]:w-auto">
               {tm.phase === 'setup' && (
                 <Button size="lg" onClick={tm.startMatch} disabled={!tm.canStartMatch} className="min-h-[48px]">
                   <Play className="h-5 w-5 mr-2" /> Preparar Pelea
