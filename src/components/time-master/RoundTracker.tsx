@@ -46,18 +46,21 @@ export function RoundTracker({ totalRounds, currentRound, roundsCompleted, isRes
               const done = roundsCompleted.find((r) => r.roundNumber === n);
               const current = n === currentRound && !done;
               return (
-                <div
+                <button
+                  type="button"
                   key={n}
+                  onClick={() => done && onEditRound?.(n)}
+                  disabled={!done}
                   className={cn(
-                    "flex flex-col items-center justify-center min-w-[60px] h-16 rounded-lg border text-xs font-semibold",
-                    done && "bg-emerald-500/15 border-emerald-500/30 text-emerald-400",
+                    "flex flex-col items-center justify-center min-w-[60px] h-16 rounded-lg border text-xs font-semibold transition",
+                    done && "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 cursor-pointer",
                     current && "bg-primary/10 border-primary text-primary ring-2 ring-primary/30",
-                    !done && !current && "bg-muted/30 border-border text-muted-foreground"
+                    !done && !current && "bg-muted/30 border-border text-muted-foreground cursor-default"
                   )}
                 >
                   <div>{done ? <Check className="h-4 w-4" /> : `R${n}`}</div>
                   <div className="text-[10px] mt-0.5">{done ? 'Listo' : current ? 'Actual' : 'Pendiente'}</div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -71,13 +74,25 @@ export function RoundTracker({ totalRounds, currentRound, roundsCompleted, isRes
                 const sec = Math.floor(r.durationMs / 1000);
                 const m = Math.floor(sec / 60);
                 const s = sec % 60;
+                const a = (r.scoreA ?? 10) - (r.knockdownsA ?? 0);
+                const b = (r.scoreB ?? 10) - (r.knockdownsB ?? 0);
                 return (
-                  <div key={r.roundNumber} className="flex justify-between text-sm">
+                  <button
+                    type="button"
+                    key={r.roundNumber}
+                    onClick={() => onEditRound?.(r.roundNumber)}
+                    className="w-full flex items-center justify-between text-sm hover:bg-muted/40 rounded px-1 py-0.5"
+                  >
                     <Badge variant="outline">Round {r.roundNumber}</Badge>
-                    <span className="font-mono tabular-nums text-muted-foreground">
+                    <span className="font-mono tabular-nums">
+                      <span className={cn(a > b && "text-fighter-danger font-bold")}>{a}</span>
+                      <span className="text-muted-foreground mx-1">-</span>
+                      <span className={cn(b > a && "text-fighter-info font-bold")}>{b}</span>
+                    </span>
+                    <span className="font-mono tabular-nums text-xs text-muted-foreground">
                       {m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
