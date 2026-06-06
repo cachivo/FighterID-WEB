@@ -65,8 +65,13 @@ export default function TimeMaster() {
 
 
   const phaseLocked = tm.phase !== 'setup';
+
+  // Synthetic IDs for guest corners so the result dialog can identify the winner.
+  const cornerAId = tm.fighterAIsGuest ? 'guest:red' : (tm.fighterAId ?? '');
+  const cornerBId = tm.fighterBIsGuest ? 'guest:blue' : (tm.fighterBId ?? '');
+
   const winnerName = pendingResult?.winnerId
-    ? (pendingResult.winnerId === tm.fighterAId ? tm.fighterAName : tm.fighterBName)
+    ? (pendingResult.winnerId === cornerAId ? tm.fighterAName : tm.fighterBName)
     : null;
 
   const judgeLabel =
@@ -76,15 +81,17 @@ export default function TimeMaster() {
     'Juez no autenticado';
 
   const handleSubmitResult = (r: { winnerId: string | null; resultType: MatchResultType; notes?: string }) => {
-    // Snapshot the round number at submit-time so it can't drift if the user
-    // declares a result mid-fight (early KO) and then phase flips to finished.
     const snapshotRound = tm.currentRound;
-    // Mark the auto-open guard as fired so the post-finish effect can't open a 2nd dialog.
     autoOpenedRef.current = true;
     setPendingResult({ ...r, roundNumber: snapshotRound });
     tm.finishMatch({ winnerId: r.winnerId, resultType: r.resultType, roundNumber: snapshotRound, notes: r.notes });
     setResultDialogOpen(false);
-    setRecordDialogOpen(true);
+    if (tm.isGuestMatch) {
+      // Guest match: no DB write, no record-update prompt.
+      toast("Veredicto local registrado (pelea con invitado, sin afectar récords)");
+    } else {
+      setRecordDialogOpen(true);
+    }
   };
 
   const handleConfirmRecord = async () => {
@@ -100,7 +107,6 @@ export default function TimeMaster() {
 
   const handleDeclineRecord = async () => {
     if (pendingResult) {
-      // Audit trail: judge signed but chose not to update records
       await tm.insertVerdict({
         winnerId: pendingResult.winnerId,
         resultType: pendingResult.resultType,
@@ -111,6 +117,7 @@ export default function TimeMaster() {
     setRecordDialogOpen(false);
     toast("Resultado firmado sin actualizar récords");
   };
+
 
 
   return (
@@ -185,6 +192,10 @@ export default function TimeMaster() {
                 isLoading={tm.isLoading}
                 corner="red"
                 disabled={phaseLocked}
+                isGuest={tm.fighterAIsGuest}
+                guestName={tm.fighterAIsGuest ? tm.fighterAName : ''}
+                onGuestNameChange={tm.setFighterAGuest}
+                onClear={tm.clearFighterA}
               />
               <div className="flex items-center justify-center">
                 <Badge variant="outline" className="text-sm sm:text-base font-bold px-3 py-1 sm:px-4 sm:py-2">VS</Badge>
@@ -197,8 +208,17 @@ export default function TimeMaster() {
                 isLoading={tm.isLoading}
                 corner="blue"
                 disabled={phaseLocked}
+                isGuest={tm.fighterBIsGuest}
+                guestName={tm.fighterBIsGuest ? tm.fighterBName : ''}
+                onGuestNameChange={tm.setFighterBGuest}
+                onClear={tm.clearFighterB}
               />
             </div>
+            {tm.isGuestMatch && (
+              <p className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-500">
+                Esta pelea incluye un peleador invitado. <strong>No afectará récords oficiales</strong>.
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -346,8 +366,8 @@ export default function TimeMaster() {
         isOpen={resultDialogOpen}
         onClose={() => setResultDialogOpen(false)}
         onSubmit={handleSubmitResult}
-        fighterA={{ id: tm.fighterAId ?? '', name: tm.fighterAName }}
-        fighterB={{ id: tm.fighterBId ?? '', name: tm.fighterBName }}
+        fighterA={{ id: cornerAId, name: tm.fighterAName }}
+        fighterB={{ id: cornerBId, name: tm.fighterBName }}
         currentRound={tm.currentRound}
         totalRounds={tm.roundConfig}
         rounds={tm.roundsCompleted}
