@@ -6,7 +6,7 @@ import type { ScoringEvent, ScoringWeights } from './scoring-types';
 export function scoreEvent(event: ScoringEvent, weights: ScoringWeights): number {
   const baseWeights: Record<string, number> = {
     punch: weights.punch_weight,
-    kick: weights.kick_weight || 1.3,
+    kick: weights.kick_weight ?? 1.3,
     defense: weights.defense_weight,
   };
 

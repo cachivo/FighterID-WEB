@@ -17,6 +17,25 @@ interface TimerDisplayProps {
   fighterBName?: string;
 }
 
+// Hoisted out of TimerDisplay so it isn't remounted on every animation-frame tick.
+const FighterTag = ({ name, corner }: { name?: string; corner: 'red' | 'blue' }) => (
+  <div className={cn(
+    "min-w-0 flex flex-col items-center text-center px-3 py-2 rounded border-2",
+    corner === 'red' ? 'border-fighter-danger/60 bg-fighter-danger/5' : 'border-blue-500/60 bg-blue-500/5',
+  )}>
+    <span className={cn(
+      "text-[10px] uppercase tracking-widest font-semibold",
+      corner === 'red' ? 'text-fighter-danger' : 'text-blue-400',
+    )}>
+      {corner === 'red' ? 'Esquina Roja' : 'Esquina Azul'}
+    </span>
+    <span className="text-sm sm:text-base font-bold leading-tight break-words mt-0.5">
+      {name || '—'}
+    </span>
+  </div>
+);
+
+
 export function TimerDisplay({
   timeMs, roundDuration, isRunning, isPaused, currentRound, totalRounds, phase, restTimeMs = 0,
   fighterAName, fighterBName,
@@ -88,22 +107,6 @@ export function TimerDisplay({
   const displayMs = isRest ? restTimeMs : elapsedMs;
   const displayLabel = isRest ? 'DESCANSO' : 'TRANSCURRIDO';
 
-  const FighterTag = ({ name, corner }: { name?: string; corner: 'red' | 'blue' }) => (
-    <div className={cn(
-      "min-w-0 flex flex-col items-center text-center px-3 py-2 rounded border-2",
-      corner === 'red' ? 'border-fighter-danger/60 bg-fighter-danger/5' : 'border-blue-500/60 bg-blue-500/5'
-    )}>
-      <span className={cn(
-        "text-[10px] uppercase tracking-widest font-semibold",
-        corner === 'red' ? 'text-fighter-danger' : 'text-blue-400'
-      )}>
-        {corner === 'red' ? 'Esquina Roja' : 'Esquina Azul'}
-      </span>
-      <span className="text-sm sm:text-base font-bold leading-tight break-words line-clamp-2 mt-0.5">
-        {name || '—'}
-      </span>
-    </div>
-  );
 
   return (
     <div ref={containerRef} className="w-full flex flex-col items-center gap-4">
@@ -115,9 +118,9 @@ export function TimerDisplay({
         </Badge>
         <div className="text-center">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">Round</div>
-          <div className="text-5xl sm:text-6xl font-black tabular-nums leading-none text-primary">
+          <div className="text-4xl sm:text-6xl font-black tabular-nums leading-none text-primary">
             {currentRound}
-            <span className="text-2xl sm:text-3xl text-muted-foreground font-bold"> / {totalRounds}</span>
+            <span className="text-xl sm:text-3xl text-muted-foreground font-bold"> / {totalRounds}</span>
           </div>
         </div>
       </div>
@@ -152,8 +155,8 @@ export function TimerDisplay({
         </div>
       </div>
 
-      {/* Fighter names below the timer */}
-      <div className="w-full grid grid-cols-2 gap-3">
+      {/* Fighter names below the timer — stack on narrow viewports so names never crowd */}
+      <div className="w-full flex flex-col sm:grid sm:grid-cols-2 gap-2 sm:gap-3">
         <FighterTag name={fighterAName} corner="red" />
         <FighterTag name={fighterBName} corner="blue" />
       </div>

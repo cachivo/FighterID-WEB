@@ -56,6 +56,7 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
   const [winnerId, setWinnerId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -72,6 +73,7 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
       }
       setNotes('');
       setValidationError(null);
+      setSubmitting(false);
     }
   }, [isOpen, rounds.length, totalScoreA, totalScoreB, fighterA.id, fighterB.id]);
 
@@ -96,15 +98,16 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
             <div className="rounded-md border border-border p-3 space-y-2">
               <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Resumen por Round</p>
               <div className="space-y-1 text-sm">
+                {/* Scores are already post-KD (entered by judge). Do NOT subtract KDs again. */}
                 {rounds.map((r) => (
                   <div key={r.roundNumber} className="flex items-center justify-between font-mono">
                     <span className="text-muted-foreground">R{r.roundNumber}</span>
-                    <span className={cn(r.scoreA - r.knockdownsA > r.scoreB - r.knockdownsB && "text-fighter-danger font-bold")}>
-                      {r.scoreA - r.knockdownsA}
+                    <span className={cn(r.scoreA > r.scoreB && "text-fighter-danger font-bold")}>
+                      {r.scoreA}
                     </span>
                     <span className="text-muted-foreground">-</span>
-                    <span className={cn(r.scoreB - r.knockdownsB > r.scoreA - r.knockdownsA && "text-fighter-info font-bold")}>
-                      {r.scoreB - r.knockdownsB}
+                    <span className={cn(r.scoreB > r.scoreA && "text-fighter-info font-bold")}>
+                      {r.scoreB}
                     </span>
                   </div>
                 ))}
@@ -175,20 +178,22 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
           </div>
         )}
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="min-h-[44px]">Cancelar</Button>
+          <Button variant="outline" onClick={onClose} disabled={submitting} className="min-h-[44px]">Cancelar</Button>
           <Button
             onClick={() => {
+              if (submitting) return;
               if (resultRequiresAllRounds && !allRoundsCompleted) {
                 setValidationError(`Debes completar todos los ${totalRounds} rounds antes de registrar una ${RESULT_OPTIONS.find(o => o.value === resultType)?.label.toLowerCase()}.`);
                 return;
               }
               setValidationError(null);
+              setSubmitting(true);
               onSubmit({ winnerId, resultType, notes: notes || undefined });
             }}
-            disabled={!canSubmit}
+            disabled={!canSubmit || submitting}
             className="min-h-[44px]"
           >
-            <Trophy className="h-4 w-4 mr-2" /> Confirmar Resultado
+            <Trophy className="h-4 w-4 mr-2" /> {submitting ? 'Enviando…' : 'Confirmar Resultado'}
           </Button>
         </DialogFooter>
       </DialogContent>

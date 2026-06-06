@@ -7941,6 +7941,21 @@ export type Database = {
         }
         Returns: Json
       }
+      save_fight_result: {
+        Args: {
+          p_blue_fighter_id: string
+          p_notes: string
+          p_red_fighter_id: string
+          p_result_type: string
+          p_round_config: number
+          p_round_duration_sec: number
+          p_round_number: number
+          p_rounds: Json
+          p_update_records: boolean
+          p_winner_fighter_id: string
+        }
+        Returns: Json
+      }
       search_fighters_for_gym:
         | {
             Args: {
