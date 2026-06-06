@@ -449,6 +449,10 @@ export function useTimeMaster() {
   // correct No-Contest handling). Falls back to legacy direct writes if the
   // RPC is unavailable (e.g. before migration deploys).
   const saveResultAtomic = useCallback(async (result: MatchResult, updateRecords: boolean) => {
+    // Guest matches never touch the database: at least one side has no profile id.
+    if (fighterAIsGuest || fighterBIsGuest) {
+      return { success: true, recordsUpdated: false, duplicate: false };
+    }
     if (!fighterAId || !fighterBId) return { success: false, recordsUpdated: false, duplicate: false };
     try {
       const { data, error } = await (supabase.rpc as unknown as (
@@ -483,15 +487,22 @@ export function useTimeMaster() {
       toastRef.current({ title: 'Error', description: msg, variant: 'destructive' });
       return { success: false, recordsUpdated: false, duplicate: false };
     }
-  }, [fighterAId, fighterBId, roundConfig, roundDuration, roundsCompleted]);
+  }, [fighterAId, fighterBId, fighterAIsGuest, fighterBIsGuest, roundConfig, roundDuration, roundsCompleted]);
 
   const insertVerdict = useCallback(async (result: MatchResult, recordsUpdated: boolean) => {
-    // recordsUpdated here is advisory; the RPC computes the truthful value.
+    if (fighterAIsGuest || fighterBIsGuest) {
+      toastRef.current({ title: 'Veredicto local', description: 'Pelea con invitado: no se actualizan récords.' });
+      return { success: true };
+    }
     const res = await saveResultAtomic(result, recordsUpdated);
     return { success: res.success };
-  }, [saveResultAtomic]);
+  }, [saveResultAtomic, fighterAIsGuest, fighterBIsGuest]);
 
   const updateFighterRecords = useCallback(async (result: MatchResult) => {
+    if (fighterAIsGuest || fighterBIsGuest) {
+      toastRef.current({ title: 'Veredicto local', description: 'Pelea con invitado: no se actualizan récords.' });
+      return { success: true };
+    }
     const res = await saveResultAtomic(result, true);
     if (!res.success) return { success: false, error: 'Failed to update records' };
     if (res.duplicate) {
@@ -507,16 +518,18 @@ export function useTimeMaster() {
     }
     return { success: true };
 
-  }, [saveResultAtomic, loadFighters]);
+  }, [saveResultAtomic, loadFighters, fighterAIsGuest, fighterBIsGuest]);
 
 
 
   return {
     phase, fighterAId, fighterBId, fighterAName, fighterBName,
+    fighterAIsGuest, fighterBIsGuest, isGuestMatch,
     roundConfig, roundDuration, currentRound, timeMs, isRunning, isPaused,
     restTimeMs, isRestPeriod, roundsCompleted, matchResult, fighterProfiles, isLoading,
     canStartMatch, totalScoreA, totalScoreB,
     loadFighters, selectFighterA, selectFighterB,
+    setFighterAGuest, setFighterBGuest, clearFighterA, clearFighterB,
     setRoundConfig, setRoundDuration, setRoundScore,
     startMatch, startRound, pauseRound, resumeRound, endRound, resetCurrentRound, skipRestPeriod,
     finishMatch, resetMatch, updateFighterRecords, insertVerdict,
