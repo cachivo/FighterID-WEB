@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; errorCode: 'email_not_confirmed' | 'invalid_credentials' | 'rate_limited' | 'other' | null }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -98,7 +98,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('[AUTH] Sign in error:', error);
-        return { error };
+        const raw = (error.message || '').toLowerCase();
+        const code = (error as any).code as string | undefined;
+        let errorCode: 'email_not_confirmed' | 'invalid_credentials' | 'rate_limited' | 'other' = 'other';
+        let friendly = error.message;
+        if (code === 'email_not_confirmed' || raw.includes('email not confirmed') || raw.includes('not confirmed')) {
+          errorCode = 'email_not_confirmed';
+          friendly = 'Tu correo aún no está confirmado. Revisa tu bandeja o reenvía el enlace.';
+        } else if (code === 'invalid_credentials' || raw.includes('invalid login credentials')) {
+          errorCode = 'invalid_credentials';
+          friendly = 'Credenciales incorrectas.';
+        } else if (raw.includes('rate') || raw.includes('too many')) {
+          errorCode = 'rate_limited';
+          friendly = 'Demasiados intentos. Espera unos segundos e intenta de nuevo.';
+        }
+        return { error: { ...error, message: friendly }, errorCode };
       }
 
       // Manually update state for faster feedback on slow connections
@@ -107,10 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(data.user);
       }
 
-      return { error: null };
+      return { error: null, errorCode: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected sign in error:', e);
-      return { error: { message: 'Error de conexión. Intenta de nuevo.' } };
+      return { error: { message: 'Error de conexión. Intenta de nuevo.' }, errorCode: 'other' as const };
     }
   };
 
@@ -218,12 +232,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       if (error) {
-        // Handle rate limiting
-        if (error.message?.includes('For security purposes') || error.message?.includes('email_send_rate_limit')) {
-          return { 
-            error: { 
-              message: 'Has intentado reenviar el correo varias veces. Por favor espera 60 segundos antes de intentar nuevamente.' 
-            } 
+        // Handle rate limiting — extract retry seconds when present
+        const msg = error.message || '';
+        if (msg.includes('For security purposes') || msg.includes('email_send_rate_limit') || msg.includes('over_email_send_rate_limit')) {
+          const m = msg.match(/after (\d+) second/i);
+          const retryAfter = m ? parseInt(m[1], 10) : 60;
+          return {
+            error: {
+              message: `Espera ${retryAfter} segundos antes de reenviar el correo.`,
+              retryAfter,
+            }
           };
         }
         return { error };
