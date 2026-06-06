@@ -16,16 +16,17 @@ import { Link } from "react-router-dom";
 
 export default function TimeMaster() {
   const tm = useTimeMaster();
+  const { loadFighters } = tm;
   const { user } = useAuth();
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
-  const [pendingResult, setPendingResult] = useState<{ winnerId: string | null; resultType: MatchResultType; notes?: string } | null>(null);
+  const [pendingResult, setPendingResult] = useState<{ winnerId: string | null; resultType: MatchResultType; roundNumber: number; notes?: string } | null>(null);
   const [roundScoreOpen, setRoundScoreOpen] = useState(false);
   const [editingRound, setEditingRound] = useState<number | null>(null);
   const lastCompletedCountRef = useRef(0);
   const autoOpenedRef = useRef(false);
 
-  useEffect(() => { tm.loadFighters(); }, [tm.loadFighters]);
+  useEffect(() => { loadFighters(); }, [loadFighters]);
 
   // When a new round is pushed to roundsCompleted, prompt for its score
   useEffect(() => {
@@ -37,9 +38,12 @@ export default function TimeMaster() {
     lastCompletedCountRef.current = tm.roundsCompleted.length;
   }, [tm.roundsCompleted]);
 
-  // Reset auto-open guard when a new match begins
+  // Reset auto-open guard AND any stale pending result when a new match begins.
   useEffect(() => {
-    if (tm.phase === 'setup') autoOpenedRef.current = false;
+    if (tm.phase === 'setup') {
+      autoOpenedRef.current = false;
+      setPendingResult(null);
+    }
   }, [tm.phase]);
 
   // Auto-launch result dialog when the full fight finishes and all rounds scored
@@ -72,8 +76,13 @@ export default function TimeMaster() {
     'Juez no autenticado';
 
   const handleSubmitResult = (r: { winnerId: string | null; resultType: MatchResultType; notes?: string }) => {
-    setPendingResult(r);
-    tm.finishMatch({ winnerId: r.winnerId, resultType: r.resultType, roundNumber: tm.currentRound, notes: r.notes });
+    // Snapshot the round number at submit-time so it can't drift if the user
+    // declares a result mid-fight (early KO) and then phase flips to finished.
+    const snapshotRound = tm.currentRound;
+    // Mark the auto-open guard as fired so the post-finish effect can't open a 2nd dialog.
+    autoOpenedRef.current = true;
+    setPendingResult({ ...r, roundNumber: snapshotRound });
+    tm.finishMatch({ winnerId: r.winnerId, resultType: r.resultType, roundNumber: snapshotRound, notes: r.notes });
     setResultDialogOpen(false);
     setRecordDialogOpen(true);
   };
@@ -83,11 +92,10 @@ export default function TimeMaster() {
     await tm.updateFighterRecords({
       winnerId: pendingResult.winnerId,
       resultType: pendingResult.resultType,
-      roundNumber: tm.currentRound,
+      roundNumber: pendingResult.roundNumber,
       notes: pendingResult.notes,
     });
     setRecordDialogOpen(false);
-    toast.success("Récords actualizados");
   };
 
   const handleDeclineRecord = async () => {
@@ -96,7 +104,7 @@ export default function TimeMaster() {
       await tm.insertVerdict({
         winnerId: pendingResult.winnerId,
         resultType: pendingResult.resultType,
-        roundNumber: tm.currentRound,
+        roundNumber: pendingResult.roundNumber,
         notes: pendingResult.notes,
       }, false);
     }
