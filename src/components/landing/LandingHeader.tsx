@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Timer } from 'lucide-react';
 
 const NAV = [
+  { label: 'Time Master', href: '/time-master', highlight: true },
   { label: 'Peleadores', href: '/fighters' },
   { label: 'Eventos', href: '/eventos' },
   { label: 'Rankings', href: '/#rankings' },
@@ -43,14 +45,28 @@ export default function LandingHeader() {
             <a
               key={item.href}
               href={item.href}
-              className="font-mono-label text-[12px] font-medium text-[var(--fid-text-muted)] hover:text-white transition-colors duration-200"
+              className={`font-mono-label text-[12px] font-medium transition-colors duration-200 inline-flex items-center gap-1.5 ${
+                item.highlight
+                  ? 'text-[var(--fid-crimson)] hover:text-white'
+                  : 'text-[var(--fid-text-muted)] hover:text-white'
+              }`}
             >
+              {item.highlight && <Timer className="h-3.5 w-3.5" />}
               {item.label}
             </a>
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Time Master - Mobile only, always visible */}
+          <Link
+            to="/time-master"
+            aria-label="Time Master"
+            className="md:hidden h-11 w-11 grid place-items-center text-[var(--fid-crimson)] touch-manipulation"
+          >
+            <Timer className="h-5 w-5" />
+          </Link>
+
           {user ? (
             <Button
               size="sm"
@@ -89,8 +105,13 @@ export default function LandingHeader() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="font-mono-label text-[14px] text-[var(--fid-text-muted)] hover:text-white"
+                    className={`font-mono-label text-[14px] inline-flex items-center gap-2 ${
+                      item.highlight
+                        ? 'text-[var(--fid-crimson)] font-semibold'
+                        : 'text-[var(--fid-text-muted)] hover:text-white'
+                    }`}
                   >
+                    {item.highlight && <Timer className="h-4 w-4" />}
                     {item.label}
                   </a>
                 ))}
