@@ -193,11 +193,16 @@ const Header = () => {
                     <nav className="space-y-1">
                       {navigationItems.map((item) => {
                         const IconComponent = item.icon;
+                        const isHighlight = (item as { highlight?: boolean }).highlight;
                         return (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-foreground hover:bg-muted hover:text-primary transition-colors min-h-[48px] touch-manipulation"
+                            className={`flex items-center gap-3 rounded-lg px-3 py-3 transition-colors min-h-[48px] touch-manipulation ${
+                              isHighlight
+                                ? "bg-primary/10 border border-primary/30 text-primary hover:bg-primary/15"
+                                : "text-foreground hover:bg-muted hover:text-primary"
+                            }`}
                             onClick={() => setMobileMenuOpen(false)}
                           >
                             <IconComponent className="h-5 w-5 flex-shrink-0" />
