@@ -416,6 +416,8 @@ export function useTimeMaster() {
     setFighterBId(null);
     setFighterAName('');
     setFighterBName('');
+    setFighterAIsGuest(false);
+    setFighterBIsGuest(false);
     setRoundConfig(3);
     setRoundDuration(180);
     setCurrentRound(1);
