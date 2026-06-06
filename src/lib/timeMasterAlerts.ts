@@ -72,10 +72,31 @@ function vibrate(pattern: number[]) {
   } catch { /* ignore */ }
 }
 
+// Shared AudioContext singleton. Browsers (especially on 2-3GB Android)
+// limit concurrent contexts to ~6 — recreating per alert silently leaks
+// and eventually stops playing.
+let _audioCtx: AudioContext | null = null;
+function getAudioCtx(): AudioContext | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    if (!_audioCtx || _audioCtx.state === 'closed') {
+      const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+      if (!Ctx) return null;
+      _audioCtx = new Ctx();
+    }
+    if (_audioCtx.state === 'suspended') {
+      void _audioCtx.resume();
+    }
+    return _audioCtx;
+  } catch {
+    return null;
+  }
+}
+
 function playTone(tone: Tone, volume: number) {
   try {
-    const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
-    const ctx = new Ctx();
+    const ctx = getAudioCtx();
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -99,9 +120,24 @@ const BELL_URLS: Record<BellVariant, string> = {
   end: bell3Asset.url,
 };
 
+// Preload bells at module init so first play has no CDN latency on 3G.
+const _preloaded: Partial<Record<BellVariant, HTMLAudioElement>> = {};
+if (typeof window !== 'undefined') {
+  try {
+    (Object.keys(BELL_URLS) as BellVariant[]).forEach((v) => {
+      const a = new Audio();
+      a.preload = 'auto';
+      a.src = BELL_URLS[v];
+      _preloaded[v] = a;
+    });
+  } catch { /* ignore */ }
+}
+
 function playBell(variant: BellVariant, volume: number) {
   try {
-    const audio = new Audio(BELL_URLS[variant]);
+    const cached = _preloaded[variant];
+    const audio = cached ?? new Audio(BELL_URLS[variant]);
+    try { audio.currentTime = 0; } catch { /* ignore seek errors */ }
     audio.volume = Math.max(0, Math.min(1, volume));
     void audio.play().catch(() => { /* ignore autoplay errors */ });
   } catch { /* ignore */ }

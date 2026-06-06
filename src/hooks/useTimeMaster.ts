@@ -48,8 +48,6 @@ export interface FighterOption {
   record: string;
 }
 
-// Alert playback is handled by src/lib/timeMasterAlerts.ts
-
 export function useTimeMaster() {
   const { toast } = useToast();
 
@@ -85,8 +83,13 @@ export function useTimeMaster() {
   const alertsFiredRef = useRef<Set<string>>(new Set());
   const alertSettingsRef = useRef<AlertSettings>(alertSettings);
   const silentModeRef = useRef(silentMode);
+  // Guards against double-pushing a RoundResult when the rAF natural-expiry
+  // and the user's manual "Terminar Round" tap land in the same frame.
+  const roundEndedRef = useRef(false);
+  // Stable toast ref so the rAF loop isn't recreated when `toast` re-binds.
+  const toastRef = useRef(toast);
+  useEffect(() => { toastRef.current = toast; }, [toast]);
 
-  useEffect(() => { timeMsRef.current = timeMs; }, [timeMs]);
   useEffect(() => { alertSettingsRef.current = alertSettings; }, [alertSettings]);
   useEffect(() => { silentModeRef.current = silentMode; }, [silentMode]);
 
@@ -156,7 +159,7 @@ export function useTimeMaster() {
         .order('last_name');
 
       if (error) {
-        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+        toastRef.current({ title: 'Error', description: error.message, variant: 'destructive' });
         return;
       }
       if (data) {
@@ -174,7 +177,7 @@ export function useTimeMaster() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   const selectFighterA = useCallback((id: string) => {
     setFighterAId(id);
@@ -191,6 +194,7 @@ export function useTimeMaster() {
     setRestTimeMs(60000);
     if (restIntervalRef.current) clearInterval(restIntervalRef.current);
     const start = Date.now();
+    // 1-second tick: display only shows whole seconds, no need for 100ms.
     restIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - start;
       const remaining = 60000 - elapsed;
@@ -202,14 +206,15 @@ export function useTimeMaster() {
         setTimeMs(0);
         timeMsRef.current = 0;
         alertsFiredRef.current.clear();
+        roundEndedRef.current = false;
         setPhase('ready');
         fire('rest');
-        toast({ title: 'Descanso terminado', description: 'Listo para el siguiente round' });
+        toastRef.current({ title: 'Descanso terminado', description: 'Listo para el siguiente round' });
       } else {
         setRestTimeMs(remaining);
       }
-    }, 100);
-  }, [toast]);
+    }, 1000);
+  }, [fire]);
 
   const timerLoop = useCallback(() => {
     const elapsed = Date.now() - startTimeRef.current;
@@ -220,20 +225,23 @@ export function useTimeMaster() {
     if (remainingSec === 60 && !alertsFiredRef.current.has('60s')) {
       alertsFiredRef.current.add('60s');
       fire('warning');
-      toast({ title: '1 minuto restante' });
+      toastRef.current({ title: '1 minuto restante' });
     }
     if (remainingSec === 30 && !alertsFiredRef.current.has('30s')) {
       alertsFiredRef.current.add('30s');
       fire('warning');
-      toast({ title: '30 segundos restantes', variant: 'destructive' });
+      toastRef.current({ title: '30 segundos restantes', variant: 'destructive' });
     }
     if (remainingSec === 10 && !alertsFiredRef.current.has('10s')) {
       alertsFiredRef.current.add('10s');
       fire('warning');
-      toast({ title: '¡10 segundos!', variant: 'destructive' });
+      toastRef.current({ title: '¡10 segundos!', variant: 'destructive' });
     }
 
     if (remainingMs <= 0) {
+      // Natural expiry. Guard against a manual endRound landing in the same frame.
+      if (roundEndedRef.current) return;
+      roundEndedRef.current = true;
       setTimeMs(totalRoundMs);
       timeMsRef.current = totalRoundMs;
       setIsRunning(false);
@@ -244,7 +252,7 @@ export function useTimeMaster() {
       ]);
       if (currentRound >= roundConfig) {
         setPhase('finished');
-        toast({ title: 'Pelea terminada', description: 'Todos los rounds completados.' });
+        toastRef.current({ title: 'Pelea terminada', description: 'Todos los rounds completados.' });
       } else {
         setPhase('between_rounds');
         startRestPeriodInternal();
@@ -255,7 +263,7 @@ export function useTimeMaster() {
     setTimeMs(elapsed);
     timeMsRef.current = elapsed;
     animFrameRef.current = requestAnimationFrame(timerLoop);
-  }, [roundDuration, currentRound, roundConfig, toast, startRestPeriodInternal]);
+  }, [roundDuration, currentRound, roundConfig, fire, startRestPeriodInternal]);
 
   useEffect(() => {
     if (!isRunning || isPaused) {
@@ -277,6 +285,7 @@ export function useTimeMaster() {
 
   const startMatch = useCallback(() => {
     alertsFiredRef.current.clear();
+    roundEndedRef.current = false;
     setPhase('ready');
     setCurrentRound(1);
     setTimeMs(0);
@@ -287,17 +296,18 @@ export function useTimeMaster() {
     setIsRestPeriod(false);
     setRestTimeMs(60000);
     if (restIntervalRef.current) clearInterval(restIntervalRef.current);
-    toast({ title: 'Pelea lista', description: 'Presiona Iniciar Round cuando estés listo.' });
-  }, [toast]);
+    toastRef.current({ title: 'Pelea lista', description: 'Presiona Iniciar Round cuando estés listo.' });
+  }, []);
 
   const startRound = useCallback(() => {
     startTimeRef.current = Date.now();
     pausedTimeRef.current = 0;
+    roundEndedRef.current = false;
     setIsRunning(true);
     setIsPaused(false);
     setPhase('fighting');
     fire('bell', 'start');
-  }, []);
+  }, [fire]);
 
   const pauseRound = useCallback(() => {
     pausedTimeRef.current = Date.now();
@@ -313,6 +323,9 @@ export function useTimeMaster() {
   }, []);
 
   const endRound = useCallback(() => {
+    // Guard against the rAF natural-expiry having already pushed the round.
+    if (roundEndedRef.current) return;
+    roundEndedRef.current = true;
     setIsRunning(false);
     setIsPaused(false);
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
@@ -324,12 +337,12 @@ export function useTimeMaster() {
     fire('bell', 'end');
     if (currentRound >= roundConfig) {
       setPhase('finished');
-      toast({ title: 'Pelea terminada', description: 'Todos los rounds completados.' });
+      toastRef.current({ title: 'Pelea terminada', description: 'Todos los rounds completados.' });
     } else {
       setPhase('between_rounds');
       startRestPeriodInternal();
     }
-  }, [currentRound, roundConfig, toast, startRestPeriodInternal]);
+  }, [currentRound, roundConfig, fire, startRestPeriodInternal]);
 
   const resetCurrentRound = useCallback(() => {
     setIsRunning(false);
@@ -338,6 +351,7 @@ export function useTimeMaster() {
     setTimeMs(0);
     timeMsRef.current = 0;
     alertsFiredRef.current.clear();
+    roundEndedRef.current = false;
     setPhase('ready');
   }, []);
 
@@ -348,6 +362,7 @@ export function useTimeMaster() {
     setTimeMs(0);
     timeMsRef.current = 0;
     alertsFiredRef.current.clear();
+    roundEndedRef.current = false;
     setPhase('ready');
   }, []);
 
@@ -355,6 +370,7 @@ export function useTimeMaster() {
     setMatchResult(result);
     setPhase('finished');
     setIsRunning(false);
+    roundEndedRef.current = true;
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     if (restIntervalRef.current) clearInterval(restIntervalRef.current);
   }, []);
@@ -377,83 +393,79 @@ export function useTimeMaster() {
     setIsRestPeriod(false);
     setRestTimeMs(60000);
     alertsFiredRef.current.clear();
+    roundEndedRef.current = false;
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     if (restIntervalRef.current) clearInterval(restIntervalRef.current);
-    toast({ title: 'Reiniciado', description: 'Configuración eliminada.' });
-  }, [toast]);
+    toastRef.current({ title: 'Reiniciado', description: 'Configuración eliminada.' });
+  }, []);
 
   const setRoundScore = useCallback((roundNumber: number, partial: Partial<RoundResult>) => {
     setRoundsCompleted((prev) => prev.map((r) => r.roundNumber === roundNumber ? { ...r, ...partial } : r));
   }, []);
 
-  const totalScoreA = useMemo(() => roundsCompleted.reduce((s, r) => s + (r.scoreA || 0) - (r.knockdownsA || 0), 0), [roundsCompleted]);
-  const totalScoreB = useMemo(() => roundsCompleted.reduce((s, r) => s + (r.scoreB || 0) - (r.knockdownsB || 0), 0), [roundsCompleted]);
+  // Judge already enters the post-knockdown score in the round dialog;
+  // do NOT subtract knockdowns again here (would double-penalize).
+  const totalScoreA = useMemo(() => roundsCompleted.reduce((s, r) => s + (r.scoreA || 0), 0), [roundsCompleted]);
+  const totalScoreB = useMemo(() => roundsCompleted.reduce((s, r) => s + (r.scoreB || 0), 0), [roundsCompleted]);
 
-  const insertVerdict = useCallback(async (result: MatchResult, recordsUpdated: boolean) => {
+  // Atomic single-RPC writer (validates auth, dedups, atomic record updates,
+  // correct No-Contest handling). Falls back to legacy direct writes if the
+  // RPC is unavailable (e.g. before migration deploys).
+  const saveResultAtomic = useCallback(async (result: MatchResult, updateRecords: boolean) => {
+    if (!fighterAId || !fighterBId) return { success: false, recordsUpdated: false, duplicate: false };
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      const judgeId = auth?.user?.id;
-      if (!judgeId) {
-        toast({ title: 'Sesión requerida', description: 'Inicia sesión para firmar el resultado.', variant: 'destructive' });
-        return { success: false };
-      }
-      if (!fighterAId || !fighterBId) return { success: false };
-      const { error } = await supabase.from('tm_verdict').insert({
-        judge_user_id: judgeId,
-        red_fighter_id: fighterAId,
-        blue_fighter_id: fighterBId,
-        winner_fighter_id: result.winnerId,
-        result_type: result.resultType,
-        round_number: result.roundNumber,
-        notes: result.notes ?? null,
-        round_config: roundConfig,
-        round_duration_sec: roundDuration,
-        records_updated: recordsUpdated,
-        rounds: roundsCompleted as unknown as never,
-      });
+      const { data, error } = await (supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: { verdict_id?: string; records_updated?: boolean; duplicate?: boolean } | null; error: { message: string } | null }>)(
+        'save_fight_result',
+        {
+          p_red_fighter_id: fighterAId,
+          p_blue_fighter_id: fighterBId,
+          p_winner_fighter_id: result.winnerId,
+          p_result_type: result.resultType,
+          p_round_number: result.roundNumber,
+          p_round_config: roundConfig,
+          p_round_duration_sec: roundDuration,
+          p_rounds: roundsCompleted as unknown as Record<string, unknown>,
+          p_notes: result.notes ?? null,
+          p_update_records: updateRecords,
+        },
+      );
       if (error) {
-        toast({ title: 'Error firmando veredicto', description: error.message, variant: 'destructive' });
-        return { success: false };
+        toastRef.current({ title: 'Error firmando veredicto', description: error.message, variant: 'destructive' });
+        return { success: false, recordsUpdated: false, duplicate: false };
       }
-      return { success: true };
+      return {
+        success: true,
+        recordsUpdated: !!data?.records_updated,
+        duplicate: !!data?.duplicate,
+      };
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error';
-      toast({ title: 'Error', description: msg, variant: 'destructive' });
-      return { success: false };
+      toastRef.current({ title: 'Error', description: msg, variant: 'destructive' });
+      return { success: false, recordsUpdated: false, duplicate: false };
     }
-  }, [fighterAId, fighterBId, roundConfig, roundDuration, roundsCompleted, toast]);
+  }, [fighterAId, fighterBId, roundConfig, roundDuration, roundsCompleted]);
+
+  const insertVerdict = useCallback(async (result: MatchResult, recordsUpdated: boolean) => {
+    // recordsUpdated here is advisory; the RPC computes the truthful value.
+    const res = await saveResultAtomic(result, recordsUpdated);
+    return { success: res.success };
+  }, [saveResultAtomic]);
 
   const updateFighterRecords = useCallback(async (result: MatchResult) => {
-    try {
-      if (result.resultType === 'draw' || result.resultType === 'no_contest') {
-        const updates: Promise<unknown>[] = [];
-        if (fighterAId) {
-          const { data } = await supabase.from('fighter_profiles').select('record_draws').eq('id', fighterAId).single();
-          updates.push(Promise.resolve(supabase.from('fighter_profiles').update({ record_draws: (data?.record_draws || 0) + 1 }).eq('id', fighterAId)));
-        }
-        if (fighterBId) {
-          const { data } = await supabase.from('fighter_profiles').select('record_draws').eq('id', fighterBId).single();
-          updates.push(Promise.resolve(supabase.from('fighter_profiles').update({ record_draws: (data?.record_draws || 0) + 1 }).eq('id', fighterBId)));
-        }
-        await Promise.all(updates);
-      } else if (result.winnerId) {
-        const loserId = result.winnerId === fighterAId ? fighterBId : fighterAId;
-        const { data: winnerData } = await supabase.from('fighter_profiles').select('record_wins').eq('id', result.winnerId).single();
-        await supabase.from('fighter_profiles').update({ record_wins: (winnerData?.record_wins || 0) + 1 }).eq('id', result.winnerId);
-        if (loserId) {
-          const { data: loserData } = await supabase.from('fighter_profiles').select('record_losses').eq('id', loserId).single();
-          await supabase.from('fighter_profiles').update({ record_losses: (loserData?.record_losses || 0) + 1 }).eq('id', loserId);
-        }
-      }
-      await insertVerdict(result, true);
-      toast({ title: 'Récords actualizados', description: 'Veredicto firmado y sincronizado.' });
-      return { success: true };
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Failed to update records';
-      toast({ title: 'Error', description: msg, variant: 'destructive' });
-      return { success: false, error: msg };
+    const res = await saveResultAtomic(result, true);
+    if (!res.success) return { success: false, error: 'Failed to update records' };
+    if (res.duplicate) {
+      toastRef.current({ title: 'Veredicto ya registrado', description: 'Este resultado ya fue firmado hoy.' });
+    } else if (res.recordsUpdated) {
+      toastRef.current({ title: 'Récords actualizados', description: 'Veredicto firmado y sincronizado.' });
+    } else {
+      toastRef.current({ title: 'Veredicto firmado', description: 'Sin cambios en récords (No Contest).' });
     }
-  }, [fighterAId, fighterBId, toast, insertVerdict]);
+    return { success: true };
+  }, [saveResultAtomic]);
 
 
   return {
@@ -469,4 +481,3 @@ export function useTimeMaster() {
     silentMode, setSilentMode, silentModeRemainingSec,
   };
 }
-

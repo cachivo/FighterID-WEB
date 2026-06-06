@@ -88,7 +88,7 @@ export function RoundScoreDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className={cn("rounded-md border p-3 space-y-2", "border-fighter-danger/30 bg-fighter-danger/5")}>
-              <p className="text-xs font-semibold uppercase text-fighter-danger truncate">{fighterAName || 'Roja'}</p>
+              <p className="text-xs font-semibold uppercase text-fighter-danger break-words leading-tight">{fighterAName || 'Roja'}</p>
               <div>
                 <Label className="text-xs">Puntaje</Label>
                 <Input type="number" min={6} max={10} value={scoreA} onChange={(e) => setScoreA(num(e.target.value, 10, 6))} />
@@ -106,7 +106,7 @@ export function RoundScoreDialog({
             </div>
 
             <div className={cn("rounded-md border p-3 space-y-2", "border-fighter-info/30 bg-fighter-info/5")}>
-              <p className="text-xs font-semibold uppercase text-fighter-info truncate">{fighterBName || 'Azul'}</p>
+              <p className="text-xs font-semibold uppercase text-fighter-info break-words leading-tight">{fighterBName || 'Azul'}</p>
               <div>
                 <Label className="text-xs">Puntaje</Label>
                 <Input type="number" min={6} max={10} value={scoreB} onChange={(e) => setScoreB(num(e.target.value, 10, 6))} />
