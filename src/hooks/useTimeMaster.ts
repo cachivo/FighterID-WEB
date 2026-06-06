@@ -470,7 +470,8 @@ export function useTimeMaster() {
     }
     return { success: true };
 
-  }, [saveResultAtomic]);
+  }, [saveResultAtomic, loadFighters]);
+
 
 
   return {
