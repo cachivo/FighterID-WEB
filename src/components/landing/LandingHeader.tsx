@@ -133,6 +133,17 @@ export default function LandingHeader() {
                 >
                   {user ? 'Mi cuenta' : 'Crear cuenta'}
                 </Button>
+                {!user && (
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      navigate('/auth');
+                    }}
+                    className="font-mono-label text-[14px] text-[var(--fid-text-muted)] hover:text-white text-center py-2"
+                  >
+                    Iniciar sesión
+                  </button>
+                )}
               </div>
             </SheetContent>
           </Sheet>
