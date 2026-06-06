@@ -1,49 +1,59 @@
-# Récords del Time Master no se ven actualizados
+# Historial de récord en el perfil del peleador
 
-## Diagnóstico
+Objetivo: que en el perfil de cada peleador se vea un historial cronológico de cada vez que su récord cambió, con fecha/hora, juez firmante y su correo, para garantizar trazabilidad.
 
-Verificación contra la base de datos del último combate (KO, 01:59:54Z):
+## Fuente de datos
 
-- `tm_verdict` registró el veredicto con `records_updated = true`.
-- `fighter_profiles` de ganador y perdedor tienen `updated_at` exacto al microsegundo del veredicto, con récords incrementados correctamente.
+Ya existe `public.tm_verdict` con todo lo necesario:
+`signed_at`, `judge_user_id`, `red_fighter_id`, `blue_fighter_id`, `winner_fighter_id`, `result_type`, `round_number`, `records_updated`.
 
-Conclusión: el backend funciona. El problema es de **frontend**: tras firmar, el `FighterSelector` sigue mostrando los récords cacheados en `fighterProfiles` (cargados una sola vez en `useEffect` al montar la página). El usuario interpreta esa cifra estática como "no se actualizó".
-
-Además, al revisar `tm_verdict` aparecen **dos filas casi simultáneas** por cada pelea (una con `records_updated=false` y otra con `true`, separadas por menos de 1 ms en el último caso). La verificación de idempotencia del RPC `save_fight_result` corre antes de que la transacción concurrente haga commit, así que ambas pasan el chequeo. Riesgo: en una carrera real los récords podrían **incrementarse dos veces**.
+El correo del juez vive en `auth.users.email`. Para no exponer toda esa tabla, se accede vía vista + RPC.
 
 ## Cambios
 
-### 1. Refrescar récords tras firmar (frontend)
-`src/hooks/useTimeMaster.ts` — en `updateFighterRecords`, después de `saveResultAtomic` exitoso y no-duplicado, llamar a `loadFighters()` para que los récords nuevos aparezcan en el selector y en cualquier vista que use ese estado.
+### 1. Vista `fighter_record_history` (migración)
+Vista (`security_invoker=on`) que, para un peleador dado, devuelve:
+- `signed_at` (fecha/hora del veredicto)
+- `result_type` (ko, tko, decision_*, draw, dq, no_contest)
+- `outcome_for_fighter` calculado: `win` | `loss` | `draw` | `no_contest` según si es ganador, perdedor o empate
+- `round_number`, `round_config`
+- `opponent_id`, `opponent_name` (join a `fighter_profiles`)
+- `judge_user_id`, `judge_email` (join a `auth.users`)
+- `verdict_id`
+Filtra `records_updated = true` (solo veredictos que sí movieron el récord).
 
-`src/pages/TimeMaster.tsx` — sin cambios funcionales necesarios, pero podemos mostrar el récord actualizado del ganador/perdedor en el toast de confirmación para feedback visible inmediato.
+### 2. RPC `get_fighter_record_history(p_fighter_id uuid)`
+SECURITY DEFINER, devuelve filas de la vista para un peleador. Permite controlar acceso sin abrir `auth.users` al cliente.
+- Cualquier usuario autenticado puede consultar el historial de cualquier peleador (es el caso de transparencia que pediste).
+- Si prefieres restringirlo a admin/dueño del perfil, lo indicamos y ajustamos.
 
-### 2. Blindar el RPC contra doble inserción (backend)
-Nueva migración: agregar un **índice único parcial** en `tm_verdict` que impida dos veredictos del mismo juez sobre el mismo par de peleadores en el mismo día UTC:
+### 3. Componente `FighterRecordHistory.tsx`
+Tabla/lista cronológica (más reciente primero) con:
+- Fecha + hora local
+- Resultado para este peleador (Victoria / Derrota / Empate / No Contest) con badge de color
+- Tipo de finalización (KO, TKO, Decisión, etc.) y round
+- Oponente (enlace al perfil del oponente)
+- Juez: nombre/correo + ícono `ShieldCheck`
+- Tooltip con `verdict_id` para auditoría
 
-```sql
-CREATE UNIQUE INDEX IF NOT EXISTS uniq_tm_verdict_judge_pair_day
-  ON public.tm_verdict (
-    judge_user_id,
-    red_fighter_id,
-    blue_fighter_id,
-    ((signed_at AT TIME ZONE 'UTC')::date)
-  );
-```
+Estados: loading skeleton, vacío ("Sin cambios registrados"), error.
 
-Y en `save_fight_result`, envolver el `INSERT INTO tm_verdict` y los `UPDATE fighter_profiles` en una sección que capture `unique_violation` y devuelva `duplicate=true` sin re-incrementar récords. Esto convierte la idempotencia en una garantía atómica de Postgres, no una verificación oportunista.
-
-### 3. (Opcional pero recomendado) Limpieza de duplicados existentes
-Borrar las filas duplicadas con `records_updated=false` que tengan una contraparte `true` del mismo juez/par/día, para que el historial quede limpio. Solo afecta `tm_verdict` (no toca récords ya aplicados).
+### 4. Integración en `FighterProfile.tsx`
+Nueva sección "Historial de récord" debajo del bloque de récord, colapsable. En la versión móvil va en pestaña dedicada si ya hay tabs; si no, como `Card` plegable.
 
 ## Verificación
 
-1. Firmar una nueva pelea desde `/time-master`. Confirmar que el récord visible del peleador en el selector cambia inmediatamente sin recargar la página.
-2. Consultar `tm_verdict` y comprobar que aparece **una sola fila** por pelea.
-3. Forzar una doble llamada (doble tap rápido en "Confirmar"): el RPC debe devolver `duplicate=true` en la segunda llamada y los récords no deben incrementarse dos veces.
+1. Después de firmar una pelea en Time Master, abrir el perfil del peleador y confirmar que aparece la nueva entrada con la fecha exacta y el correo del juez.
+2. Confirmar que entradas viejas con `records_updated=false` (firmadas sin actualizar récord) NO aparecen.
+3. Probar con peleador sin peleas: muestra estado vacío.
+4. Probar como usuario no autenticado: el RPC niega acceso (si decidimos restringirlo) o devuelve los datos sin el correo (si abrimos transparencia parcial).
+
+## Pregunta abierta
+
+¿El correo del juez debe ser visible para **todo el público** del perfil (transparencia total) o solo para **admins y el propio peleador**? El default propuesto en esta plan es: visible para cualquier usuario autenticado. Si quieres más restrictivo, lo cambiamos antes de implementar.
 
 ## Fuera de alcance
 
-- Cambios visuales del Time Master más allá del refresh del selector.
-- Rediseño del flujo de firmar/declarar resultado.
-- Lógica de scoring por round.
+- Cambios manuales de récord hechos por admin (no pasan por `tm_verdict`). Si los necesitas auditables, sería otra tabla `fighter_record_audit` con trigger sobre `fighter_profiles`.
+- Edición/borrado de veredictos.
+- Notificaciones al peleador cuando cambia su récord.
