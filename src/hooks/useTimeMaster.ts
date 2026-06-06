@@ -146,10 +146,17 @@ export function useTimeMaster() {
     }
   }, []);
 
-  const canStartMatch = useMemo(
-    () => !!fighterAId && !!fighterBId && fighterAId !== fighterBId && phase === 'setup',
-    [fighterAId, fighterBId, phase]
-  );
+  const isGuestMatch = fighterAIsGuest || fighterBIsGuest;
+
+  const canStartMatch = useMemo(() => {
+    if (phase !== 'setup') return false;
+    const aReady = fighterAIsGuest ? fighterAName.trim().length > 0 : !!fighterAId;
+    const bReady = fighterBIsGuest ? fighterBName.trim().length > 0 : !!fighterBId;
+    if (!aReady || !bReady) return false;
+    // Two registered fighters must be different.
+    if (!fighterAIsGuest && !fighterBIsGuest && fighterAId === fighterBId) return false;
+    return true;
+  }, [fighterAId, fighterBId, fighterAIsGuest, fighterBIsGuest, fighterAName, fighterBName, phase]);
 
   const loadFighters = useCallback(async () => {
     setIsLoading(true);
@@ -182,14 +189,40 @@ export function useTimeMaster() {
   }, []);
 
   const selectFighterA = useCallback((id: string) => {
+    setFighterAIsGuest(false);
     setFighterAId(id);
     setFighterAName(fighterProfiles.find((f) => f.id === id)?.displayName || '');
   }, [fighterProfiles]);
 
   const selectFighterB = useCallback((id: string) => {
+    setFighterBIsGuest(false);
     setFighterBId(id);
     setFighterBName(fighterProfiles.find((f) => f.id === id)?.displayName || '');
   }, [fighterProfiles]);
+
+  const setFighterAGuest = useCallback((name: string) => {
+    setFighterAIsGuest(true);
+    setFighterAId(null);
+    setFighterAName(name);
+  }, []);
+
+  const setFighterBGuest = useCallback((name: string) => {
+    setFighterBIsGuest(true);
+    setFighterBId(null);
+    setFighterBName(name);
+  }, []);
+
+  const clearFighterA = useCallback(() => {
+    setFighterAIsGuest(false);
+    setFighterAId(null);
+    setFighterAName('');
+  }, []);
+
+  const clearFighterB = useCallback(() => {
+    setFighterBIsGuest(false);
+    setFighterBId(null);
+    setFighterBName('');
+  }, []);
 
   const startRestPeriodInternal = useCallback(() => {
     setIsRestPeriod(true);
