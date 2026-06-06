@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Timer } from 'lucide-react';
 
 const NAV = [
+  { label: 'Time Master', href: '/time-master', highlight: true },
   { label: 'Peleadores', href: '/fighters' },
   { label: 'Eventos', href: '/eventos' },
   { label: 'Rankings', href: '/#rankings' },
