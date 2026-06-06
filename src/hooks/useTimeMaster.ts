@@ -56,6 +56,8 @@ export function useTimeMaster() {
   const [fighterBId, setFighterBId] = useState<string | null>(null);
   const [fighterAName, setFighterAName] = useState('');
   const [fighterBName, setFighterBName] = useState('');
+  const [fighterAIsGuest, setFighterAIsGuest] = useState(false);
+  const [fighterBIsGuest, setFighterBIsGuest] = useState(false);
   const [roundConfig, setRoundConfig] = useState<RoundConfig>(3);
   const [roundDuration, setRoundDuration] = useState(180);
   const [currentRound, setCurrentRound] = useState(1);
