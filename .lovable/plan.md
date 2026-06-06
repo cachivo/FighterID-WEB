@@ -1,59 +1,68 @@
-# Historial de récord en el perfil del peleador
+# Diagnóstico — "Los usuarios no pueden iniciar sesión"
 
-Objetivo: que en el perfil de cada peleador se vea un historial cronológico de cada vez que su récord cambió, con fecha/hora, juez firmante y su correo, para garantizar trazabilidad.
+## Lo que revisé
 
-## Fuente de datos
+- `auth_logs` últimos 30 eventos (Supabase)
+- `src/hooks/useAuth.tsx` (`signIn` → `supabase.auth.signInWithPassword`)
+- `src/pages/Auth.tsx` (`handleSignIn`, `handleResendEmail`, `checkEmailExists`)
+- `supabase/functions/check-email-exists/index.ts`
+- Migraciones recientes (audit trail de récord, `save_fight_result`, índice único de `tm_verdict`) — **ninguna toca auth/RLS de login**
 
-Ya existe `public.tm_verdict` con todo lo necesario:
-`signed_at`, `judge_user_id`, `red_fighter_id`, `blue_fighter_id`, `winner_fighter_id`, `result_type`, `round_number`, `records_updated`.
+## Lo que NO está roto
 
-El correo del juez vive en `auth.users.email`. Para no exponer toda esa tabla, se accede vía vista + RPC.
+- No hay errores `/token` (login) en los logs de auth.
+- El último signup terminó **200 OK** y el correo de confirmación se envió correctamente (Resend id `d777c2bf…`, hook `send-signup-confirmation` OK).
+- El cliente Supabase, `AuthProvider`, y `signInWithPassword` funcionan normal.
+- Las migraciones del historial de récord (`get_fighter_record_history`, índice único en `tm_verdict`) no afectan login.
 
-## Cambios
+## Causa real del síntoma
 
-### 1. Vista `fighter_record_history` (migración)
-Vista (`security_invoker=on`) que, para un peleador dado, devuelve:
-- `signed_at` (fecha/hora del veredicto)
-- `result_type` (ko, tko, decision_*, draw, dq, no_contest)
-- `outcome_for_fighter` calculado: `win` | `loss` | `draw` | `no_contest` según si es ganador, perdedor o empate
-- `round_number`, `round_config`
-- `opponent_id`, `opponent_name` (join a `fighter_profiles`)
-- `judge_user_id`, `judge_email` (join a `auth.users`)
-- `verdict_id`
-Filtra `records_updated = true` (solo veredictos que sí movieron el récord).
+El único error real en logs es:
 
-### 2. RPC `get_fighter_record_history(p_fighter_id uuid)`
-SECURITY DEFINER, devuelve filas de la vista para un peleador. Permite controlar acceso sin abrir `auth.users` al cliente.
-- Cualquier usuario autenticado puede consultar el historial de cualquier peleador (es el caso de transparencia que pediste).
-- Si prefieres restringirlo a admin/dueño del perfil, lo indicamos y ajustamos.
+```
+POST /resend  →  429  over_email_send_rate_limit
+"For security purposes, you can only request this after 46 seconds."
+```
 
-### 3. Componente `FighterRecordHistory.tsx`
-Tabla/lista cronológica (más reciente primero) con:
-- Fecha + hora local
-- Resultado para este peleador (Victoria / Derrota / Empate / No Contest) con badge de color
-- Tipo de finalización (KO, TKO, Decisión, etc.) y round
-- Oponente (enlace al perfil del oponente)
-- Juez: nombre/correo + ícono `ShieldCheck`
-- Tooltip con `verdict_id` para auditoría
+Es decir: el usuario `migulalbertogonzalesmena934@gmail.com` se registró, **no confirmó el correo**, intentó re-enviar la confirmación, y chocó con el rate limit de Supabase Auth. Sin confirmar, no puede iniciar sesión.
 
-Estados: loading skeleton, vacío ("Sin cambios registrados"), error.
+Hay además **3 problemas UX en `src/pages/Auth.tsx`** que hacen que el usuario perciba "no puedo entrar" sin saber por qué:
 
-### 4. Integración en `FighterProfile.tsx`
-Nueva sección "Historial de récord" debajo del bloque de récord, colapsable. En la versión móvil va en pestaña dedicada si ya hay tabs; si no, como `Card` plegable.
+1. **`handleSignIn` solo distingue "Invalid login credentials"**. Si Supabase devuelve `email_not_confirmed`, se muestra el mensaje crudo en inglés en un `toast.error`, y el usuario no ve ningún CTA para reenviar el correo desde la pantalla de login.
+2. **El bloque "Reenviar correo" solo aparece tras un signup nuevo en la misma sesión** (depende de `registrationSuccess` + `registeredEmail`). Si el usuario vuelve al día siguiente e intenta login, no tiene cómo reenviar.
+3. **`checkEmailExists` devuelve `true` también para usuarios no confirmados**, entonces el flujo los manda al paso `login` (no a `register`), donde fallan silenciosamente con "Credenciales incorrectas" si escriben mal o con un mensaje confuso si Supabase responde `email_not_confirmed`.
 
-## Verificación
+## Plan de corrección (cuando apruebes pasar a build)
 
-1. Después de firmar una pelea en Time Master, abrir el perfil del peleador y confirmar que aparece la nueva entrada con la fecha exacta y el correo del juez.
-2. Confirmar que entradas viejas con `records_updated=false` (firmadas sin actualizar récord) NO aparecen.
-3. Probar con peleador sin peleas: muestra estado vacío.
-4. Probar como usuario no autenticado: el RPC niega acceso (si decidimos restringirlo) o devuelve los datos sin el correo (si abrimos transparencia parcial).
+### 1. `src/hooks/useAuth.tsx` — propagar tipo de error
+- En `signIn`, además del `error`, devolver `errorCode: 'email_not_confirmed' | 'invalid_credentials' | 'other'` basado en `error.code` / `error.message` de Supabase.
 
-## Pregunta abierta
+### 2. `src/pages/Auth.tsx` — manejo claro de "email no confirmado"
+- En `handleSignIn`, si `errorCode === 'email_not_confirmed'`:
+  - `toast.warning('Tu correo aún no está confirmado. Te enviamos el enlace de nuevo.')`
+  - Setear `registeredEmail = email` y `registrationSuccess = true` para que se muestre el bloque "Reenviar correo".
+  - Si `resendCooldown === 0`, disparar `handleResendEmail()` automáticamente.
+- Traducir mensajes comunes al español (`Email not confirmed`, `Invalid login credentials`, `Too many requests`).
 
-¿El correo del juez debe ser visible para **todo el público** del perfil (transparencia total) o solo para **admins y el propio peleador**? El default propuesto en esta plan es: visible para cualquier usuario autenticado. Si quieres más restrictivo, lo cambiamos antes de implementar.
+### 3. Cooldown coordinado con el rate limit real de Supabase (60s)
+- Hoy `setResendCooldown(60)` ya existe; añadir un guard que, si la respuesta es `over_email_send_rate_limit`, leer `retryAfter` (ya viene en `useAuth.resetPassword`, replicar en `resendConfirmation`) y respetarlo.
+
+### 4. (Opcional) `check-email-exists` — devolver `confirmed`
+- Extender la RPC `check_email_exists_fn` para devolver `{ exists, confirmed }` (lee `email_confirmed_at`). Así `Auth.tsx` puede mostrar directamente la pantalla de "reenviar confirmación" sin esperar a que falle el login.
+
+## Acciones inmediatas para el usuario afectado (sin código)
+
+Puedo hacerlas yo desde Supabase si me confirmas:
+
+1. **Confirmar manualmente el email** del usuario `migulalbertogonzalesmena934@gmail.com` (UPDATE `auth.users.email_confirmed_at = now()`).
+2. O **eliminar el usuario** para que pueda volver a registrarse limpio.
 
 ## Fuera de alcance
 
-- Cambios manuales de récord hechos por admin (no pasan por `tm_verdict`). Si los necesitas auditables, sería otra tabla `fighter_record_audit` con trigger sobre `fighter_profiles`.
-- Edición/borrado de veredictos.
-- Notificaciones al peleador cuando cambia su récord.
+- Cambios en el sistema de historial de récord recién creado.
+- Cambios en políticas RLS, OAuth de Google, o flujo PKCE (todo funciona).
+- Tocar `auth.users` o esquemas reservados de Supabase fuera de las acciones puntuales de arriba.
+
+## Pregunta para ti
+
+¿Quieres que (a) **solo arregle el UX** para que ningún usuario quede atrapado en este estado en el futuro, (b) **además confirme manualmente** al usuario afectado, o (c) **ambas**?
