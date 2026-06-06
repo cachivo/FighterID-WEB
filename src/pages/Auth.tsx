@@ -158,40 +158,47 @@ export default function Auth() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
-    const { error, errorCode } = await signIn(email, password);
-    if (error) {
-      if (errorCode === 'email_not_confirmed') {
-        toast.warning('Tu correo aún no está confirmado. Te enviamos el enlace de nuevo.');
-        setRegisteredEmail(email);
-        setRegistrationSuccess(true);
-        setStep('register');
-        // Auto-resend if not on cooldown
-        if (resendCooldown === 0 && !isResending) {
-          setIsResending(true);
-          const { error: resendErr } = await resendConfirmation(email);
-          if (resendErr) {
-            const msg = (resendErr as any).message || '';
-            if (/rate|security purposes|too many/i.test(msg)) {
-              const retry = (resendErr as any).retryAfter ?? 60;
-              setResendCooldown(retry);
-              toast.info(`Espera ${retry}s para reenviar el correo.`);
+    // Safety: ensure the spinner never sticks if something hangs unexpectedly
+    const safety = setTimeout(() => setLoading(false), 20000);
+    try {
+      const { error, errorCode } = await signIn(email, password);
+      if (error) {
+        if (errorCode === 'email_not_confirmed') {
+          toast.warning('Tu correo aún no está confirmado. Te enviamos el enlace de nuevo.');
+          setRegisteredEmail(email);
+          setRegistrationSuccess(true);
+          setStep('register');
+          if (resendCooldown === 0 && !isResending) {
+            setIsResending(true);
+            const { error: resendErr } = await resendConfirmation(email);
+            if (resendErr) {
+              const msg = (resendErr as any).message || '';
+              if (/rate|security purposes|too many/i.test(msg)) {
+                const retry = (resendErr as any).retryAfter ?? 60;
+                setResendCooldown(retry);
+                toast.info(`Espera ${retry}s para reenviar el correo.`);
+              } else {
+                toast.error(msg || 'No se pudo reenviar el correo.');
+              }
             } else {
-              toast.error(msg || 'No se pudo reenviar el correo.');
+              setResendCooldown(60);
             }
-          } else {
-            setResendCooldown(60);
+            setIsResending(false);
           }
-          setIsResending(false);
+        } else {
+          toast.error(error.message);
         }
       } else {
-        toast.error(error.message);
+        toast.success('Sesión iniciada correctamente');
       }
-    } else {
-      toast.success('Sesión iniciada correctamente');
+    } finally {
+      clearTimeout(safety);
+      setLoading(false);
     }
-    setLoading(false);
   };
+
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
