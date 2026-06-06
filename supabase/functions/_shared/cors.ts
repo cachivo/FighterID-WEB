@@ -16,6 +16,15 @@ export const ALLOWED_ORIGINS: ReadonlyArray<string> = [
   "http://localhost:3000",
 ];
 
+// Regex patterns for dynamic Lovable preview/sandbox origins.
+// Sandbox previews use lovableproject.com (no fixed subdomain prefix) and
+// lovable.app preview subdomains. Custom branches may also appear.
+const ALLOWED_ORIGIN_PATTERNS: ReadonlyArray<RegExp> = [
+  /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/,
+  /^https:\/\/[a-z0-9-]+\.lovable\.app$/,
+  /^https:\/\/[a-z0-9-]+\.sandbox\.lovable\.dev$/,
+];
+
 const BASE_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -26,7 +35,8 @@ const BASE_HEADERS: Record<string, string> = {
 
 export function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false;
-  return ALLOWED_ORIGINS.includes(origin);
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  return ALLOWED_ORIGIN_PATTERNS.some((re) => re.test(origin));
 }
 
 export function buildCorsHeaders(req: Request): Record<string, string> {
