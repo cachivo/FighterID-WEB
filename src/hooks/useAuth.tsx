@@ -298,9 +298,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       return { error: null };
-    } catch (error: any) {
-      return { error };
-    }
+    } catch (e: any) {
+      console.error('[AUTH] Unexpected error in resendConfirmation:', e);
+      const message = isNetworkError(e) ? networkErrorMessage() : (e?.message || 'Error de conexión. Intenta de nuevo.');
+      return { error: { message } };
   };
 
   const value = {
