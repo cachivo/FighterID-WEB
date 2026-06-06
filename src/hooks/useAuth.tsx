@@ -140,7 +140,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null, errorCode: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected sign in error:', e);
-      const isTimeout = e?.message === 'timeout';
+      const msg = (e?.message || '').toLowerCase();
+      const isTimeout = msg === 'timeout';
+      const isNetwork = msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('load failed') || e?.name === 'TypeError';
+      if (isNetwork) {
+        return {
+          error: { message: 'No pudimos conectar con el servidor. Desactiva extensiones/bloqueadores, prueba en modo incógnito o usa "Limpiar caché y reintentar".' },
+          errorCode: 'network' as const,
+        };
+      }
       return {
         error: { message: isTimeout ? 'La conexión tardó demasiado. Verifica tu internet e intenta de nuevo.' : 'Error de conexión. Intenta de nuevo.' },
         errorCode: 'other' as const,
