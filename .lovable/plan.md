@@ -1,20 +1,33 @@
-## Goal
-Resolver el "Failed to fetch" al iniciar sesión en `fighter-id.org/auth`, que casi siempre lo causa un Service Worker viejo cacheado o una extensión bloqueando Supabase.
+Do I know what the issue is? Sí: el login no está fallando por una credencial o tabla de Supabase en el código actual. En la prueba directa sobre `https://fighter-id.org/auth`, Supabase respondió correctamente al endpoint `/auth/v1/token` con un error normal de credenciales inválidas, no con `Failed to fetch`. Eso significa que el navegador sí puede llegar a Supabase desde el dominio publicado. El fallo persistente viene de uno de estos dos escenarios: el preview/editor de Lovable interceptando fetches, o un Service Worker/cache/navegador/red del usuario bloqueando `*.supabase.co`.
 
-## Plan
+Plan de corrección:
 
-1. **Forzar actualización del Service Worker**
-   - Subir la versión del SW de `v10` a `v11` en `public/sw.js` para invalidar caches previos.
-   - En el registro del SW (`src/main.tsx`), llamar a `registration.update()` al cargar y enviar `SKIP_WAITING` cuando haya una versión nueva, recargando una sola vez.
+1. Separar claramente login y creación de cuenta
+   - Quitar la dependencia del flujo automático como camino principal.
+   - Dejar dos acciones explícitas: `Iniciar sesión` y `Crear cuenta`.
+   - Evitar que un fallo de detección de email mande al usuario al flujo equivocado.
 
-2. **Mensaje de error más claro en login**
-   - En `useAuth.signIn`, detectar específicamente `TypeError: Failed to fetch` y devolver un mensaje guiado: "No pudimos conectar con el servidor. Desactiva bloqueadores/extensiones o intenta en modo incógnito."
+2. Desactivar el Service Worker de app-shell para auth
+   - Reemplazar el `public/sw.js` actual por un Service Worker tipo kill-switch que limpie solo caches de Fighter ID y se desregistre.
+   - Esto elimina una fuente persistente de errores de red en navegadores que ya instalaron una versión vieja.
+   - Mantener manifest/iconos, pero quitar el cache offline que puede interferir con auth.
 
-3. **Botón de auto-reparación en la pantalla `/auth`**
-   - Si el login falla por red, mostrar un botón "Limpiar caché y reintentar" que: desregistre todos los Service Workers, borre `caches`, y recargue la página. Esto soluciona el caso clásico de SW corrupto sin pedirle al usuario que entre a DevTools.
+3. Blindar el registro del Service Worker
+   - En `src/main.tsx`, no registrar SW en preview, iframe, Lovable dev domains, ni `/auth`.
+   - Si existe un SW viejo en esos contextos, desregistrarlo automáticamente.
 
-## Technical details
-- `public/sw.js`: bump de versión.
-- `src/main.tsx`: añadir lógica de update + skipWaiting + reload controlado.
-- `src/hooks/useAuth.tsx`: nuevo `errorCode: 'network'` con mensaje específico.
-- `src/pages/Auth.tsx`: estado local para detectar error de red y renderizar el botón de auto-reparación.
+4. Mejorar el mensaje de error real en login
+   - Si Supabase devuelve `invalid_credentials`, mostrar credenciales incorrectas.
+   - Si hay `Failed to fetch`, mostrar una pantalla/alerta más directa: “Prueba en fighter-id.org, no en preview; limpia caché si estás en el dominio publicado”.
+   - Mantener el botón de limpiar caché, pero sin borrar caches de terceros indiscriminadamente.
+
+5. Validación después del cambio
+   - Probar `/auth` en `fighter-id.org` con una credencial falsa: debe responder `Credenciales incorrectas`, no quedarse cargando.
+   - Probar que el preview no registre Service Worker.
+   - Confirmar que el login ya no mezcla cuenta nueva con cuenta existente desde la UI.
+
+Archivos a tocar:
+- `public/sw.js`
+- `src/main.tsx`
+- `src/pages/Auth.tsx`
+- `src/hooks/useAuth.tsx`

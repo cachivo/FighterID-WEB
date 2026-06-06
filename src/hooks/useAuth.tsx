@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           friendly = 'Tu correo aún no está confirmado. Revisa tu bandeja o reenvía el enlace.';
         } else if (code === 'invalid_credentials' || raw.includes('invalid login credentials')) {
           errorCode = 'invalid_credentials';
-          friendly = 'Credenciales incorrectas.';
+          friendly = 'Credenciales incorrectas. Verifica tu email y contraseña.';
         } else if (raw.includes('rate') || raw.includes('too many')) {
           errorCode = 'rate_limited';
           friendly = 'Demasiados intentos. Espera unos segundos e intenta de nuevo.';
@@ -142,12 +142,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('[AUTH] Unexpected sign in error:', e);
       const msg = (e?.message || '').toLowerCase();
       const isTimeout = msg === 'timeout';
-      const isNetwork = msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('load failed') || e?.name === 'TypeError';
+      const isNetwork =
+        msg.includes('failed to fetch') ||
+        msg.includes('networkerror') ||
+        msg.includes('load failed') ||
+        e?.name === 'TypeError';
+      const inPreview =
+        typeof window !== 'undefined' &&
+        (window.location.hostname.includes('lovableproject.com') ||
+          window.location.hostname.includes('lovable.app') ||
+          window.self !== window.top);
       if (isNetwork) {
-        return {
-          error: { message: 'No pudimos conectar con el servidor. Desactiva extensiones/bloqueadores, prueba en modo incógnito o usa "Limpiar caché y reintentar".' },
-          errorCode: 'network' as const,
-        };
+        const message = inPreview
+          ? 'No se pudo conectar desde el preview de Lovable. Abre el sitio publicado en fighter-id.org para iniciar sesión.'
+          : 'No pudimos conectar con el servidor. Desactiva extensiones/bloqueadores o usa "Limpiar caché y reintentar".';
+        return { error: { message }, errorCode: 'network' as const };
       }
       return {
         error: { message: isTimeout ? 'La conexión tardó demasiado. Verifica tu internet e intenta de nuevo.' : 'Error de conexión. Intenta de nuevo.' },

@@ -295,7 +295,7 @@ export default function Auth() {
         <CardContent className="space-y-4">
           {/* STEP 1: Email */}
           {step === 'email' && (
-            <form onSubmit={handleEmailSubmit} className="space-y-4 animate-fade-in">
+            <form onSubmit={(e) => handleEmailSubmit(e, 'login')} className="space-y-4 animate-fade-in">
               <div>
                 <label className="text-sm font-medium text-foreground/90" htmlFor="auth-email">Email</label>
                 <Input
@@ -306,35 +306,31 @@ export default function Auth() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoFocus
+                  autoComplete="email"
                   disabled={!!invitation}
                   className="bg-secondary border-border focus:border-primary"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-border hover:bg-secondary"
-                  disabled={checkingEmail || !email}
-                  onClick={(e) => handleEmailSubmit(e as any, 'login')}
-                >
-                  Iniciar sesión
-                </Button>
-                <Button
-                  type="button"
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                  disabled={checkingEmail || !email}
-                  onClick={(e) => handleEmailSubmit(e as any, 'register')}
-                >
-                  Crear cuenta
-                </Button>
+              <Button
+                type="submit"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                disabled={checkingEmail || !email}
+              >
+                Iniciar sesión
+              </Button>
+              <div className="relative flex items-center gap-3 py-1">
+                <Separator className="flex-1" />
+                <span className="text-xs text-muted-foreground uppercase">o</span>
+                <Separator className="flex-1" />
               </div>
-              <Button type="submit" variant="ghost" className="w-full text-sm text-muted-foreground hover:text-foreground" disabled={checkingEmail}>
-                {checkingEmail ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verificando email...</>
-                ) : (
-                  'Detectar automáticamente'
-                )}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-border hover:bg-secondary"
+                disabled={checkingEmail || !email}
+                onClick={(e) => handleEmailSubmit(e as any, 'register')}
+              >
+                Crear cuenta nueva
               </Button>
 
               <div className="flex flex-col gap-2">
@@ -350,6 +346,7 @@ export default function Auth() {
                 <span className="text-xs text-muted-foreground uppercase">o continúa con</span>
                 <Separator className="flex-1" />
               </div>
+
 
               {/* OAuth Buttons */}
               <Button
