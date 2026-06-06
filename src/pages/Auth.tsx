@@ -123,19 +123,38 @@ export default function Auth() {
     } catch { return false; }
   };
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  // Initial mode from URL (?mode=signin|signup)
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    if (mode === 'signin') setStep('login');
+    else if (mode === 'signup') setStep('register');
+  }, [searchParams]);
+
+  const handleEmailSubmit = async (e: React.FormEvent, forcedStep?: 'login' | 'register') => {
     e.preventDefault();
     if (!email) return;
+    // If user explicitly chose login/register, honor it.
+    if (forcedStep) {
+      setStep(forcedStep);
+      return;
+    }
     setCheckingEmail(true);
-    const exists = await checkEmailExists(email);
-    setCheckingEmail(false);
-    setStep(exists ? 'login' : 'register');
+    try {
+      const exists = await checkEmailExists(email);
+      // If lookup fails, default to login (safer for existing users) rather than registration.
+      setStep(exists ? 'login' : 'register');
+    } catch {
+      setStep('login');
+    } finally {
+      setCheckingEmail(false);
+    }
   };
 
   const handleBackToEmail = () => {
     setStep('email');
     setPassword('');
   };
+
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
