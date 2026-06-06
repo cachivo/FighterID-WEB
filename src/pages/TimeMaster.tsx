@@ -192,6 +192,10 @@ export default function TimeMaster() {
                 isLoading={tm.isLoading}
                 corner="red"
                 disabled={phaseLocked}
+                isGuest={tm.fighterAIsGuest}
+                guestName={tm.fighterAIsGuest ? tm.fighterAName : ''}
+                onGuestNameChange={tm.setFighterAGuest}
+                onClear={tm.clearFighterA}
               />
               <div className="flex items-center justify-center">
                 <Badge variant="outline" className="text-sm sm:text-base font-bold px-3 py-1 sm:px-4 sm:py-2">VS</Badge>
@@ -204,8 +208,17 @@ export default function TimeMaster() {
                 isLoading={tm.isLoading}
                 corner="blue"
                 disabled={phaseLocked}
+                isGuest={tm.fighterBIsGuest}
+                guestName={tm.fighterBIsGuest ? tm.fighterBName : ''}
+                onGuestNameChange={tm.setFighterBGuest}
+                onClear={tm.clearFighterB}
               />
             </div>
+            {tm.isGuestMatch && (
+              <p className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-500">
+                Esta pelea incluye un peleador invitado. <strong>No afectará récords oficiales</strong>.
+              </p>
+            )}
           </CardContent>
         </Card>
 
