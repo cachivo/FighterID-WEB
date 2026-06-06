@@ -391,6 +391,10 @@ export default function FighterProfile() {
           </CardContent>
         </Card>
 
+        {/* Record change audit trail */}
+        <FighterRecordHistory fighterId={fighter.id} />
+
+
         {/* Fighter Details */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Biography */}
