@@ -76,13 +76,21 @@ export default function LandingHeader() {
               Mi cuenta
             </Button>
           ) : (
-            <Button
-              size="sm"
-              onClick={() => navigate('/auth')}
-              className="hidden sm:inline-flex h-9 rounded-[2px] bg-[var(--fid-crimson)] hover:bg-[var(--fid-crimson-deep)] text-white font-semibold text-[13px] px-4"
-            >
-              Crear cuenta
-            </Button>
+            <>
+              <button
+                onClick={() => navigate('/auth')}
+                className="hidden sm:inline-flex font-mono-label text-[12px] font-medium text-[var(--fid-text-muted)] hover:text-white transition-colors px-2 h-9 items-center"
+              >
+                Iniciar sesión
+              </button>
+              <Button
+                size="sm"
+                onClick={() => navigate('/auth')}
+                className="hidden sm:inline-flex h-9 rounded-[2px] bg-[var(--fid-crimson)] hover:bg-[var(--fid-crimson-deep)] text-white font-semibold text-[13px] px-4"
+              >
+                Crear cuenta
+              </Button>
+            </>
           )}
 
           <Sheet open={open} onOpenChange={setOpen}>
