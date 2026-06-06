@@ -102,10 +102,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       console.log('[AUTH] Signing in...');
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+
+      // Timeout guard so the UI never hangs on slow networks
+      const timeoutPromise = new Promise<any>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 15000)
+      );
+
+      const { data, error } = (await Promise.race([
+        supabase.auth.signInWithPassword({ email, password }),
+        timeoutPromise,
+      ])) as any;
 
       if (error) {
         console.error('[AUTH] Sign in error:', error);
@@ -126,8 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: { ...error, message: friendly }, errorCode };
       }
 
-      // Manually update state for faster feedback on slow connections
-      if (data.session) {
+      if (data?.session) {
         setSession(data.session);
         setUser(data.user);
       }
@@ -135,7 +140,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null, errorCode: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected sign in error:', e);
-      return { error: { message: 'Error de conexión. Intenta de nuevo.' }, errorCode: 'other' as const };
+      const isTimeout = e?.message === 'timeout';
+      return {
+        error: { message: isTimeout ? 'La conexión tardó demasiado. Verifica tu internet e intenta de nuevo.' : 'Error de conexión. Intenta de nuevo.' },
+        errorCode: 'other' as const,
+      };
     }
   };
 
@@ -238,7 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/license/auth`
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
       
