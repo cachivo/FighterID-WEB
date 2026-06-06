@@ -23,6 +23,31 @@ const isPWA = () => {
     document.referrer.includes('android-app://');
 };
 
+// Normalize network/connection errors so the UI never shows raw browser
+// strings ("Failed to fetch", "Load failed", "NetworkError") in toasts.
+function isNetworkError(e: any): boolean {
+  const msg = (e?.message || '').toLowerCase();
+  return (
+    msg === 'timeout' ||
+    msg.includes('failed to fetch') ||
+    msg.includes('load failed') ||
+    msg.includes('networkerror') ||
+    msg.includes('network request failed') ||
+    e?.name === 'TypeError'
+  );
+}
+
+function networkErrorMessage(): string {
+  const inPreview =
+    typeof window !== 'undefined' &&
+    (window.location.hostname.includes('lovableproject.com') ||
+      window.location.hostname.includes('lovable.app') ||
+      window.self !== window.top);
+  return inPreview
+    ? 'No se pudo conectar desde el preview de Lovable. Abre el sitio publicado en fighter-id.org para iniciar sesión.'
+    : 'No pudimos conectar con el servidor. Desactiva extensiones/bloqueadores o usa "Limpiar caché y reintentar".';
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -140,23 +165,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null, errorCode: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected sign in error:', e);
-      const msg = (e?.message || '').toLowerCase();
-      const isTimeout = msg === 'timeout';
-      const isNetwork =
-        msg.includes('failed to fetch') ||
-        msg.includes('networkerror') ||
-        msg.includes('load failed') ||
-        e?.name === 'TypeError';
-      const inPreview =
-        typeof window !== 'undefined' &&
-        (window.location.hostname.includes('lovableproject.com') ||
-          window.location.hostname.includes('lovable.app') ||
-          window.self !== window.top);
-      if (isNetwork) {
-        const message = inPreview
-          ? 'No se pudo conectar desde el preview de Lovable. Abre el sitio publicado en fighter-id.org para iniciar sesión.'
-          : 'No pudimos conectar con el servidor. Desactiva extensiones/bloqueadores o usa "Limpiar caché y reintentar".';
-        return { error: { message }, errorCode: 'network' as const };
+      const isTimeout = (e?.message || '').toLowerCase() === 'timeout';
+      if (isNetworkError(e)) {
+        return { error: { message: networkErrorMessage() }, errorCode: 'network' as const };
       }
       return {
         error: { message: isTimeout ? 'La conexión tardó demasiado. Verifica tu internet e intenta de nuevo.' : 'Error de conexión. Intenta de nuevo.' },
@@ -196,7 +207,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected sign up error:', e);
-      return { error: { message: 'Error de conexión. Intenta de nuevo.' } };
+      const message = isNetworkError(e) ? networkErrorMessage() : 'Error de conexión. Intenta de nuevo.';
+      return { error: { message } };
     }
   };
 
@@ -247,7 +259,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected error in resetPassword:', e);
-      return { error: { message: 'Error de conexión. Intenta de nuevo.' } };
+      const message = isNetworkError(e) ? networkErrorMessage() : 'Error de conexión. Intenta de nuevo.';
+      return { error: { message } };
     }
   };
 
@@ -285,8 +298,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       return { error: null };
-    } catch (error: any) {
-      return { error };
+    } catch (e: any) {
+      console.error('[AUTH] Unexpected error in resendConfirmation:', e);
+      const message = isNetworkError(e) ? networkErrorMessage() : (e?.message || 'Error de conexión. Intenta de nuevo.');
+      return { error: { message } };
     }
   };
 

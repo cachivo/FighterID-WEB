@@ -415,7 +415,9 @@ export default function Auth() {
                         }
                         if ('caches' in window) {
                           const keys = await caches.keys();
-                          await Promise.all(keys.map((k) => caches.delete(k)));
+                          await Promise.all(
+                            keys.filter((k) => k.startsWith('fighter-id-')).map((k) => caches.delete(k))
+                          );
                         }
                       } catch (err) {
                         console.warn('[AUTH] Cache cleanup failed:', err);

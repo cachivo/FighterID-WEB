@@ -1,33 +1,28 @@
-Do I know what the issue is? Sí: el login no está fallando por una credencial o tabla de Supabase en el código actual. En la prueba directa sobre `https://fighter-id.org/auth`, Supabase respondió correctamente al endpoint `/auth/v1/token` con un error normal de credenciales inválidas, no con `Failed to fetch`. Eso significa que el navegador sí puede llegar a Supabase desde el dominio publicado. El fallo persistente viene de uno de estos dos escenarios: el preview/editor de Lovable interceptando fetches, o un Service Worker/cache/navegador/red del usuario bloqueando `*.supabase.co`.
+## Hallazgos
 
-Plan de corrección:
+- Probé `cachivo@gmail.com` con la contraseña indicada en el preview: Supabase respondió `200` y la app entró correctamente a la home.
+- Los logs de Auth confirman login exitoso para ese usuario; por tanto, ese intento no está fallando en Supabase.
+- El texto crudo `Failed to fetch` todavía puede aparecer desde un flujo secundario: `resendConfirmation` devuelve el error crudo si falla la red, y la UI lo muestra directamente en un toast.
+- También conviene endurecer `signUp` y los botones de limpieza de caché para que ningún flujo de auth vuelva a mostrar errores nativos del navegador.
 
-1. Separar claramente login y creación de cuenta
-   - Quitar la dependencia del flujo automático como camino principal.
-   - Dejar dos acciones explícitas: `Iniciar sesión` y `Crear cuenta`.
-   - Evitar que un fallo de detección de email mande al usuario al flujo equivocado.
+## Plan de implementación
 
-2. Desactivar el Service Worker de app-shell para auth
-   - Reemplazar el `public/sw.js` actual por un Service Worker tipo kill-switch que limpie solo caches de Fighter ID y se desregistre.
-   - Esto elimina una fuente persistente de errores de red en navegadores que ya instalaron una versión vieja.
-   - Mantener manifest/iconos, pero quitar el cache offline que puede interferir con auth.
+1. Normalizar errores de red de auth
+   - Crear un helper pequeño en `useAuth.tsx` para detectar `Failed to fetch`, `Load failed`, `NetworkError`, `TypeError` y timeouts.
+   - Reutilizarlo en `signIn`, `signUp`, `resetPassword` y `resendConfirmation`.
 
-3. Blindar el registro del Service Worker
-   - En `src/main.tsx`, no registrar SW en preview, iframe, Lovable dev domains, ni `/auth`.
-   - Si existe un SW viejo en esos contextos, desregistrarlo automáticamente.
+2. Corregir el origen más probable del popup crudo
+   - Cambiar `resendConfirmation` para que nunca retorne el `Error` original del navegador.
+   - Mostrar un mensaje en español, con variante específica para Lovable preview cuando aplique.
 
-4. Mejorar el mensaje de error real en login
-   - Si Supabase devuelve `invalid_credentials`, mostrar credenciales incorrectas.
-   - Si hay `Failed to fetch`, mostrar una pantalla/alerta más directa: “Prueba en fighter-id.org, no en preview; limpia caché si estás en el dominio publicado”.
-   - Mantener el botón de limpiar caché, pero sin borrar caches de terceros indiscriminadamente.
+3. Ajustar la UI del error de red
+   - Hacer que el bloque `networkError` muestre el mismo mensaje real devuelto por `signIn`, no una copia genérica distinta.
+   - Cambiar “Limpiar caché y reintentar” para borrar solo caches `fighter-id-*`, no todos los caches del navegador.
 
-5. Validación después del cambio
-   - Probar `/auth` en `fighter-id.org` con una credencial falsa: debe responder `Credenciales incorrectas`, no quedarse cargando.
-   - Probar que el preview no registre Service Worker.
-   - Confirmar que el login ya no mezcla cuenta nueva con cuenta existente desde la UI.
+4. Validación
+   - Verificar en preview que el login con `cachivo@gmail.com` sigue llegando a Supabase y no muestra popup de error.
+   - Revisar logs/red tras la prueba: si Supabase recibe `200`, queda confirmado que el backend y credenciales funcionan.
 
-Archivos a tocar:
-- `public/sw.js`
-- `src/main.tsx`
-- `src/pages/Auth.tsx`
-- `src/hooks/useAuth.tsx`
+## Nota importante
+
+Si el usuario ve `Failed to fetch` solo dentro del editor/preview pero no en `fighter-id.org`, es un bloqueo del sandbox/preview o del navegador, no un problema de credenciales ni de Supabase.
