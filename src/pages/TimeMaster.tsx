@@ -366,8 +366,8 @@ export default function TimeMaster() {
         isOpen={resultDialogOpen}
         onClose={() => setResultDialogOpen(false)}
         onSubmit={handleSubmitResult}
-        fighterA={{ id: tm.fighterAId ?? '', name: tm.fighterAName }}
-        fighterB={{ id: tm.fighterBId ?? '', name: tm.fighterBName }}
+        fighterA={{ id: cornerAId, name: tm.fighterAName }}
+        fighterB={{ id: cornerBId, name: tm.fighterBName }}
         currentRound={tm.currentRound}
         totalRounds={tm.roundConfig}
         rounds={tm.roundsCompleted}
