@@ -56,11 +56,11 @@ const Header = () => {
   }, [user, getUserFighterProfile]);
 
   const navigationItems = [
+    { name: "Time Master", href: "/time-master", icon: Timer, highlight: true },
     { name: "Social", href: "/social/feed", icon: Users },
     { name: "Eventos", href: "/eventos", icon: Calendar },
     { name: "En Vivo", href: "/en-vivo", icon: Radio },
     { name: "Peleadores", href: "/fighters", icon: Trophy },
-    { name: "Time Master", href: "/time-master", icon: Timer },
     { name: "Mi Perfil", href: "/profile", icon: User },
   ];
 
@@ -137,10 +137,28 @@ const Header = () => {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/fighters">Peleadores</Link>
           </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/time-master" className="flex items-center gap-1.5 text-primary">
+              <Timer className="h-3.5 w-3.5" />
+              Time Master
+            </Link>
+          </Button>
         </div>
         
         {/* Actions */}
         <div className="flex items-center gap-3">
+          {/* Time Master - Mobile only, always visible */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden min-h-[44px] min-w-[44px] touch-manipulation text-primary"
+            asChild
+          >
+            <Link to="/time-master" aria-label="Time Master">
+              <Timer className="h-5 w-5" />
+            </Link>
+          </Button>
+
           {/* Mobile Menu Trigger */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
@@ -175,11 +193,16 @@ const Header = () => {
                     <nav className="space-y-1">
                       {navigationItems.map((item) => {
                         const IconComponent = item.icon;
+                        const isHighlight = (item as { highlight?: boolean }).highlight;
                         return (
                           <Link
                             key={item.name}
                             to={item.href}
-                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-foreground hover:bg-muted hover:text-primary transition-colors min-h-[48px] touch-manipulation"
+                            className={`flex items-center gap-3 rounded-lg px-3 py-3 transition-colors min-h-[48px] touch-manipulation ${
+                              isHighlight
+                                ? "bg-primary/10 border border-primary/30 text-primary hover:bg-primary/15"
+                                : "text-foreground hover:bg-muted hover:text-primary"
+                            }`}
                             onClick={() => setMobileMenuOpen(false)}
                           >
                             <IconComponent className="h-5 w-5 flex-shrink-0" />
