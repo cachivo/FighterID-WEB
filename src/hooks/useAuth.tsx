@@ -165,23 +165,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null, errorCode: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected sign in error:', e);
-      const msg = (e?.message || '').toLowerCase();
-      const isTimeout = msg === 'timeout';
-      const isNetwork =
-        msg.includes('failed to fetch') ||
-        msg.includes('networkerror') ||
-        msg.includes('load failed') ||
-        e?.name === 'TypeError';
-      const inPreview =
-        typeof window !== 'undefined' &&
-        (window.location.hostname.includes('lovableproject.com') ||
-          window.location.hostname.includes('lovable.app') ||
-          window.self !== window.top);
-      if (isNetwork) {
-        const message = inPreview
-          ? 'No se pudo conectar desde el preview de Lovable. Abre el sitio publicado en fighter-id.org para iniciar sesión.'
-          : 'No pudimos conectar con el servidor. Desactiva extensiones/bloqueadores o usa "Limpiar caché y reintentar".';
-        return { error: { message }, errorCode: 'network' as const };
+      const isTimeout = (e?.message || '').toLowerCase() === 'timeout';
+      if (isNetworkError(e)) {
+        return { error: { message: networkErrorMessage() }, errorCode: 'network' as const };
       }
       return {
         error: { message: isTimeout ? 'La conexión tardó demasiado. Verifica tu internet e intenta de nuevo.' : 'Error de conexión. Intenta de nuevo.' },
