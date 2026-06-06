@@ -105,8 +105,13 @@ export default function LandingHeader() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="font-mono-label text-[14px] text-[var(--fid-text-muted)] hover:text-white"
+                    className={`font-mono-label text-[14px] inline-flex items-center gap-2 ${
+                      item.highlight
+                        ? 'text-[var(--fid-crimson)] font-semibold'
+                        : 'text-[var(--fid-text-muted)] hover:text-white'
+                    }`}
                   >
+                    {item.highlight && <Timer className="h-4 w-4" />}
                     {item.label}
                   </a>
                 ))}
