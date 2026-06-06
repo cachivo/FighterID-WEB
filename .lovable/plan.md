@@ -1,27 +1,20 @@
 ## Goal
-Make `/auth` reliable for existing accounts like `cachivo@gmail.com`: login and account creation should be clearly separated, and the form must not stay loading after entering a password.
+Resolver el "Failed to fetch" al iniciar sesión en `fighter-id.org/auth`, que casi siempre lo causa un Service Worker viejo cacheado o una extensión bloqueando Supabase.
 
 ## Plan
-1. **Separate login and signup modes in `/auth`**
-   - Add clear “Iniciar sesión” and “Crear cuenta” choices instead of relying only on automatic email detection.
-   - Respect URL params like `?mode=signin` and `?mode=signup` so buttons from the landing page open the correct flow.
-   - Keep email lookup as a helper, but do not let a failed lookup silently send an existing user into signup.
 
-2. **Fix stuck loading on password submit**
-   - Add a timeout-safe wrapper around the sign-in submit so the local button loading state always resets if Supabase/network stalls.
-   - Disable duplicate submits while a login is in progress.
-   - Show a clear error/toast if login takes too long instead of spinning forever.
+1. **Forzar actualización del Service Worker**
+   - Subir la versión del SW de `v10` a `v11` en `public/sw.js` para invalidar caches previos.
+   - En el registro del SW (`src/main.tsx`), llamar a `registration.update()` al cargar y enviar `SKIP_WAITING` cuando haya una versión nueva, recargando una sola vez.
 
-3. **Improve existing-account handling**
-   - For `cachivo@gmail.com`, ensure the screen remains in login mode when the account exists.
-   - If credentials are wrong, show “Credenciales incorrectas” and offer password recovery.
-   - If the email check fails due to network/CORS, show an error and let the user choose login manually instead of defaulting to registration.
+2. **Mensaje de error más claro en login**
+   - En `useAuth.signIn`, detectar específicamente `TypeError: Failed to fetch` y devolver un mensaje guiado: "No pudimos conectar con el servidor. Desactiva bloqueadores/extensiones o intenta en modo incógnito."
 
-4. **Remove auth route confusion**
-   - Align `/license/auth` redirects and forgot-password links to the unified `/auth` flow where appropriate.
-   - Fix the resend confirmation redirect currently pointing back to `/license/auth` from the shared auth hook.
+3. **Botón de auto-reparación en la pantalla `/auth`**
+   - Si el login falla por red, mostrar un botón "Limpiar caché y reintentar" que: desregistre todos los Service Workers, borre `caches`, y recargue la página. Esto soluciona el caso clásico de SW corrupto sin pedirle al usuario que entre a DevTools.
 
 ## Technical details
-- Update `src/pages/Auth.tsx` to support explicit auth mode state and safer submit handling.
-- Update `src/hooks/useAuth.tsx` to use `/auth/callback` consistently for confirmation resend and add a timeout guard for `signIn` if needed.
-- Keep database/auth schema unchanged; this is a frontend/auth-flow fix only.
+- `public/sw.js`: bump de versión.
+- `src/main.tsx`: añadir lógica de update + skipWaiting + reload controlado.
+- `src/hooks/useAuth.tsx`: nuevo `errorCode: 'network'` con mensaje específico.
+- `src/pages/Auth.tsx`: estado local para detectar error de red y renderizar el botón de auto-reparación.
