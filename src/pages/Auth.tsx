@@ -31,6 +31,7 @@ export default function Auth() {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [isResending, setIsResending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   const [step, setStep] = useState<AuthStep>('email');
   const [email, setEmail] = useState('');
