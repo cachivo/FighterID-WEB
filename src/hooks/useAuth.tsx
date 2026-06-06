@@ -207,7 +207,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected sign up error:', e);
-      return { error: { message: 'Error de conexión. Intenta de nuevo.' } };
+      const message = isNetworkError(e) ? networkErrorMessage() : 'Error de conexión. Intenta de nuevo.';
+      return { error: { message } };
     }
   };
 
