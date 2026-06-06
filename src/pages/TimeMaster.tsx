@@ -65,8 +65,13 @@ export default function TimeMaster() {
 
 
   const phaseLocked = tm.phase !== 'setup';
+
+  // Synthetic IDs for guest corners so the result dialog can identify the winner.
+  const cornerAId = tm.fighterAIsGuest ? 'guest:red' : (tm.fighterAId ?? '');
+  const cornerBId = tm.fighterBIsGuest ? 'guest:blue' : (tm.fighterBId ?? '');
+
   const winnerName = pendingResult?.winnerId
-    ? (pendingResult.winnerId === tm.fighterAId ? tm.fighterAName : tm.fighterBName)
+    ? (pendingResult.winnerId === cornerAId ? tm.fighterAName : tm.fighterBName)
     : null;
 
   const judgeLabel =
@@ -76,15 +81,17 @@ export default function TimeMaster() {
     'Juez no autenticado';
 
   const handleSubmitResult = (r: { winnerId: string | null; resultType: MatchResultType; notes?: string }) => {
-    // Snapshot the round number at submit-time so it can't drift if the user
-    // declares a result mid-fight (early KO) and then phase flips to finished.
     const snapshotRound = tm.currentRound;
-    // Mark the auto-open guard as fired so the post-finish effect can't open a 2nd dialog.
     autoOpenedRef.current = true;
     setPendingResult({ ...r, roundNumber: snapshotRound });
     tm.finishMatch({ winnerId: r.winnerId, resultType: r.resultType, roundNumber: snapshotRound, notes: r.notes });
     setResultDialogOpen(false);
-    setRecordDialogOpen(true);
+    if (tm.isGuestMatch) {
+      // Guest match: no DB write, no record-update prompt.
+      toast("Veredicto local registrado (pelea con invitado, sin afectar récords)");
+    } else {
+      setRecordDialogOpen(true);
+    }
   };
 
   const handleConfirmRecord = async () => {
@@ -100,7 +107,6 @@ export default function TimeMaster() {
 
   const handleDeclineRecord = async () => {
     if (pendingResult) {
-      // Audit trail: judge signed but chose not to update records
       await tm.insertVerdict({
         winnerId: pendingResult.winnerId,
         resultType: pendingResult.resultType,
@@ -111,6 +117,7 @@ export default function TimeMaster() {
     setRecordDialogOpen(false);
     toast("Resultado firmado sin actualizar récords");
   };
+
 
 
   return (
