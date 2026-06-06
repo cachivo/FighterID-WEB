@@ -232,12 +232,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       if (error) {
-        // Handle rate limiting
-        if (error.message?.includes('For security purposes') || error.message?.includes('email_send_rate_limit')) {
-          return { 
-            error: { 
-              message: 'Has intentado reenviar el correo varias veces. Por favor espera 60 segundos antes de intentar nuevamente.' 
-            } 
+        // Handle rate limiting — extract retry seconds when present
+        const msg = error.message || '';
+        if (msg.includes('For security purposes') || msg.includes('email_send_rate_limit') || msg.includes('over_email_send_rate_limit')) {
+          const m = msg.match(/after (\d+) second/i);
+          const retryAfter = m ? parseInt(m[1], 10) : 60;
+          return {
+            error: {
+              message: `Espera ${retryAfter} segundos antes de reenviar el correo.`,
+              retryAfter,
+            }
           };
         }
         return { error };
