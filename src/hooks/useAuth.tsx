@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any; errorCode: 'email_not_confirmed' | 'invalid_credentials' | 'rate_limited' | 'other' | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; errorCode: 'email_not_confirmed' | 'invalid_credentials' | 'rate_limited' | 'network' | 'other' | null }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
