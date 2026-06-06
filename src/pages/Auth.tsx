@@ -305,11 +305,30 @@ export default function Auth() {
                   className="bg-secondary border-border focus:border-primary"
                 />
               </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={checkingEmail}>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-border hover:bg-secondary"
+                  disabled={checkingEmail || !email}
+                  onClick={(e) => handleEmailSubmit(e as any, 'login')}
+                >
+                  Iniciar sesión
+                </Button>
+                <Button
+                  type="button"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  disabled={checkingEmail || !email}
+                  onClick={(e) => handleEmailSubmit(e as any, 'register')}
+                >
+                  Crear cuenta
+                </Button>
+              </div>
+              <Button type="submit" variant="ghost" className="w-full text-sm text-muted-foreground hover:text-foreground" disabled={checkingEmail}>
                 {checkingEmail ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verificando email...</>
                 ) : (
-                  'Continuar'
+                  'Detectar automáticamente'
                 )}
               </Button>
 
