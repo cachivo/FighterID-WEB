@@ -13,6 +13,8 @@ import { ArrowLeft, Shield, Trophy, MapPin, Users, BarChart3, Info, Home, Gradua
 import cageBackground from "@/assets/mma-cage-background.png";
 import { Crown, Award } from 'lucide-react';
 import FighterUpdatesFeed from '@/components/FighterUpdatesFeed';
+import FighterRecordHistory from '@/components/FighterRecordHistory';
+
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getWeightClassLabel } from '@/lib/constants/disciplines';
@@ -388,6 +390,10 @@ export default function FighterProfile() {
             <FighterUpdatesFeed fighterId={fighter.id} />
           </CardContent>
         </Card>
+
+        {/* Record change audit trail */}
+        <FighterRecordHistory fighterId={fighter.id} />
+
 
         {/* Fighter Details */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

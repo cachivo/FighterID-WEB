@@ -7739,6 +7739,21 @@ export type Database = {
           status: string
         }[]
       }
+      get_fighter_record_history: {
+        Args: { p_fighter_id: string }
+        Returns: {
+          judge_email: string
+          judge_user_id: string
+          opponent_id: string
+          opponent_name: string
+          outcome: string
+          result_type: string
+          round_config: number
+          round_number: number
+          signed_at: string
+          verdict_id: string
+        }[]
+      }
       get_fighter_sensitive_data: {
         Args: { p_fighter_id: string }
         Returns: {
