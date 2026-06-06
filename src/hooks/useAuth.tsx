@@ -33,6 +33,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     mountedRef.current = true;
 
+    // Safety timeout: never let the app stay stuck on the loading splash.
+    // If Supabase getSession() hangs (slow network, offline), unblock UI after 2.5s.
+    const safetyTimer = setTimeout(() => {
+      if (mountedRef.current && !initializedRef.current) {
+        console.warn('[AUTH] Safety timeout reached, unblocking UI');
+        initializedRef.current = true;
+        setLoading(false);
+      }
+    }, 2500);
+
     // CRITICAL: Set up listener FIRST, BEFORE checking session
     // This prevents race conditions on slow mobile connections
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -84,6 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mountedRef.current = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, []);
