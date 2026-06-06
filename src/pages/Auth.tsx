@@ -140,10 +140,34 @@ export default function Auth() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const { error, errorCode } = await signIn(email, password);
     if (error) {
-      const isInvalid = error.message?.includes('Invalid login credentials');
-      toast.error(isInvalid ? 'Credenciales incorrectas.' : error.message);
+      if (errorCode === 'email_not_confirmed') {
+        toast.warning('Tu correo aún no está confirmado. Te enviamos el enlace de nuevo.');
+        setRegisteredEmail(email);
+        setRegistrationSuccess(true);
+        setStep('register');
+        // Auto-resend if not on cooldown
+        if (resendCooldown === 0 && !isResending) {
+          setIsResending(true);
+          const { error: resendErr } = await resendConfirmation(email);
+          if (resendErr) {
+            const msg = (resendErr as any).message || '';
+            if (/rate|security purposes|too many/i.test(msg)) {
+              const retry = (resendErr as any).retryAfter ?? 60;
+              setResendCooldown(retry);
+              toast.info(`Espera ${retry}s para reenviar el correo.`);
+            } else {
+              toast.error(msg || 'No se pudo reenviar el correo.');
+            }
+          } else {
+            setResendCooldown(60);
+          }
+          setIsResending(false);
+        }
+      } else {
+        toast.error(error.message);
+      }
     } else {
       toast.success('Sesión iniciada correctamente');
     }
