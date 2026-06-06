@@ -224,7 +224,14 @@ export default function Auth() {
     if (resendCooldown > 0 || !registeredEmail) return;
     setIsResending(true);
     const { error } = await resendConfirmation(registeredEmail);
-    if (error) { toast.error(error.message); } else { toast.success('Correo reenviado'); setResendCooldown(60); }
+    if (error) {
+      const retry = (error as any).retryAfter;
+      if (retry) setResendCooldown(retry);
+      toast.error(error.message);
+    } else {
+      toast.success('Correo reenviado');
+      setResendCooldown(60);
+    }
     setIsResending(false);
   };
 
