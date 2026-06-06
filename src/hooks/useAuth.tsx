@@ -302,6 +302,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('[AUTH] Unexpected error in resendConfirmation:', e);
       const message = isNetworkError(e) ? networkErrorMessage() : (e?.message || 'Error de conexión. Intenta de nuevo.');
       return { error: { message } };
+    }
   };
 
   const value = {
