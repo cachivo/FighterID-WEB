@@ -464,8 +464,14 @@ export function useTimeMaster() {
     } else {
       toastRef.current({ title: 'Veredicto firmado', description: 'Sin cambios en récords (No Contest).' });
     }
+    // Refresh the in-memory fighter list so the selector reflects the new records.
+    if (res.recordsUpdated) {
+      await loadFighters();
+    }
     return { success: true };
-  }, [saveResultAtomic]);
+
+  }, [saveResultAtomic, loadFighters]);
+
 
 
   return {
