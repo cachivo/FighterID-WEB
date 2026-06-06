@@ -137,10 +137,28 @@ const Header = () => {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/fighters">Peleadores</Link>
           </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/time-master" className="flex items-center gap-1.5 text-primary">
+              <Timer className="h-3.5 w-3.5" />
+              Time Master
+            </Link>
+          </Button>
         </div>
         
         {/* Actions */}
         <div className="flex items-center gap-3">
+          {/* Time Master - Mobile only, always visible */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden min-h-[44px] min-w-[44px] touch-manipulation text-primary"
+            asChild
+          >
+            <Link to="/time-master" aria-label="Time Master">
+              <Timer className="h-5 w-5" />
+            </Link>
+          </Button>
+
           {/* Mobile Menu Trigger */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
