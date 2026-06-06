@@ -17,6 +17,25 @@ interface TimerDisplayProps {
   fighterBName?: string;
 }
 
+// Hoisted out of TimerDisplay so it isn't remounted on every animation-frame tick.
+const FighterTag = ({ name, corner }: { name?: string; corner: 'red' | 'blue' }) => (
+  <div className={cn(
+    "min-w-0 flex flex-col items-center text-center px-3 py-2 rounded border-2",
+    corner === 'red' ? 'border-fighter-danger/60 bg-fighter-danger/5' : 'border-blue-500/60 bg-blue-500/5',
+  )}>
+    <span className={cn(
+      "text-[10px] uppercase tracking-widest font-semibold",
+      corner === 'red' ? 'text-fighter-danger' : 'text-blue-400',
+    )}>
+      {corner === 'red' ? 'Esquina Roja' : 'Esquina Azul'}
+    </span>
+    <span className="text-sm sm:text-base font-bold leading-tight break-words mt-0.5">
+      {name || '—'}
+    </span>
+  </div>
+);
+
+
 export function TimerDisplay({
   timeMs, roundDuration, isRunning, isPaused, currentRound, totalRounds, phase, restTimeMs = 0,
   fighterAName, fighterBName,
