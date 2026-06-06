@@ -400,6 +400,38 @@ export default function Auth() {
                 Iniciar Sesión
               </Button>
 
+              {networkError && (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 space-y-2">
+                  <p className="text-xs text-foreground/90">
+                    No pudimos conectar con el servidor. Esto suele pasar por una extensión del navegador o caché vieja.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-destructive/40"
+                    onClick={async () => {
+                      try {
+                        if ('serviceWorker' in navigator) {
+                          const regs = await navigator.serviceWorker.getRegistrations();
+                          await Promise.all(regs.map((r) => r.unregister()));
+                        }
+                        if ('caches' in window) {
+                          const keys = await caches.keys();
+                          await Promise.all(keys.map((k) => caches.delete(k)));
+                        }
+                      } catch (err) {
+                        console.warn('[AUTH] Cache cleanup failed:', err);
+                      } finally {
+                        window.location.reload();
+                      }
+                    }}
+                  >
+                    Limpiar caché y reintentar
+                  </Button>
+                </div>
+              )}
+
               <div className="flex flex-col gap-2 pt-2 border-t border-border">
                 <Link to="/auth/forgot-password" className="inline-flex items-center justify-center text-sm font-medium text-primary hover:text-primary/80 underline underline-offset-4">
                   <HelpCircle className="w-4 h-4 mr-1.5" />
