@@ -164,6 +164,7 @@ export default function Auth() {
     // Safety: ensure the spinner never sticks if something hangs unexpectedly
     const safety = setTimeout(() => setLoading(false), 20000);
     try {
+      setNetworkError(false);
       const { error, errorCode } = await signIn(email, password);
       if (error) {
         if (errorCode === 'email_not_confirmed') {
@@ -188,6 +189,9 @@ export default function Auth() {
             }
             setIsResending(false);
           }
+        } else if (errorCode === 'network') {
+          setNetworkError(true);
+          toast.error(error.message);
         } else {
           toast.error(error.message);
         }
