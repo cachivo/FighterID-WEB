@@ -1,68 +1,41 @@
-# Diagnóstico — "Los usuarios no pueden iniciar sesión"
+# Plan: Guest fighters in Time Master
 
-## Lo que revisé
+Allow the Time Master to type a free-text fighter name for fighters that do not have a user/profile in the system. Matches involving a guest do not touch any fighter record.
 
-- `auth_logs` últimos 30 eventos (Supabase)
-- `src/hooks/useAuth.tsx` (`signIn` → `supabase.auth.signInWithPassword`)
-- `src/pages/Auth.tsx` (`handleSignIn`, `handleResendEmail`, `checkEmailExists`)
-- `supabase/functions/check-email-exists/index.ts`
-- Migraciones recientes (audit trail de récord, `save_fight_result`, índice único de `tm_verdict`) — **ninguna toca auth/RLS de login**
+## UX
 
-## Lo que NO está roto
+In each corner selector (Red / Blue):
 
-- No hay errores `/token` (login) en los logs de auth.
-- El último signup terminó **200 OK** y el correo de confirmación se envió correctamente (Resend id `d777c2bf…`, hook `send-signup-confirmation` OK).
-- El cliente Supabase, `AuthProvider`, y `signInWithPassword` funcionan normal.
-- Las migraciones del historial de récord (`get_fighter_record_history`, índice único en `tm_verdict`) no afectan login.
+- Keep the existing "Select fighter" dropdown of registered profiles.
+- Add a small toggle / link at the bottom of the popover: **"Use guest fighter"**.
+- When picked, the trigger turns into a text input where the operator types the fighter's display name (e.g. "Juan Pérez"). A subtle "Guest" tag appears under the name.
+- Switching back to the registered list clears the typed name.
 
-## Causa real del síntoma
+Either corner can be a guest. Both corners can be guests. The "Start match" button enables as soon as both corners have something selected (registered or guest with non-empty name).
 
-El único error real en logs es:
+When a match involves at least one guest:
 
-```
-POST /resend  →  429  over_email_send_rate_limit
-"For security purposes, you can only request this after 46 seconds."
-```
+- A persistent notice appears above the Start button: **"This match will not affect any fighter's record (guest fighter)."**
+- The `MatchResultDialog` still lets the judge pick the winner (Red / Blue / Draw / NC), but the "Update fighter records" switch is forced **off** and disabled, with the same explanatory copy.
+- The verdict is shown on screen with the typed names so the judges have a clean summary, but nothing is written to the database.
 
-Es decir: el usuario `migulalbertogonzalesmena934@gmail.com` se registró, **no confirmó el correo**, intentó re-enviar la confirmación, y chocó con el rate limit de Supabase Auth. Sin confirmar, no puede iniciar sesión.
+Registered-vs-registered matches behave exactly like today.
 
-Hay además **3 problemas UX en `src/pages/Auth.tsx`** que hacen que el usuario perciba "no puedo entrar" sin saber por qué:
+## Technical notes
 
-1. **`handleSignIn` solo distingue "Invalid login credentials"**. Si Supabase devuelve `email_not_confirmed`, se muestra el mensaje crudo en inglés en un `toast.error`, y el usuario no ve ningún CTA para reenviar el correo desde la pantalla de login.
-2. **El bloque "Reenviar correo" solo aparece tras un signup nuevo en la misma sesión** (depende de `registrationSuccess` + `registeredEmail`). Si el usuario vuelve al día siguiente e intenta login, no tiene cómo reenviar.
-3. **`checkEmailExists` devuelve `true` también para usuarios no confirmados**, entonces el flujo los manda al paso `login` (no a `register`), donde fallan silenciosamente con "Credenciales incorrectas" si escriben mal o con un mensaje confuso si Supabase responde `email_not_confirmed`.
+- `FighterSelector`: add `mode` ('registered' | 'guest'), `guestName`, and `onGuestNameChange`. Render either the Command popover or a text input based on `mode`. Add the toggle inside the popover footer.
+- `useTimeMaster`:
+  - Add `fighterAIsGuest`, `fighterBIsGuest` state and setters `setFighterAGuest(name)` / `setFighterBGuest(name)`. Setting guest mode clears `fighterAId`; setting a registered fighter clears guest mode.
+  - `canStartMatch` becomes: each corner is either a registered id or a guest with a non-empty trimmed name, and (when both are registered) the ids differ.
+  - Derive `isGuestMatch = fighterAIsGuest || fighterBIsGuest` and expose it.
+  - `saveResultAtomic` / `updateFighterRecords` / `insertVerdict`: when `isGuestMatch` is true, skip the `save_fight_result` RPC entirely, return `{ success: true, recordsUpdated: false, duplicate: false }`, and toast "Verdict registered locally — records not updated (guest fighter)".
+  - `winnerId` in `MatchResult` can be a synthetic string (`'guest:red'` / `'guest:blue'`) when the winner is a guest; only used for UI labels.
+- `MatchResultDialog`: when `isGuestMatch`, hide / disable the "Update records" switch and show the explanatory copy. Winner selector still works using the typed names.
+- `RoundScoreDialog`: no change beyond using the existing `fighterAName` / `fighterBName` (already typed-name-friendly).
+- No database or RLS changes. No edge function changes.
 
-## Plan de corrección (cuando apruebes pasar a build)
+## Out of scope
 
-### 1. `src/hooks/useAuth.tsx` — propagar tipo de error
-- En `signIn`, además del `error`, devolver `errorCode: 'email_not_confirmed' | 'invalid_credentials' | 'other'` basado en `error.code` / `error.message` de Supabase.
-
-### 2. `src/pages/Auth.tsx` — manejo claro de "email no confirmado"
-- En `handleSignIn`, si `errorCode === 'email_not_confirmed'`:
-  - `toast.warning('Tu correo aún no está confirmado. Te enviamos el enlace de nuevo.')`
-  - Setear `registeredEmail = email` y `registrationSuccess = true` para que se muestre el bloque "Reenviar correo".
-  - Si `resendCooldown === 0`, disparar `handleResendEmail()` automáticamente.
-- Traducir mensajes comunes al español (`Email not confirmed`, `Invalid login credentials`, `Too many requests`).
-
-### 3. Cooldown coordinado con el rate limit real de Supabase (60s)
-- Hoy `setResendCooldown(60)` ya existe; añadir un guard que, si la respuesta es `over_email_send_rate_limit`, leer `retryAfter` (ya viene en `useAuth.resetPassword`, replicar en `resendConfirmation`) y respetarlo.
-
-### 4. (Opcional) `check-email-exists` — devolver `confirmed`
-- Extender la RPC `check_email_exists_fn` para devolver `{ exists, confirmed }` (lee `email_confirmed_at`). Así `Auth.tsx` puede mostrar directamente la pantalla de "reenviar confirmación" sin esperar a que falle el login.
-
-## Acciones inmediatas para el usuario afectado (sin código)
-
-Puedo hacerlas yo desde Supabase si me confirmas:
-
-1. **Confirmar manualmente el email** del usuario `migulalbertogonzalesmena934@gmail.com` (UPDATE `auth.users.email_confirmed_at = now()`).
-2. O **eliminar el usuario** para que pueda volver a registrarse limpio.
-
-## Fuera de alcance
-
-- Cambios en el sistema de historial de récord recién creado.
-- Cambios en políticas RLS, OAuth de Google, o flujo PKCE (todo funciona).
-- Tocar `auth.users` o esquemas reservados de Supabase fuera de las acciones puntuales de arriba.
-
-## Pregunta para ti
-
-¿Quieres que (a) **solo arregle el UX** para que ningún usuario quede atrapado en este estado en el futuro, (b) **además confirme manualmente** al usuario afectado, o (c) **ambas**?
+- Persisting guest matches to any history table.
+- Promoting a guest into a real `fighter_profile` from inside Time Master.
+- Stats / record reporting for guest fighters.
