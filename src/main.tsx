@@ -16,18 +16,32 @@ if ('serviceWorker' in navigator) {
         .register('/sw.js')
         .then((registration) => {
           console.log('[PWA] Service Worker registered:', registration.scope);
-          
-          // Check for updates
+
+          // Force a check immediately so stale SWs get replaced fast
+          registration.update().catch(() => {});
+
+          let reloaded = false;
+          const activateNewWorker = (worker: ServiceWorker) => {
+            worker.postMessage({ type: 'SKIP_WAITING' });
+          };
+
+          if (registration.waiting) activateNewWorker(registration.waiting);
+
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('[PWA] New version available! Please refresh.');
-                  // Optionally show a toast notification here
-                }
-              });
-            }
+            if (!newWorker) return;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[PWA] New version available, activating...');
+                activateNewWorker(newWorker);
+              }
+            });
+          });
+
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (reloaded) return;
+            reloaded = true;
+            window.location.reload();
           });
         })
         .catch((error) => {
