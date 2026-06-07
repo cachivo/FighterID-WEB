@@ -145,9 +145,15 @@ const Header = () => {
             <Link to="/fighters">Peleadores</Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/time-master" className="flex items-center gap-1.5 text-primary">
+            <Link to="/arena" className="flex items-center gap-1.5 text-primary">
+              <Radio className="h-3.5 w-3.5" />
+              ARENA
+            </Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/time-master" className="flex items-center gap-1.5">
               <Timer className="h-3.5 w-3.5" />
-              Time Master
+              Arena Control
             </Link>
           </Button>
         </div>
