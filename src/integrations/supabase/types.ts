@@ -8763,7 +8763,12 @@ export type Database = {
         | "RESULT_CONFIRMED"
         | "ARCHIVED"
       sparc_member_role: "admin" | "judge" | "coach" | "observer"
-      sparc_presence_status: "online" | "away" | "reconnecting" | "offline"
+      sparc_presence_status:
+        | "online"
+        | "away"
+        | "reconnecting"
+        | "offline"
+        | "idle"
       sparc_round_state:
         | "PENDING"
         | "ACTIVE"
@@ -8772,7 +8777,8 @@ export type Database = {
         | "VOTING_CLOSED"
         | "FINALIZED"
       sparc_vote_choice: "red" | "blue" | "draw" | "abstain"
-      sparc_vote_status: "DRAFT" | "SUBMITTED" | "CONFIRMED"
+      sparc_vote_source: "human" | "ai" | "coach" | "hybrid" | "auto"
+      sparc_vote_status: "DRAFT" | "SUBMITTED" | "CONFIRMED" | "LOCKED"
       strike_target: "head" | "body" | "leg"
       strike_type:
         | "punch"
@@ -8993,7 +8999,13 @@ export const Constants = {
         "ARCHIVED",
       ],
       sparc_member_role: ["admin", "judge", "coach", "observer"],
-      sparc_presence_status: ["online", "away", "reconnecting", "offline"],
+      sparc_presence_status: [
+        "online",
+        "away",
+        "reconnecting",
+        "offline",
+        "idle",
+      ],
       sparc_round_state: [
         "PENDING",
         "ACTIVE",
@@ -9003,7 +9015,8 @@ export const Constants = {
         "FINALIZED",
       ],
       sparc_vote_choice: ["red", "blue", "draw", "abstain"],
-      sparc_vote_status: ["DRAFT", "SUBMITTED", "CONFIRMED"],
+      sparc_vote_source: ["human", "ai", "coach", "hybrid", "auto"],
+      sparc_vote_status: ["DRAFT", "SUBMITTED", "CONFIRMED", "LOCKED"],
       strike_target: ["head", "body", "leg"],
       strike_type: [
         "punch",
