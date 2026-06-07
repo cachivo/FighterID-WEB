@@ -79,6 +79,12 @@ const JudgeOnboarding = lazy(() => import("./pages/judge/JudgeOnboarding"));
 // Time Master
 const TimeMaster = lazy(() => import("./pages/TimeMaster"));
 
+// SPARC (Sparring Performance Assessment & Ranking Circuit)
+const SparcHub = lazy(() => import("./pages/sparc/SparcHub"));
+const SparcLiveFight = lazy(() => import("./pages/sparc/SparcLiveFight"));
+const SparcRankings = lazy(() => import("./pages/sparc/SparcRankings"));
+const SparcAdmin = lazy(() => import("./pages/sparc/SparcAdmin"));
+
 
 // Stations
 const StationPinLogin = lazy(() => import('@/components/station/StationPinLogin').then(m => ({ default: m.StationPinLogin })));
