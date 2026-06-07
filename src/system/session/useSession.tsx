@@ -70,8 +70,11 @@ export function SessionProvider({ context, fighterProfileId, children }: Provide
           fighterProfileId: fighterProfileId ?? null,
         });
         if (cancelled) {
-          // cleanup race: close immediately
-          endSession(s.id).catch(() => {});
+          if (s) endSession(s.id).catch(() => {});
+          return;
+        }
+        if (!s) {
+          console.warn('[useSession] startSession returned null, no session created');
           return;
         }
         createdId = s.id;

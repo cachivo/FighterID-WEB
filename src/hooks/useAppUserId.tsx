@@ -36,18 +36,16 @@ export function useAppUserId() {
           .from('app_user')
           .select('id')
           .eq('auth_user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (fetchError) {
           console.error('[useAppUserId] Error fetching app_user:', fetchError);
-          throw new Error('No se pudo obtener la información del usuario');
+          setError('No se pudo obtener la información del usuario');
+          setAppUserId(null);
+          return;
         }
 
-        if (!appUser) {
-          throw new Error('Usuario no encontrado en el sistema');
-        }
-
-        setAppUserId(appUser.id);
+        setAppUserId(appUser?.id ?? null);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
         console.error('[useAppUserId] Error:', errorMessage);
@@ -72,25 +70,19 @@ export function useAppUserId() {
  * @returns Promise con el app_user.id
  * @throws Error si no se encuentra el usuario o hay un error de DB
  */
-export async function getAppUserIdFromAuth(authUserId: string): Promise<string> {
-  if (!authUserId) {
-    throw new Error('auth_user_id es requerido');
-  }
+export async function getAppUserIdFromAuth(authUserId: string): Promise<string | null> {
+  if (!authUserId) return null;
 
   const { data: appUser, error } = await supabase
     .from('app_user')
     .select('id')
     .eq('auth_user_id', authUserId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('[getAppUserIdFromAuth] Error:', error);
-    throw new Error(`Error al obtener app_user: ${error.message}`);
+    return null;
   }
 
-  if (!appUser) {
-    throw new Error('Usuario no encontrado en app_user');
-  }
-
-  return appUser.id;
+  return appUser?.id ?? null;
 }

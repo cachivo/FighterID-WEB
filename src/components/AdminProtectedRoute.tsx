@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 
 interface AdminProtectedRouteProps {
@@ -8,6 +9,7 @@ interface AdminProtectedRouteProps {
 
 export default function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
   const { isAdmin, loading, error } = useAdmin();
+  const { user } = useAuth();
 
   if (loading) {
     return (
@@ -20,16 +22,13 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
     );
   }
 
-  if (error) {
-    return <Navigate to="/access-denied" replace />;
-  }
-
-  if (isAdmin === false) {
-    return <Navigate to="/access-denied" replace />;
-  }
-
-  if (isAdmin === null) {
+  // Unauthenticated → send to login with redirect back to /admin
+  if (!user) {
     return <Navigate to="/auth?redirect=/admin" replace />;
+  }
+
+  if (error || isAdmin === false) {
+    return <Navigate to="/access-denied" replace />;
   }
 
   return <>{children}</>;

@@ -230,8 +230,31 @@ export default function Auth() {
         await new Promise(resolve => setTimeout(resolve, 2000));
         const { data: { user: newUser } } = await supabase.auth.getUser();
         if (newUser) {
-          const { data: appUser } = await supabase.from('app_user').select('id').eq('auth_user_id', newUser.id).single();
-          if (!appUser) throw new Error('Error configurando perfil');
+          // Retry loop — DB trigger that creates app_user may not have fired yet
+          let appUser: { id: string } | null = null;
+          let retries = 5;
+          while (!appUser && retries > 0) {
+            const result = await supabase
+              .from('app_user')
+              .select('id')
+              .eq('auth_user_id', newUser.id)
+              .maybeSingle();
+            appUser = result.data;
+            if (!appUser) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              retries--;
+            }
+          }
+
+          if (!appUser) {
+            // Persist token so it can be processed post-confirmation
+            localStorage.setItem('fighter_invite_pending', inviteToken);
+            toast.info('Cuenta creada. Tu perfil de peleador se configurará después de confirmar tu email.');
+            setRegistrationSuccess(true);
+            setRegisteredEmail(email);
+            return;
+          }
+
           const { data: fighterProfile, error: profileError } = await supabase
             .from('fighter_profiles')
             .insert({ user_id: appUser.id, first_name: invitation.first_name, last_name: invitation.last_name, weight_class: invitation.weight_class || 'Peso Ligero', country: 'Honduras' })

@@ -16,8 +16,13 @@ interface StartSessionInput {
   clientMeta?: Record<string, unknown>;
 }
 
-export async function startSession(input: StartSessionInput): Promise<WorkSession> {
+export async function startSession(input: StartSessionInput): Promise<WorkSession | null> {
   const appUserId = await getAppUserIdFromAuth(input.authUserId);
+
+  if (!appUserId) {
+    console.warn('[session.service] No app_user found for auth user:', input.authUserId);
+    return null;
+  }
 
   const meta = {
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
@@ -40,7 +45,10 @@ export async function startSession(input: StartSessionInput): Promise<WorkSessio
     .select('*')
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.warn('[session.service] startSession insert error', error.message);
+    return null;
+  }
   return data as WorkSession;
 }
 
@@ -106,6 +114,7 @@ export async function endSession(sessionId: string): Promise<CloseSessionResult 
 
 export async function getOpenSessionFor(authUserId: string, context: string) {
   const appUserId = await getAppUserIdFromAuth(authUserId);
+  if (!appUserId) return null;
   const { data } = await supabase
     .from('work_sessions')
     .select('*')

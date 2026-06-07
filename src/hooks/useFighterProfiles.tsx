@@ -186,10 +186,15 @@ export function useFighterProfiles() {
       .from('app_user')
       .select('id')
       .eq('auth_user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (userError) throw userError;
-    if (!appUser) throw new Error('Perfil de usuario no encontrado');
+    if (userError) {
+      console.error('[createFighterProfile] app_user lookup error:', userError);
+      throw new Error('Error al verificar tu cuenta');
+    }
+    if (!appUser) {
+      throw new Error('Tu cuenta no está registrada en el sistema. Contacta soporte.');
+    }
 
     const { data, error } = await supabase
       .from('fighter_profiles')
@@ -224,18 +229,22 @@ export function useFighterProfiles() {
         .from('app_user')
         .select('id')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (userError || !appUser) return null;
+      if (userError) {
+        console.error('[getUserFighterProfile] app_user lookup error:', userError);
+        return null;
+      }
+      if (!appUser) return null;
 
       const { data, error } = await supabase
         .from('fighter_profiles')
         .select(`*, primary_license:fighter_licenses!primary_license_id(*)`)
         .eq('user_id', appUser.id)
         .eq('active', true)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       return data;
     } catch (err) {
       console.error('Error fetching user fighter profile:', err);
@@ -252,7 +261,7 @@ export function useFighterProfiles() {
       .from('fighter_profiles')
       .select(`*, coach:coaches(id, nombre, apellidos, avatar_url, especialidades, slug), gym:gyms!gym_id(id, nombre, logo_url, slug)`)
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
     return data;
@@ -280,7 +289,7 @@ export function useFighterProfiles() {
         .from('app_user')
         .select('is_admin, id')
         .eq('auth_user_id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (adminError) throw new Error('Error verificando permisos de administrador');
       if (!adminCheck?.is_admin) throw new Error('No tienes permisos de administrador');

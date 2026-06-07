@@ -48,10 +48,21 @@ export const useUserProfile = () => {
         .from('app_user')
         .select('*')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      
+      if (error) {
+        console.error('[useUserProfile] Error fetching profile:', error);
+        setError(error.message);
+        setProfile(null);
+        return;
+      }
+
+      if (!data) {
+        // No profile row yet (pre-trigger / legacy account) — valid empty state
+        setProfile(null);
+        return;
+      }
+
       // Convert profile_visibility from Json to Record<string, boolean>
       const profileData = {
         ...data,
