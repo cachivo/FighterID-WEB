@@ -225,6 +225,7 @@ export default function SparcDashboard() {
   }, []);
 
   // ----- guards -----
+  if (redirect) return redirect;
   if (adminLoading) {
     return <Shell><div className="font-mono text-xs uppercase text-muted-foreground p-6">Verifying…</div></Shell>;
   }
