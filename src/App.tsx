@@ -301,6 +301,12 @@ const App = () => {
               <Route path="/judge/fight/:fightId" element={<JudgeScoringPanel />} />
               <Route path="/referee/control/:fightId" element={<RefereeControlRoom />} />
 
+              {/* SPARC */}
+              <Route path="/sparc" element={<SparcHub />} />
+              <Route path="/sparc/live/:fightId" element={<ProtectedRoute><SparcLiveFight /></ProtectedRoute>} />
+              <Route path="/sparc/rankings" element={<SparcRankings />} />
+              <Route path="/sparc/admin" element={<ProtectedRoute><SparcAdmin /></ProtectedRoute>} />
+
               {/* Misc */}
               <Route path="/access-denied" element={<AccessDenied />} />
               <Route path="*" element={<NotFound />} />
