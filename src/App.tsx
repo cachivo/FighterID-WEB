@@ -84,6 +84,7 @@ const SparcHub = lazy(() => import("./pages/sparc/SparcHub"));
 const SparcLiveFight = lazy(() => import("./pages/sparc/SparcLiveFight"));
 const SparcRankings = lazy(() => import("./pages/sparc/SparcRankings"));
 const SparcAdmin = lazy(() => import("./pages/sparc/SparcAdmin"));
+const SparcDashboard = lazy(() => import("./pages/sparc/SparcDashboard"));
 
 
 // Stations
@@ -306,6 +307,7 @@ const App = () => {
               <Route path="/sparc/live/:fightId" element={<ProtectedRoute><SparcLiveFight /></ProtectedRoute>} />
               <Route path="/sparc/rankings" element={<SparcRankings />} />
               <Route path="/sparc/admin" element={<ProtectedRoute><SparcAdmin /></ProtectedRoute>} />
+              <Route path="/sparc/dashboard/:sessionId" element={<ProtectedRoute><SparcDashboard /></ProtectedRoute>} />
 
               {/* Misc */}
               <Route path="/access-denied" element={<AccessDenied />} />
