@@ -425,7 +425,11 @@ const Ranking = ({ organizationCode = 'UCC_MMA', compact = false }: RankingProps
             onClick={() => navigate(compact ? `/fighters?org=${organizationCode}` : '/fighters')}
             className="w-full xs:w-auto bg-purple-neon-primary hover:bg-purple-neon-secondary text-black font-bold px-4 xs:px-6 sm:px-8 py-3 xs:py-4 text-sm xs:text-base sm:text-lg animate-glow-neon min-h-[48px] touch-manipulation"
           >
-            {compact ? `Ver ranking completo de ${currentOrg?.short_name || ''}` : 'Ver Todos los Peleadores'}
+            {compact ? (
+              <span className="truncate max-w-[280px] xs:max-w-none inline-block" title={`Ver ranking completo de ${currentOrg?.short_name || ''}`}>
+                Ver completo de {currentOrg?.short_name || ''}
+              </span>
+            ) : 'Ver Todos los Peleadores'}
           </Button>
         </div>
       </div>
