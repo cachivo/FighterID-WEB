@@ -56,7 +56,8 @@ const Header = () => {
   }, [user, getUserFighterProfile]);
 
   const navigationItems = [
-    { name: "Time Master", href: "/time-master", icon: Timer, highlight: true },
+    { name: "ARENA", href: "/arena", icon: Radio, highlight: true },
+    { name: "Arena Control", href: "/time-master", icon: Timer },
     { name: "Social", href: "/social/feed", icon: Users },
     { name: "Eventos", href: "/eventos", icon: Calendar },
     { name: "En Vivo", href: "/en-vivo", icon: Radio },
@@ -107,9 +108,15 @@ const Header = () => {
             <Link to="/fighters">Peleadores</Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
+            <Link to="/arena" className="flex items-center gap-1.5 text-primary">
+              <Radio className="h-3.5 w-3.5" />
+              ARENA
+            </Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
             <Link to="/time-master" className="flex items-center gap-1.5">
               <Timer className="h-3.5 w-3.5" />
-              Time Master
+              Arena Control
             </Link>
           </Button>
           <Link to="/contacto" className="pill-button px-4 py-1.5 text-xs uppercase tracking-[0.12em] font-medium text-foreground/70 ml-2">
@@ -138,24 +145,30 @@ const Header = () => {
             <Link to="/fighters">Peleadores</Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/time-master" className="flex items-center gap-1.5 text-primary">
+            <Link to="/arena" className="flex items-center gap-1.5 text-primary">
+              <Radio className="h-3.5 w-3.5" />
+              ARENA
+            </Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/time-master" className="flex items-center gap-1.5">
               <Timer className="h-3.5 w-3.5" />
-              Time Master
+              Arena Control
             </Link>
           </Button>
         </div>
         
         {/* Actions */}
         <div className="flex items-center gap-3">
-          {/* Time Master - Mobile only, always visible */}
+          {/* ARENA - Mobile only, always visible */}
           <Button
             variant="ghost"
             size="icon"
             className="md:hidden min-h-[44px] min-w-[44px] touch-manipulation text-primary"
             asChild
           >
-            <Link to="/time-master" aria-label="Time Master">
-              <Timer className="h-5 w-5" />
+            <Link to="/arena" aria-label="ARENA">
+              <Radio className="h-5 w-5" />
             </Link>
           </Button>
 

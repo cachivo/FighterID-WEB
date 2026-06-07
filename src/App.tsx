@@ -86,6 +86,11 @@ const SparcRankings = lazy(() => import("./pages/sparc/SparcRankings"));
 const SparcAdmin = lazy(() => import("./pages/sparc/SparcAdmin"));
 const SparcDashboard = lazy(() => import("./pages/sparc/SparcDashboard"));
 
+// ARENA — Competition Layer (consumes SPARC integrity backend)
+const ArenaLanding = lazy(() => import("./pages/arena/ArenaLanding"));
+const ArenaSessionDashboard = lazy(() => import("./pages/arena/ArenaSessionDashboard"));
+const ArenaPublicWatch = lazy(() => import("./pages/arena/ArenaPublicWatch"));
+
 
 // Stations
 const StationPinLogin = lazy(() => import('@/components/station/StationPinLogin').then(m => ({ default: m.StationPinLogin })));
@@ -311,6 +316,12 @@ const App = () => {
               <Route path="/sparc/rankings" element={<SparcRankings />} />
               <Route path="/sparc/admin" element={<ProtectedRoute><SparcAdmin /></ProtectedRoute>} />
               <Route path="/sparc/dashboard/:sessionId" element={<ProtectedRoute><SparcDashboard /></ProtectedRoute>} />
+
+              {/* ARENA — Competition Layer */}
+              <Route path="/arena" element={<ArenaLanding />} />
+              <Route path="/arena/session/:sessionId" element={<ProtectedRoute><ArenaSessionDashboard /></ProtectedRoute>} />
+              <Route path="/arena/live/:fightId" element={<ProtectedRoute><SparcLiveFight /></ProtectedRoute>} />
+              <Route path="/arena/watch/:fightId" element={<ArenaPublicWatch />} />
 
               {/* Misc */}
               <Route path="/access-denied" element={<AccessDenied />} />

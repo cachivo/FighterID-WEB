@@ -56,6 +56,13 @@ export const BREADCRUMB_CONFIG = {
   ]
 };
 
+export const ARENA_ROUTES = {
+  HUB: '/arena',
+  SESSION: (id: string) => `/arena/session/${id}`,
+  LIVE: (id: string) => `/arena/live/${id}`,
+  WATCH: (id: string) => `/arena/watch/${id}`,
+} as const;
+
 export type MainRoute = typeof MAIN_ROUTES[keyof typeof MAIN_ROUTES];
 export type AdminRoute = typeof ADMIN_ROUTES[keyof typeof ADMIN_ROUTES];
 export type LicenseRoute = typeof LICENSE_ROUTES[keyof typeof LICENSE_ROUTES];
