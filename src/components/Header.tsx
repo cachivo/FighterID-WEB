@@ -160,15 +160,15 @@ const Header = () => {
         
         {/* Actions */}
         <div className="flex items-center gap-3">
-          {/* Time Master - Mobile only, always visible */}
+          {/* ARENA - Mobile only, always visible */}
           <Button
             variant="ghost"
             size="icon"
             className="md:hidden min-h-[44px] min-w-[44px] touch-manipulation text-primary"
             asChild
           >
-            <Link to="/time-master" aria-label="Time Master">
-              <Timer className="h-5 w-5" />
+            <Link to="/arena" aria-label="ARENA">
+              <Radio className="h-5 w-5" />
             </Link>
           </Button>
 
