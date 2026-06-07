@@ -4,6 +4,39 @@ All notable changes to **Fighter ID**. Format inspired by [Keep a Changelog](htt
 
 ---
 
+## [2026-06-07] — Critical stability fix: query-pattern failures & orphaned auth rows
+
+> **Context**: Systemic `.single()` query failures across multiple hooks/pages caused unhandled rejections when an expected row did not exist. The root trigger was an inconsistent `app_user` backfill state where some `auth.users` rows had no corresponding `app_user`, making every `.single()` call throw at runtime.
+
+### Auth — fixed
+
+- **`src/hooks/useAppUserId.tsx`** — Both helper and hook switched from `.single()` to `.maybeSingle()`. Returns `null` gracefully when no `app_user` row exists for the current `auth.users` session.
+- **`src/pages/Auth.tsx`** — Invitation acceptance flow now retries up to 5 attempts waiting for the database trigger to create the linked `app_user` row, and persists the verification token across attempts.
+- **`supabase/migrations/20260607175959_b34e87a3-5e55-43bf-9bd2-96f4a57ab678.sql`** — Backfills every orphaned `auth.users` row with a unique `app_user` record (sanitized email prefix + UUID suffix) so existing accounts no longer trigger missing-row errors.
+
+### Roles — fixed
+
+- **`src/hooks/useUserRoles.tsx`** — Legacy accounts whose `app_user.auth_user_id` is `null` now fall back to querying by `app_user.id`, restoring role resolution for pre-migration users.
+- **`src/components/AdminProtectedRoute.tsx`** — Removed dead `isAdmin === null` branch that caused UI flicker; authentication check now runs first and returns early with a loading state.
+
+### Fighter sensitive data — fixed
+
+- **`src/pages/FighterProfile.tsx`** — `getFighterById()` wrapped in `try/catch/finally`; ownership validation query switched to `.maybeSingle()` to prevent crashes on non-existent fighter IDs.
+- **`src/hooks/useFighterProfiles.tsx`** — All `.single()` calls converted to `.maybeSingle()` with explicit error messages when a fighter profile is missing.
+- **`src/hooks/useUserProfile.tsx`** — Query switched to `.maybeSingle()` and surfaces an empty-state instead of throwing when the profile row is absent.
+- **`src/pages/profile/ProfileHub.tsx`** — `gym_staff` and `judges` relationship queries now bind on `appUser.id` (the application user UUID) instead of the raw `auth.users` UUID, fixing silent data mismatches that leaked incorrect gym/coach visibility.
+
+### State / session — fixed
+
+- **`src/system/session/session.service.ts`** — `startSession()` now returns `WorkSession | null` and guards against a missing `app_user` row before writing; `getOpenSessionFor()` no longer propagates null dereferences.
+- **`src/system/session/useSession.tsx`** — Handles `null` session responses and fixes a cleanup race condition that left stale listeners on rapid unmount/remount.
+- **`src/hooks/useEvents.tsx`** — Event creation now explicitly inserts `state: 'draft'` so downstream consumers never read an undefined state.
+
+### Files changed
+
+- **Created**: `supabase/migrations/20260607175959_b34e87a3-5e55-43bf-9bd2-96f4a57ab678.sql`
+- **Edited**: `src/hooks/useAppUserId.tsx`, `src/hooks/useEvents.tsx`, `src/hooks/useFighterProfiles.tsx`, `src/hooks/useUserProfile.tsx`, `src/hooks/useUserRoles.tsx`, `src/pages/Auth.tsx`, `src/pages/FighterProfile.tsx`, `src/pages/profile/ProfileHub.tsx`, `src/components/AdminProtectedRoute.tsx`, `src/system/session/session.service.ts`, `src/system/session/useSession.tsx`
+
 ## [2026-05-02b] — Security hardening pass 2 (CORS allowlist + dry-run patches)
 
 > **Context**: Bug-hunter scan flagged 1 critical (`.env` tracked) and 25 high (wildcard CORS in 17 edge functions). This pass closes them without touching business logic.
