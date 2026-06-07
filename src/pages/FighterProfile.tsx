@@ -56,7 +56,7 @@ export default function FighterProfile() {
           .from('app_user')
           .select('id')
           .eq('auth_user_id', user.id)
-          .single();
+          .maybeSingle();
         
         setIsOwner(appUser?.id === fighter.user_id);
       } catch (error) {
@@ -69,9 +69,17 @@ export default function FighterProfile() {
   }, [fighter?.user_id]);
 
   const fetchFighter = useCallback(async () => {
-    if (id) {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    try {
       const profile = await getFighterById(id);
       setFighter(profile);
+    } catch (err) {
+      console.error('[FighterProfile] Error fetching fighter:', err);
+      setFighter(null);
+    } finally {
       setLoading(false);
     }
   }, [id, getFighterById]);

@@ -66,24 +66,30 @@ export default function ProfileHub() {
         }
       }
 
-      // Check gym status
+      // Check gym status — gym_staff.user_id references app_user.id, NOT auth.users.id
       let gymStatus: ModuleStatus = 'none';
-      const { data: gymStaff } = await supabase
-        .from('gym_staff')
-        .select('gym_id')
-        .eq('user_id', user.id)
-        .eq('active', true)
-        .maybeSingle();
-      if (gymStaff) gymStatus = 'active';
+      let gymStaff: { gym_id: string } | null = null;
+      if (appUser?.id) {
+        const { data } = await supabase
+          .from('gym_staff')
+          .select('gym_id')
+          .eq('user_id', appUser.id)
+          .eq('active', true)
+          .maybeSingle();
+        gymStaff = data;
+        if (gymStaff) gymStatus = 'active';
+      }
 
-      // Check judge status
+      // Check judge status — judges.user_id references app_user.id
       let judgeStatus: ModuleStatus = 'none';
-      const { data: judge } = await supabase
-        .from('judges')
-        .select('active')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (judge) judgeStatus = judge.active ? 'active' : 'pending';
+      if (appUser?.id) {
+        const { data: judge } = await supabase
+          .from('judges')
+          .select('active')
+          .eq('user_id', appUser.id)
+          .maybeSingle();
+        if (judge) judgeStatus = judge.active ? 'active' : 'pending';
+      }
 
       setModules([
         {

@@ -129,6 +129,7 @@ export function useEvents(discipline?: string) {
         poster_url: eventData.poster_url || null,
         rules_document_url: eventData.rules_document_url || null,
         moderation_status: isAdmin ? 'approved' : 'pending',
+        state: 'draft',
       };
 
       const { data, error } = await supabase
