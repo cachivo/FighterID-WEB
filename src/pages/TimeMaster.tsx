@@ -128,9 +128,9 @@ export default function TimeMaster() {
           <div>
             <div className="flex items-center gap-2">
               <Swords className="h-7 w-7 text-primary" />
-              <h1 className="text-2xl sm:text-3xl font-bold">Time Master</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold">Arena Control</h1>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Cronómetro profesional de boxeo y gestión de pelea</p>
+            <p className="text-sm text-muted-foreground mt-1">Cronómetro profesional y gestión de pelea en arena</p>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-end flex-wrap">
             <Button
