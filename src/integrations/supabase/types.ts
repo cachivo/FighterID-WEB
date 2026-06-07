@@ -6042,6 +6042,559 @@ export type Database = {
         }
         Relationships: []
       }
+      sparc_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          at: string
+          fight_id: string | null
+          id: string
+          payload: Json
+          round_id: string | null
+          session_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          at?: string
+          fight_id?: string | null
+          id?: string
+          payload?: Json
+          round_id?: string | null
+          session_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          at?: string
+          fight_id?: string | null
+          id?: string
+          payload?: Json
+          round_id?: string | null
+          session_id?: string | null
+        }
+        Relationships: []
+      }
+      sparc_coach_rankings: {
+        Row: {
+          coach_id: string
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          points: number
+          rank: number | null
+          updated_at: string
+        }
+        Insert: {
+          coach_id: string
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          points?: number
+          rank?: number | null
+          updated_at?: string
+        }
+        Update: {
+          coach_id?: string
+          discipline?: Database["public"]["Enums"]["sparc_discipline"]
+          points?: number
+          rank?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sparc_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          host_gym_id: string | null
+          id: string
+          meta: Json
+          name: string
+          starts_at: string | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          host_gym_id?: string | null
+          id?: string
+          meta?: Json
+          name: string
+          starts_at?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          discipline?: Database["public"]["Enums"]["sparc_discipline"]
+          host_gym_id?: string | null
+          id?: string
+          meta?: Json
+          name?: string
+          starts_at?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sparc_fights: {
+        Row: {
+          blue_fighter_id: string | null
+          blue_name: string
+          created_at: string
+          current_round: number
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          id: string
+          order_idx: number
+          red_fighter_id: string | null
+          red_name: string
+          round_duration_s: number
+          rounds_planned: number
+          session_id: string
+          state: Database["public"]["Enums"]["sparc_fight_state"]
+          updated_at: string
+          vote_window_s: number
+          weight_class: string | null
+        }
+        Insert: {
+          blue_fighter_id?: string | null
+          blue_name: string
+          created_at?: string
+          current_round?: number
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          id?: string
+          order_idx?: number
+          red_fighter_id?: string | null
+          red_name: string
+          round_duration_s?: number
+          rounds_planned?: number
+          session_id: string
+          state?: Database["public"]["Enums"]["sparc_fight_state"]
+          updated_at?: string
+          vote_window_s?: number
+          weight_class?: string | null
+        }
+        Update: {
+          blue_fighter_id?: string | null
+          blue_name?: string
+          created_at?: string
+          current_round?: number
+          discipline?: Database["public"]["Enums"]["sparc_discipline"]
+          id?: string
+          order_idx?: number
+          red_fighter_id?: string | null
+          red_name?: string
+          round_duration_s?: number
+          rounds_planned?: number
+          session_id?: string
+          state?: Database["public"]["Enums"]["sparc_fight_state"]
+          updated_at?: string
+          vote_window_s?: number
+          weight_class?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sparc_fights_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sparc_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sparc_gym_rankings: {
+        Row: {
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          gym_id: string
+          points: number
+          rank: number | null
+          updated_at: string
+        }
+        Insert: {
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          gym_id: string
+          points?: number
+          rank?: number | null
+          updated_at?: string
+        }
+        Update: {
+          discipline?: Database["public"]["Enums"]["sparc_discipline"]
+          gym_id?: string
+          points?: number
+          rank?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sparc_presence: {
+        Row: {
+          app_user_id: string
+          client_info: Json
+          last_seen: string
+          session_id: string
+          status: Database["public"]["Enums"]["sparc_presence_status"]
+        }
+        Insert: {
+          app_user_id: string
+          client_info?: Json
+          last_seen?: string
+          session_id: string
+          status?: Database["public"]["Enums"]["sparc_presence_status"]
+        }
+        Update: {
+          app_user_id?: string
+          client_info?: Json
+          last_seen?: string
+          session_id?: string
+          status?: Database["public"]["Enums"]["sparc_presence_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sparc_presence_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sparc_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sparc_rankings: {
+        Row: {
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          fighter_id: string
+          points: number
+          rank: number | null
+          updated_at: string
+          weight_class: string
+        }
+        Insert: {
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          fighter_id: string
+          points?: number
+          rank?: number | null
+          updated_at?: string
+          weight_class?: string
+        }
+        Update: {
+          discipline?: Database["public"]["Enums"]["sparc_discipline"]
+          fighter_id?: string
+          points?: number
+          rank?: number | null
+          updated_at?: string
+          weight_class?: string
+        }
+        Relationships: []
+      }
+      sparc_reconnections: {
+        Row: {
+          app_user_id: string
+          disconnected_at: string
+          gap_ms: number
+          id: string
+          reconnected_at: string
+          session_id: string | null
+        }
+        Insert: {
+          app_user_id: string
+          disconnected_at: string
+          gap_ms?: number
+          id?: string
+          reconnected_at?: string
+          session_id?: string | null
+        }
+        Update: {
+          app_user_id?: string
+          disconnected_at?: string
+          gap_ms?: number
+          id?: string
+          reconnected_at?: string
+          session_id?: string | null
+        }
+        Relationships: []
+      }
+      sparc_records: {
+        Row: {
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          draws: number
+          fighter_id: string
+          losses: number
+          sparring_count: number
+          updated_at: string
+          wins: number
+        }
+        Insert: {
+          discipline: Database["public"]["Enums"]["sparc_discipline"]
+          draws?: number
+          fighter_id: string
+          losses?: number
+          sparring_count?: number
+          updated_at?: string
+          wins?: number
+        }
+        Update: {
+          discipline?: Database["public"]["Enums"]["sparc_discipline"]
+          draws?: number
+          fighter_id?: string
+          losses?: number
+          sparring_count?: number
+          updated_at?: string
+          wins?: number
+        }
+        Relationships: []
+      }
+      sparc_results: {
+        Row: {
+          blue_rounds: number
+          confirmed_at: string
+          confirmed_by: string | null
+          draw_rounds: number
+          fight_id: string
+          method: string
+          red_rounds: number
+          winner: Database["public"]["Enums"]["sparc_vote_choice"]
+        }
+        Insert: {
+          blue_rounds?: number
+          confirmed_at?: string
+          confirmed_by?: string | null
+          draw_rounds?: number
+          fight_id: string
+          method?: string
+          red_rounds?: number
+          winner: Database["public"]["Enums"]["sparc_vote_choice"]
+        }
+        Update: {
+          blue_rounds?: number
+          confirmed_at?: string
+          confirmed_by?: string | null
+          draw_rounds?: number
+          fight_id?: string
+          method?: string
+          red_rounds?: number
+          winner?: Database["public"]["Enums"]["sparc_vote_choice"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sparc_results_fight_id_fkey"
+            columns: ["fight_id"]
+            isOneToOne: true
+            referencedRelation: "sparc_fights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sparc_rounds: {
+        Row: {
+          abstain_votes: number
+          blue_votes: number
+          created_at: string
+          draw_votes: number
+          ended_at: string | null
+          fight_id: string
+          id: string
+          idx: number
+          red_votes: number
+          started_at: string | null
+          state: Database["public"]["Enums"]["sparc_round_state"]
+          voting_closes_at: string | null
+          voting_opens_at: string | null
+          winner: Database["public"]["Enums"]["sparc_vote_choice"] | null
+        }
+        Insert: {
+          abstain_votes?: number
+          blue_votes?: number
+          created_at?: string
+          draw_votes?: number
+          ended_at?: string | null
+          fight_id: string
+          id?: string
+          idx: number
+          red_votes?: number
+          started_at?: string | null
+          state?: Database["public"]["Enums"]["sparc_round_state"]
+          voting_closes_at?: string | null
+          voting_opens_at?: string | null
+          winner?: Database["public"]["Enums"]["sparc_vote_choice"] | null
+        }
+        Update: {
+          abstain_votes?: number
+          blue_votes?: number
+          created_at?: string
+          draw_votes?: number
+          ended_at?: string | null
+          fight_id?: string
+          id?: string
+          idx?: number
+          red_votes?: number
+          started_at?: string | null
+          state?: Database["public"]["Enums"]["sparc_round_state"]
+          voting_closes_at?: string | null
+          voting_opens_at?: string | null
+          winner?: Database["public"]["Enums"]["sparc_vote_choice"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sparc_rounds_fight_id_fkey"
+            columns: ["fight_id"]
+            isOneToOne: false
+            referencedRelation: "sparc_fights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sparc_session_members: {
+        Row: {
+          app_user_id: string
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["sparc_member_role"]
+          session_id: string
+          status: string
+        }
+        Insert: {
+          app_user_id: string
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["sparc_member_role"]
+          session_id: string
+          status?: string
+        }
+        Update: {
+          app_user_id?: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["sparc_member_role"]
+          session_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sparc_session_members_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sparc_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sparc_sessions: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          name: string
+          scheduled_at: string | null
+          state: string
+          time_master_offset_ms: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          name: string
+          scheduled_at?: string | null
+          state?: string
+          time_master_offset_ms?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          name?: string
+          scheduled_at?: string | null
+          state?: string
+          time_master_offset_ms?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sparc_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "sparc_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sparc_vote_drafts: {
+        Row: {
+          choice: Database["public"]["Enums"]["sparc_vote_choice"]
+          client_vote_id: string
+          judge_id: string
+          round_id: string
+          updated_at: string
+        }
+        Insert: {
+          choice: Database["public"]["Enums"]["sparc_vote_choice"]
+          client_vote_id: string
+          judge_id: string
+          round_id: string
+          updated_at?: string
+        }
+        Update: {
+          choice?: Database["public"]["Enums"]["sparc_vote_choice"]
+          client_vote_id?: string
+          judge_id?: string
+          round_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sparc_vote_drafts_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "sparc_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sparc_votes: {
+        Row: {
+          choice: Database["public"]["Enums"]["sparc_vote_choice"]
+          client_vote_id: string
+          confirmed_at: string
+          id: string
+          judge_id: string
+          round_id: string
+          source: string
+          status: Database["public"]["Enums"]["sparc_vote_status"]
+          submitted_at: string
+        }
+        Insert: {
+          choice: Database["public"]["Enums"]["sparc_vote_choice"]
+          client_vote_id: string
+          confirmed_at?: string
+          id?: string
+          judge_id: string
+          round_id: string
+          source?: string
+          status?: Database["public"]["Enums"]["sparc_vote_status"]
+          submitted_at?: string
+        }
+        Update: {
+          choice?: Database["public"]["Enums"]["sparc_vote_choice"]
+          client_vote_id?: string
+          confirmed_at?: string
+          id?: string
+          judge_id?: string
+          round_id?: string
+          source?: string
+          status?: Database["public"]["Enums"]["sparc_vote_status"]
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sparc_votes_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "sparc_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sparring_requests: {
         Row: {
           created_at: string | null
@@ -8039,6 +8592,33 @@ export type Database = {
         Args: { p_market_id: string; p_winning_outcome_id: string }
         Returns: undefined
       }
+      sparc_close_voting: { Args: { p_round_id: string }; Returns: undefined }
+      sparc_compute_result: { Args: { p_fight_id: string }; Returns: undefined }
+      sparc_heartbeat: { Args: { p_session_id: string }; Returns: undefined }
+      sparc_open_round: { Args: { p_fight_id: string }; Returns: string }
+      sparc_open_voting: { Args: { p_round_id: string }; Returns: undefined }
+      sparc_recover_session: {
+        Args: never
+        Returns: {
+          blue_name: string
+          fight_id: string
+          fight_state: Database["public"]["Enums"]["sparc_fight_state"]
+          red_name: string
+          role: Database["public"]["Enums"]["sparc_member_role"]
+          round_id: string
+          round_state: Database["public"]["Enums"]["sparc_round_state"]
+          session_id: string
+          voting_closes_at: string
+        }[]
+      }
+      sparc_submit_vote: {
+        Args: {
+          p_choice: Database["public"]["Enums"]["sparc_vote_choice"]
+          p_client_vote_id: string
+          p_round_id: string
+        }
+        Returns: string
+      }
       suspend_license: {
         Args: { p_license_id: string; p_reason: string; p_until?: string }
         Returns: undefined
@@ -8170,6 +8750,29 @@ export type Database = {
         | "declined"
         | "cancelled"
         | "expired"
+      sparc_discipline: "MMA" | "BOXING"
+      sparc_fight_state:
+        | "CREATED"
+        | "READY"
+        | "WAITING_JUDGES"
+        | "ACTIVE"
+        | "ROUND_BREAK"
+        | "VOTING_OPEN"
+        | "VOTING_CLOSED"
+        | "FINISHED"
+        | "RESULT_CONFIRMED"
+        | "ARCHIVED"
+      sparc_member_role: "admin" | "judge" | "coach" | "observer"
+      sparc_presence_status: "online" | "away" | "reconnecting" | "offline"
+      sparc_round_state:
+        | "PENDING"
+        | "ACTIVE"
+        | "ENDED"
+        | "VOTING_OPEN"
+        | "VOTING_CLOSED"
+        | "FINALIZED"
+      sparc_vote_choice: "red" | "blue" | "draw" | "abstain"
+      sparc_vote_status: "DRAFT" | "SUBMITTED" | "CONFIRMED"
       strike_target: "head" | "body" | "leg"
       strike_type:
         | "punch"
@@ -8376,6 +8979,31 @@ export const Constants = {
         "cancelled",
         "expired",
       ],
+      sparc_discipline: ["MMA", "BOXING"],
+      sparc_fight_state: [
+        "CREATED",
+        "READY",
+        "WAITING_JUDGES",
+        "ACTIVE",
+        "ROUND_BREAK",
+        "VOTING_OPEN",
+        "VOTING_CLOSED",
+        "FINISHED",
+        "RESULT_CONFIRMED",
+        "ARCHIVED",
+      ],
+      sparc_member_role: ["admin", "judge", "coach", "observer"],
+      sparc_presence_status: ["online", "away", "reconnecting", "offline"],
+      sparc_round_state: [
+        "PENDING",
+        "ACTIVE",
+        "ENDED",
+        "VOTING_OPEN",
+        "VOTING_CLOSED",
+        "FINALIZED",
+      ],
+      sparc_vote_choice: ["red", "blue", "draw", "abstain"],
+      sparc_vote_status: ["DRAFT", "SUBMITTED", "CONFIRMED"],
       strike_target: ["head", "body", "leg"],
       strike_type: [
         "punch",
