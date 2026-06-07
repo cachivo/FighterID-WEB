@@ -312,8 +312,8 @@ const Ranking = ({ organizationCode = 'UCC_MMA', compact = false }: RankingProps
                     className="bg-black/40 border-purple-neon-primary/20 backdrop-blur-sm hover:bg-black/60 transition-all duration-300 cursor-pointer touch-manipulation group"
                     onClick={() => navigate(`/fighter/${ranking.fighter_id}`)}
                   >
-                    <CardContent className="p-2.5 xs:p-3 sm:p-4 md:p-6">
-                      <div className="flex items-center gap-2 xs:gap-3 sm:gap-4">
+                    <CardContent className="p-2.5 xs:p-3 sm:p-4 md:p-6 overflow-hidden">
+                      <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 min-w-0">
                         {/* Ranking Position */}
                         <div className={`text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold ${rankColor} min-w-[28px] xs:min-w-[32px] sm:min-w-[40px] text-center shrink-0`}>
                           {rankPosition <= 3 ? <Trophy className="h-5 w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 mx-auto" /> : `#${rankPosition}`}
@@ -357,11 +357,11 @@ const Ranking = ({ organizationCode = 'UCC_MMA', compact = false }: RankingProps
                             )}
                           </div>
                           {/* Line 3: Division + Record */}
-                          <div className="flex items-center gap-1.5">
-                            <Badge variant="outline" className="text-[9px] xs:text-[10px] sm:text-xs border-purple-neon-primary/50 text-purple-neon-primary px-1 xs:px-1.5 shrink-0">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-nowrap">
+                            <Badge variant="outline" className="text-[9px] xs:text-[10px] sm:text-xs border-purple-neon-primary/50 text-purple-neon-primary px-1 xs:px-1.5 min-w-0 max-w-full truncate inline-block">
                               {getWeightClassLabel(ranking.weight_class)}
                             </Badge>
-                            <span className="text-[9px] xs:text-[10px] sm:text-xs font-mono shrink-0 ml-auto">
+                            <span className="text-[9px] xs:text-[10px] sm:text-xs font-mono shrink-0 ml-auto pl-1 whitespace-nowrap">
                               <span className="text-green-400">{wins || 0}</span>
                               <span className="text-gray-500">-</span>
                               <span className="text-red-400">{losses || 0}</span>
@@ -382,7 +382,7 @@ const Ranking = ({ organizationCode = 'UCC_MMA', compact = false }: RankingProps
                         </div>
 
                         {/* Puntos de Ranking */}
-                        <div className="text-right shrink-0 min-w-[45px] xs:min-w-[55px] sm:min-w-[70px]">
+                        <div className="text-right shrink-0 min-w-[50px] xs:min-w-[60px] sm:min-w-[70px] pl-1">
                           <div className="text-sm xs:text-base sm:text-lg font-bold text-purple-neon-primary">
                             {ranking.points}
                           </div>
