@@ -163,13 +163,13 @@ const Ranking = ({ organizationCode = 'UCC_MMA', compact = false }: RankingProps
 
       <div className="container mx-auto px-2 xs:px-3 sm:px-4 relative z-10">
         <div className="text-center mb-4 xs:mb-6 sm:mb-8 md:mb-10">
-          <div className="relative inline-block mb-2 xs:mb-3 sm:mb-4">
+          <div className="relative inline-block mb-2 xs:mb-3 sm:mb-4 overflow-hidden max-w-full">
             {/* Echo stack: only on md+ where it's free. Mobile renders one paint. */}
             <span aria-hidden="true" className="hidden md:inline echo-layer echo-4 ufc-label text-3xl lg:text-4xl font-bold tracking-display">RANKING {currentOrg?.short_name || 'OFICIAL'}</span>
             <span aria-hidden="true" className="hidden md:inline echo-layer echo-3 ufc-label text-3xl lg:text-4xl font-bold tracking-display">RANKING {currentOrg?.short_name || 'OFICIAL'}</span>
             <span aria-hidden="true" className="hidden md:inline echo-layer echo-2 ufc-label text-3xl lg:text-4xl font-bold tracking-display">RANKING {currentOrg?.short_name || 'OFICIAL'}</span>
             <span aria-hidden="true" className="hidden md:inline echo-layer echo-1 ufc-label text-3xl lg:text-4xl font-bold tracking-display">RANKING {currentOrg?.short_name || 'OFICIAL'}</span>
-            <h2 className="relative ufc-label text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-display text-white">
+            <h2 className="relative ufc-label text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-display text-white truncate px-2">
               RANKING <span className="text-purple-neon-primary">{currentOrg?.short_name || 'OFICIAL'}</span>
             </h2>
           </div>
@@ -330,8 +330,11 @@ const Ranking = ({ organizationCode = 'UCC_MMA', compact = false }: RankingProps
                         {/* Fighter Info */}
                         <div className="flex-1 min-w-0">
                           {/* Line 1: Name + Champion badge */}
-                          <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 mb-0.5">
-                            <h4 className="text-xs xs:text-sm sm:text-base font-bold text-white group-hover:text-purple-neon-primary transition-colors break-words">
+                          <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 mb-0.5 min-w-0">
+                            <h4
+                              className="text-xs xs:text-sm sm:text-base font-bold text-white group-hover:text-purple-neon-primary transition-colors truncate"
+                              title={`${ranking.fighter.first_name} ${ranking.fighter.last_name}`}
+                            >
                               {ranking.fighter.first_name} {ranking.fighter.last_name}
                             </h4>
                             {ranking.is_champion && (
@@ -343,9 +346,12 @@ const Ranking = ({ organizationCode = 'UCC_MMA', compact = false }: RankingProps
                             )}
                           </div>
                           {/* Line 2: Nickname (min-height for uniform cards) */}
-                          <div className="min-h-[14px] mb-0.5">
+                          <div className="min-h-[14px] mb-0.5 min-w-0">
                             {ranking.fighter.nickname && (
-                              <span className="text-[9px] xs:text-[10px] sm:text-xs text-white/90 font-medium italic break-words block">
+                              <span
+                                className="text-[9px] xs:text-[10px] sm:text-xs text-white/90 font-medium italic truncate block"
+                                title={`"${ranking.fighter.nickname}"`}
+                              >
                                 "{ranking.fighter.nickname}"
                               </span>
                             )}
@@ -364,9 +370,12 @@ const Ranking = ({ organizationCode = 'UCC_MMA', compact = false }: RankingProps
                             </span>
                           </div>
                           {/* Line 4: Gym */}
-                          <div className="flex items-center gap-1 mt-0.5">
+                          <div className="flex items-center gap-1 mt-0.5 min-w-0">
                             <Building2 className="h-2.5 w-2.5 text-gray-500 shrink-0" />
-                            <span className="text-[9px] xs:text-[10px] sm:text-xs text-gray-400 break-words">
+                            <span
+                              className="text-[9px] xs:text-[10px] sm:text-xs text-gray-400 truncate"
+                              title={ranking.fighter.gym_name || 'Independiente'}
+                            >
                               {ranking.fighter.gym_name || 'Independiente'}
                             </span>
                           </div>
@@ -416,7 +425,11 @@ const Ranking = ({ organizationCode = 'UCC_MMA', compact = false }: RankingProps
             onClick={() => navigate(compact ? `/fighters?org=${organizationCode}` : '/fighters')}
             className="w-full xs:w-auto bg-purple-neon-primary hover:bg-purple-neon-secondary text-black font-bold px-4 xs:px-6 sm:px-8 py-3 xs:py-4 text-sm xs:text-base sm:text-lg animate-glow-neon min-h-[48px] touch-manipulation"
           >
-            {compact ? `Ver ranking completo de ${currentOrg?.short_name || ''}` : 'Ver Todos los Peleadores'}
+            {compact ? (
+              <span className="truncate max-w-[280px] xs:max-w-none inline-block" title={`Ver ranking completo de ${currentOrg?.short_name || ''}`}>
+                Ver completo de {currentOrg?.short_name || ''}
+              </span>
+            ) : 'Ver Todos los Peleadores'}
           </Button>
         </div>
       </div>
