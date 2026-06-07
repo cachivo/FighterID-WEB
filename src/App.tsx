@@ -79,6 +79,12 @@ const JudgeOnboarding = lazy(() => import("./pages/judge/JudgeOnboarding"));
 // Time Master
 const TimeMaster = lazy(() => import("./pages/TimeMaster"));
 
+// SPARC (Sparring Performance Assessment & Ranking Circuit)
+const SparcHub = lazy(() => import("./pages/sparc/SparcHub"));
+const SparcLiveFight = lazy(() => import("./pages/sparc/SparcLiveFight"));
+const SparcRankings = lazy(() => import("./pages/sparc/SparcRankings"));
+const SparcAdmin = lazy(() => import("./pages/sparc/SparcAdmin"));
+
 
 // Stations
 const StationPinLogin = lazy(() => import('@/components/station/StationPinLogin').then(m => ({ default: m.StationPinLogin })));
@@ -294,6 +300,12 @@ const App = () => {
               <Route path="/judge/scorecard/:fightId" element={<DigitalScorecard />} />
               <Route path="/judge/fight/:fightId" element={<JudgeScoringPanel />} />
               <Route path="/referee/control/:fightId" element={<RefereeControlRoom />} />
+
+              {/* SPARC */}
+              <Route path="/sparc" element={<SparcHub />} />
+              <Route path="/sparc/live/:fightId" element={<ProtectedRoute><SparcLiveFight /></ProtectedRoute>} />
+              <Route path="/sparc/rankings" element={<SparcRankings />} />
+              <Route path="/sparc/admin" element={<ProtectedRoute><SparcAdmin /></ProtectedRoute>} />
 
               {/* Misc */}
               <Route path="/access-denied" element={<AccessDenied />} />
