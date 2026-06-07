@@ -1,85 +1,69 @@
-# SPARC → ARENA Product Architecture Refactor
+## Diagnóstico
 
-Build the ARENA competition layer on top of the existing SPARC integrity backend. **No database changes.** All RPCs/views already exist (`sparc_event_dashboard_v`, `sparc_session_quorum`, `sparc_recover_session`, `sparc_admin_override`). The existing `SparcDashboard` page is reused as the ARENA session dashboard implementation.
+De 77 perfiles, solo **3** tienen inconsistencia entre `fighter_profiles.license_status` y la licencia real:
 
-## New files
+| Perfil | Problema |
+|---|---|
+| `dcde47b4…` (Boxeo) | Perfil dice `active`, licencia primaria está `PENDING_REVIEW` |
+| `fb24308d…` (Boxeo) | Igual |
+| `82bb63ea…` Miguel Á. Calderón (`angelmonse777@gmail.com`, MMA, `FGT-2025-039`) | Perfil dice `active` desde Oct 2025, número de licencia asignado en el perfil, pero **no existe fila** en `fighter_licenses` |
 
-### `src/pages/arena/arenaHelpers.ts`
-Shared `fmt(ms)` and `fmtTime(iso)` formatters.
+Causas raíz:
+1. `fighter_licenses` y `fighter_profiles.license_status` se actualizan en lugares distintos sin trigger que los sincronice → derivan.
+2. La UI (`ProfileHub`, `useLicenseAuth`) mira a veces el perfil y a veces la licencia, así que un usuario con licencia `PENDING_REVIEW` puede ver "Solicitar licencia" en vez de "Pendiente de revisión".
 
-### `src/pages/arena/ArenaLanding.tsx` — public/admin route `/arena`
-Operations hub that lists ALL sessions from `sparc_event_dashboard_v`.
-- Boot recovery: `recoverSession()` → if `fight_id` exists, redirect to `/arena/live/:fightId`.
-- Split sessions into Active/Paused (`active_fight_id != null`) and Scheduled (no active fight).
-- Stat strip: # live, # scheduled, total judges online, total sessions.
-- Session cards: state badge, discipline, event name, active fight name + round, judges online/registered, "Ver Público" button → `/arena/watch/:fightId`, click card → `/arena/session/:sessionId`.
-- Quick actions row: Crear Sesión (`/sparc/admin`), Arena Control (`/time-master`), Reanudar (first active session), Resultados (`/resultados`).
-- Empty state with primary CTA to `/sparc/admin`.
-- Editorial Sports v2 styling: `#0A0A0A` bg, hairline borders, crimson accent on live state.
+## Cambios
 
-### `src/pages/arena/ArenaSessionDashboard.tsx` — `/arena/session/:sessionId`
-Re-exports the existing `SparcDashboard` component unchanged (it already handles quorum, judges, overrides, audit, realtime). This keeps a single dashboard implementation; we just give it the ARENA route.
+### 1. Migración de datos (one-shot)
 
-### `src/pages/arena/ArenaPublicWatch.tsx` — public route `/arena/watch/:fightId`
-Read-only spectator view.
-- Queries `sparc_event_dashboard_v` filtered by `active_fight_id = :fightId` plus realtime subscription on `sparc_rounds` and `sparc_fights`.
-- Polls every 2s as fallback.
-- Big LIVE badge, red/blue corner names, round number, round countdown (server-clock via `useSparcServerClock`), vote count, voting open/closed state.
-- No buttons, no mutations. Safe to embed on stream overlay.
-- `useUuidParam('fightId')` to prevent enumeration.
+- Para los 2 perfiles `dcde47b4` y `fb24308d`: bajar `fighter_profiles.license_status` de `active` → `pending` para que coincida con su licencia `PENDING_REVIEW`. (No tocan número de licencia ni `primary_license_id`.)
+- Para `82bb63ea` (Miguel Á. Calderón): **crear** fila en `fighter_licenses` con:
+  - `fighter_id` = `82bb63ea…`
+  - `license_number` = `FGT-2025-039` (el que ya tenía en el perfil)
+  - `discipline` = `MMA`
+  - `status` = `ACTIVE`
+  - `is_primary` = `true`
+  - `issued_at` = `created_at` del perfil (2025-10-02)
+  - `expires_at` = `issued_at + 1 año`
+  - `notes` = `'Reconciliación de auditoría 2026-06-07'`
+  
+  Luego: `UPDATE fighter_profiles SET primary_license_id = <nueva licencia>` para `82bb63ea`.
 
-## Modified files
+### 2. Trigger de consistencia permanente
 
-### `src/App.tsx`
-Add lazy imports + routes:
-```tsx
-const ArenaLanding = lazy(() => import("./pages/arena/ArenaLanding"));
-const ArenaSessionDashboard = lazy(() => import("./pages/arena/ArenaSessionDashboard"));
-const ArenaPublicWatch = lazy(() => import("./pages/arena/ArenaPublicWatch"));
-```
-New routes (placed alongside SPARC block):
-- `/arena` → `<ArenaLanding />`
-- `/arena/session/:sessionId` → `<ProtectedRoute><ArenaSessionDashboard /></ProtectedRoute>`
-- `/arena/live/:fightId` → reuse existing `<SparcLiveFight />` (judge panel)
-- `/arena/watch/:fightId` → `<ArenaPublicWatch />`
+Crear función `sync_fighter_profile_license()` + trigger `AFTER INSERT/UPDATE/DELETE ON fighter_licenses` que para cada `fighter_id` afectado:
 
-Legacy redirects (keep SPARC URLs working):
-- `/sparc/dashboard/:sessionId` → `<Navigate to="/arena/session/:sessionId" replace />` via small inline redirect component.
+1. Encuentra la mejor licencia (prioriza `is_primary=true`, luego `ACTIVE > PENDING_REVIEW > SUSPENDED > REVOKED`, luego más reciente).
+2. Actualiza `fighter_profiles.primary_license_id` = id de esa licencia (o `NULL`).
+3. Actualiza `fighter_profiles.license_status` siguiendo este mapeo:
+   - `ACTIVE` → `'active'`
+   - `PENDING_REVIEW` / `APPLIED` → `'pending'`
+   - `SUSPENDED` → `'suspended'`
+   - `REVOKED` / `EXPIRED` / `NULL` → `'expired'` (o `NULL` si no hay licencia)
+4. Sincroniza `license_number` desde la licencia primaria.
 
-Existing SPARC routes (`/sparc`, `/sparc/live/:fightId`, `/sparc/rankings`, `/sparc/admin`) stay intact.
+Esto evita que vuelvan a derivar en el futuro. Idempotente: si los valores ya coinciden, no escribe.
 
-### `src/components/Header.tsx`
-Replace the "Time Master" entry in `navigationItems` (mobile sheet) with `{ name: "ARENA", href: "/arena", icon: Radio, highlight: true }`. Desktop nav already has Time Master separately — add an ARENA link before it on `lg` and `md` rows, and keep the mobile-only icon button pointing to `/arena` instead of `/time-master`.
+### 3. UI: respetar el estado real
 
-### `src/pages/sparc/SparcHub.tsx` — full rewrite
-New hierarchy: Desarrollo (Records, Rankings, Gyms, Coaches) + Competencia bridge to ARENA + Eventos list.
-- Boot recovery redirects to `/arena/live/:fightId` (not `/sparc/live/...`).
-- Tile grid links: Records (`/resultados`), Rankings (`/sparc/rankings`), Gyms (`/gimnasios`), Coaches (`/entrenadores`).
-- ARENA bridge card → `/arena`.
-- Events list preserved from existing implementation.
+- **`src/pages/profile/ProfileHub.tsx`**: el switch que decide `fighterStatus` ya mapea `PENDING_REVIEW`→pending, pero la ruta para `pending` actualmente lleva a `/license/pending` solo si hay licencia. Si la licencia existe en cualquier estado (`PENDING_REVIEW`, `APPLIED`, `SUSPENDED`) no debe ofrecer "/license/onboarding" (re-solicitar). Ajustar la lógica para que únicamente vaya a `onboarding` cuando **no** existe fila en `fighter_licenses`.
+- **`src/hooks/useLicenseAuth.tsx`** (líneas 129-181, bloque `no_license` con profile que tiene `primary_license_id`): hoy construye una "minimal license data" con `status: 'ACTIVE'` aunque la licencia real esté `PENDING_REVIEW` — lo cual es engañoso. Cambiar para que use el `status` real consultado en la `fighter_licenses` directa; si no es `ACTIVE`, marcar `hasActiveLicense=false` y redirigir según el status (pending → `/license/pending`, suspended → `/license/suspended`). Eliminar el shortcut "ACTIVE forzado".
 
-### `src/utils/navigation.ts`
-Append ARENA helpers:
-```ts
-export const ARENA_ROUTES = {
-  HUB: '/arena',
-  SESSION: (id: string) => `/arena/session/${id}`,
-  LIVE: (id: string) => `/arena/live/${id}`,
-  WATCH: (id: string) => `/arena/watch/${id}`,
-} as const;
-```
+### 4. Verificación final
 
-### `src/pages/TimeMaster.tsx`
-Rename the visible page heading/subtitle to "Arena Control" (Spanish: "Control de Arena"). Route stays `/time-master`. No business logic changes.
+Después de migración + trigger:
+- Re-correr el query de auditoría; debe devolver **0 filas inconsistentes**.
+- Verificar que `useLicenseAuth` para Miguel Á. Calderón reporta `active_license` y para los 2 boxeadores reporta `pending_license`.
 
-## What I'm NOT doing
-- No DB migrations (script referenced non-existent `sparc_session_dashboard` / `sparc_fight_state` RPCs — I'm using `sparc_event_dashboard_v` + the existing `SparcDashboard` instead).
-- Not removing SPARC routes — they stay as legacy entry points + redirect to ARENA.
-- Not running the broken sed-based script (would corrupt App.tsx / Header.tsx).
+## Detalles técnicos
 
-## Verification
-- `/arena` renders, lists sessions, redirects when there's an active fight in localStorage.
-- `/arena/session/:sessionId` shows the existing operational dashboard (admin-gated).
-- `/arena/watch/:fightId` renders public view; survives reconnects via polling fallback.
-- `/sparc/dashboard/:sessionId` redirects to the ARENA equivalent.
-- Header shows ARENA on mobile + desktop; TimeMaster page heading reads "Arena Control".
+- Cambios de datos van en `supabase--insert` (los UPDATE + INSERT). El trigger y la función van en `supabase--migration`.
+- Trigger se llama con `AFTER` para evitar recursión; agregar guarda `WHEN (pg_trigger_depth() = 0)` o usar `SET LOCAL` para prevenir loop si el UPDATE en `fighter_profiles` dispara otros triggers.
+- No tocamos `check_user_license_status` RPC; sigue funcionando porque ahora `primary_license_id` y `license_status` siempre serán coherentes.
+- Sin cambios de schema en columnas existentes, solo función + trigger nuevos.
+
+## Fuera de alcance
+
+- No se re-emiten licencias para los 2 boxeadores pendientes (siguen en cola de aprobación admin).
+- No se modifica el flujo de aprobación admin existente.
+- No se cambian RLS.
