@@ -1,111 +1,130 @@
 /**
- * SPARC Vote Queue — IndexedDB-backed offline vote store.
- * Guarantees no vote is ever lost: tap -> DRAFT (local) -> SUBMITTED -> CONFIRMED.
+ * SPARC Vote Queue — public API on top of the IndexedDB store.
+ * Submits votes through sparc_submit_vote with device_id binding,
+ * interprets the server response, and transitions local state.
  */
-import { openDB, type IDBPDatabase } from 'idb';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  putVote, updateVote, getVote, getAllVotes, latestVoteForRound,
+  listRetryable, listPendingForUi, backoffDelay, TERMINAL_STATUSES,
+  type VoteChoice, type VoteStatus, type VoteRow,
+} from './storage/voteDb';
 
-export type VoteChoice = 'red' | 'blue' | 'draw' | 'abstain';
-export type VoteStatus = 'DRAFT' | 'SUBMITTED' | 'CONFIRMED';
+export type { VoteChoice, VoteStatus, VoteRow };
+// Back-compat alias used by older callers
+export type PendingVote = VoteRow;
 
-export interface PendingVote {
-  client_vote_id: string;
-  round_id: string;
-  choice: VoteChoice;
-  status: VoteStatus;
-  created_at: number;
-  attempts: number;
-}
-
-const DB_NAME = 'sparc';
-const STORE = 'votes';
-let dbPromise: Promise<IDBPDatabase> | null = null;
-
-function db() {
-  if (!dbPromise) {
-    dbPromise = openDB(DB_NAME, 1, {
-      upgrade(d) {
-        if (!d.objectStoreNames.contains(STORE)) {
-          d.createObjectStore(STORE, { keyPath: 'client_vote_id' });
-        }
-      },
-    });
-  }
-  return dbPromise;
-}
-
-export async function enqueueVote(round_id: string, choice: VoteChoice): Promise<PendingVote> {
-  const vote: PendingVote = {
+export async function enqueueVote(
+  round_id: string,
+  fight_id: string,
+  choice: VoteChoice,
+  device_id: string,
+): Promise<VoteRow> {
+  const now = Date.now();
+  const row: VoteRow = {
     client_vote_id: crypto.randomUUID(),
     round_id,
+    fight_id,
     choice,
     status: 'DRAFT',
-    created_at: Date.now(),
+    device_id,
+    created_at: now,
+    updated_at: now,
     attempts: 0,
+    next_retry_at: 0,
   };
-  const d = await db();
-  await d.put(STORE, vote);
-  return vote;
+  await putVote(row);
+  return row;
 }
 
-export async function listPending(): Promise<PendingVote[]> {
-  const d = await db();
-  const all = (await d.getAll(STORE)) as PendingVote[];
-  return all.filter((v) => v.status !== 'CONFIRMED');
+export async function listPending(): Promise<VoteRow[]> {
+  return listPendingForUi();
 }
 
-export async function markStatus(client_vote_id: string, status: VoteStatus) {
-  const d = await db();
-  const v = (await d.get(STORE, client_vote_id)) as PendingVote | undefined;
-  if (!v) return;
-  v.status = status;
-  await d.put(STORE, v);
+export async function getVoteForRound(round_id: string): Promise<VoteRow | null> {
+  return latestVoteForRound(round_id);
 }
 
-export async function bumpAttempts(client_vote_id: string) {
-  const d = await db();
-  const v = (await d.get(STORE, client_vote_id)) as PendingVote | undefined;
-  if (!v) return;
-  v.attempts += 1;
-  await d.put(STORE, v);
+function classifyServerResult(res: any): VoteStatus | null {
+  if (!res) return null;
+  const s = String(res.status ?? res.result ?? '').toUpperCase();
+  if (!s) return null;
+  if (s === 'CONFIRMED' || s === 'OK' || s === 'ACCEPTED' || s === 'COUNTED') return 'CONFIRMED';
+  if (s === 'LOCKED') return 'LOCKED';
+  if (s === 'TOO_LATE' || s === 'REJECTED_TOO_LATE' || s === 'VOTING_CLOSED' || s === 'WINDOW_CLOSED') return 'REJECTED_TOO_LATE';
+  if (s === 'DEVICE_REJECTED' || s === 'DEVICE_MISMATCH' || s === 'DEVICE_TRANSFERRED' || s === 'REVOKED') return 'DEVICE_REJECTED';
+  return null;
 }
 
-export async function getVoteForRound(round_id: string): Promise<PendingVote | null> {
-  const d = await db();
-  const all = (await d.getAll(STORE)) as PendingVote[];
-  const match = all
-    .filter((v) => v.round_id === round_id)
-    .sort((a, b) => b.created_at - a.created_at);
-  return match[0] ?? null;
+function classifyError(err: any): VoteStatus | null {
+  const msg = String(err?.message ?? err ?? '').toLowerCase();
+  if (msg.includes('voting_closed') || msg.includes('too_late') || msg.includes('window')) return 'REJECTED_TOO_LATE';
+  if (msg.includes('device_mismatch') || msg.includes('device_transferred') || msg.includes('device_rejected')) return 'DEVICE_REJECTED';
+  return null;
 }
 
-/** Submit a single vote to the server. Returns true on confirmed. */
-export async function submitVote(v: PendingVote): Promise<boolean> {
+/** Submit a single vote. Returns the resulting status (terminal or retryable). */
+export async function submitVote(v: VoteRow): Promise<VoteStatus> {
+  await updateVote(v.client_vote_id, {
+    status: 'SUBMITTED',
+    attempts: v.attempts + 1,
+  });
   try {
-    await bumpAttempts(v.client_vote_id);
-    await markStatus(v.client_vote_id, 'SUBMITTED');
-    const { error } = await supabase.rpc('sparc_submit_vote', {
+    const { data, error } = await supabase.rpc('sparc_submit_vote', {
       p_round_id: v.round_id,
       p_choice: v.choice,
       p_client_vote_id: v.client_vote_id,
+      p_device_id: v.device_id,
     });
     if (error) throw error;
-    await markStatus(v.client_vote_id, 'CONFIRMED');
-    return true;
-  } catch (e) {
-    await markStatus(v.client_vote_id, 'DRAFT');
-    return false;
+    const terminal = classifyServerResult(data) ?? 'CONFIRMED';
+    await updateVote(v.client_vote_id, { status: terminal });
+    return terminal;
+  } catch (e: any) {
+    const terminal = classifyError(e);
+    if (terminal) {
+      await updateVote(v.client_vote_id, { status: terminal, last_error: String(e?.message ?? e) });
+      return terminal;
+    }
+    // transient — bump backoff and stay retryable
+    const attempts = (v.attempts + 1);
+    await updateVote(v.client_vote_id, {
+      status: 'DRAFT',
+      next_retry_at: Date.now() + backoffDelay(attempts),
+      last_error: String(e?.message ?? e),
+    });
+    return 'DRAFT';
   }
 }
 
-/** Flush all pending votes. Called on reconnect / mount / interval. */
-export async function flushQueue(): Promise<{ confirmed: number; remaining: number }> {
-  const pending = await listPending();
-  let confirmed = 0;
-  for (const v of pending) {
-    const ok = await submitVote(v);
-    if (ok) confirmed += 1;
-  }
-  const remaining = (await listPending()).length;
-  return { confirmed, remaining };
+export interface FlushResult {
+  attempted: number;
+  confirmed: number;
+  locked: number;
+  rejected_too_late: number;
+  device_rejected: number;
+  remaining: number;
 }
+
+export async function flushQueue(): Promise<FlushResult> {
+  const list = await listRetryable();
+  const now = Date.now();
+  const r: FlushResult = {
+    attempted: 0, confirmed: 0, locked: 0,
+    rejected_too_late: 0, device_rejected: 0, remaining: 0,
+  };
+  for (const v of list) {
+    if (v.next_retry_at > now) continue;
+    r.attempted += 1;
+    const s = await submitVote(v);
+    if (s === 'CONFIRMED') r.confirmed += 1;
+    else if (s === 'LOCKED') r.locked += 1;
+    else if (s === 'REJECTED_TOO_LATE') r.rejected_too_late += 1;
+    else if (s === 'DEVICE_REJECTED') r.device_rejected += 1;
+  }
+  r.remaining = (await listRetryable()).length;
+  return r;
+}
+
+export async function dumpAll(): Promise<VoteRow[]> { return getAllVotes(); }
+export { getVote, TERMINAL_STATUSES };

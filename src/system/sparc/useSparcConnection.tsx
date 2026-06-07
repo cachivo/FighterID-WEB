@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { flushQueue, listPending } from './voteQueue';
+import { consumeInteraction } from './hooks/useSparcInteraction';
 
 export type ConnStatus = 'online' | 'reconnecting' | 'offline';
 
@@ -56,7 +57,14 @@ export async function recoverSession(): Promise<RecoveredSession | null> {
   return data[0] as RecoveredSession;
 }
 
-export function useSparcConnection(sessionId: string | null) {
+export interface UseSparcConnectionOpts {
+  deviceId?: string | null;
+  /** Realtime channel state callback (joined/closed) — optional. */
+  onChannelState?: (state: 'joined' | 'closed' | 'error') => void;
+}
+
+export function useSparcConnection(sessionId: string | null, opts: UseSparcConnectionOpts = {}) {
+  const { deviceId } = opts;
   const [status, setStatus] = useState<ConnStatus>(
     typeof navigator !== 'undefined' && navigator.onLine ? 'online' : 'offline'
   );
@@ -113,7 +121,11 @@ export function useSparcConnection(sessionId: string | null) {
     const beat = async () => {
       if (cancelled || document.hidden || !navigator.onLine) return;
       try {
-        await supabase.rpc('sparc_heartbeat', { p_session_id: sessionId });
+        await supabase.rpc('sparc_heartbeat', {
+          p_session_id: sessionId,
+          p_device_id: deviceId ?? null,
+          p_interacted: consumeInteraction(8_000),
+        });
       } catch {}
     };
     beat();
@@ -125,7 +137,7 @@ export function useSparcConnection(sessionId: string | null) {
       clearInterval(iv);
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [sessionId]);
+  }, [sessionId, deviceId]);
 
   // initial + periodic queue check
   useEffect(() => {
