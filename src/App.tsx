@@ -317,6 +317,12 @@ const App = () => {
               <Route path="/sparc/admin" element={<ProtectedRoute><SparcAdmin /></ProtectedRoute>} />
               <Route path="/sparc/dashboard/:sessionId" element={<ProtectedRoute><SparcDashboard /></ProtectedRoute>} />
 
+              {/* ARENA — Competition Layer */}
+              <Route path="/arena" element={<ArenaLanding />} />
+              <Route path="/arena/session/:sessionId" element={<ProtectedRoute><ArenaSessionDashboard /></ProtectedRoute>} />
+              <Route path="/arena/live/:fightId" element={<ProtectedRoute><SparcLiveFight /></ProtectedRoute>} />
+              <Route path="/arena/watch/:fightId" element={<ArenaPublicWatch />} />
+
               {/* Misc */}
               <Route path="/access-denied" element={<AccessDenied />} />
               <Route path="*" element={<NotFound />} />
