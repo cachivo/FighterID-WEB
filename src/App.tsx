@@ -86,6 +86,11 @@ const SparcRankings = lazy(() => import("./pages/sparc/SparcRankings"));
 const SparcAdmin = lazy(() => import("./pages/sparc/SparcAdmin"));
 const SparcDashboard = lazy(() => import("./pages/sparc/SparcDashboard"));
 
+// ARENA — Competition Layer (consumes SPARC integrity backend)
+const ArenaLanding = lazy(() => import("./pages/arena/ArenaLanding"));
+const ArenaSessionDashboard = lazy(() => import("./pages/arena/ArenaSessionDashboard"));
+const ArenaPublicWatch = lazy(() => import("./pages/arena/ArenaPublicWatch"));
+
 
 // Stations
 const StationPinLogin = lazy(() => import('@/components/station/StationPinLogin').then(m => ({ default: m.StationPinLogin })));
