@@ -78,7 +78,7 @@ interface Quorum {
 
 // ---------- main page ----------
 export default function SparcDashboard() {
-  const sessionId = useUuidParam('sessionId');
+  const { value: sessionId, redirect } = useUuidParam('sessionId');
   const navigate = useNavigate();
   const { isAdmin, loading: adminLoading } = useAdmin();
   const { synced, latency } = useSparcServerClock();
@@ -239,7 +239,7 @@ export default function SparcDashboard() {
     return <Shell><div className="p-6 font-mono text-xs uppercase text-muted-foreground">Invalid session id.</div></Shell>;
   }
   if (!dbReachable) {
-    return <Shell><DegradedBanner />{row && <SessionOverview row={row} />}</Shell>;
+    return <Shell><DegradedBanner /></Shell>;
   }
   if (!row) {
     return <Shell><div className="p-6 font-mono text-xs uppercase text-muted-foreground">Loading session…</div></Shell>;
