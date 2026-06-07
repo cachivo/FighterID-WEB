@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { flushQueue, listPending } from './voteQueue';
+import { consumeInteraction } from './hooks/useSparcInteraction';
 
 export type ConnStatus = 'online' | 'reconnecting' | 'offline';
 
@@ -56,7 +57,14 @@ export async function recoverSession(): Promise<RecoveredSession | null> {
   return data[0] as RecoveredSession;
 }
 
-export function useSparcConnection(sessionId: string | null) {
+export interface UseSparcConnectionOpts {
+  deviceId?: string | null;
+  /** Realtime channel state callback (joined/closed) — optional. */
+  onChannelState?: (state: 'joined' | 'closed' | 'error') => void;
+}
+
+export function useSparcConnection(sessionId: string | null, opts: UseSparcConnectionOpts = {}) {
+  const { deviceId } = opts;
   const [status, setStatus] = useState<ConnStatus>(
     typeof navigator !== 'undefined' && navigator.onLine ? 'online' : 'offline'
   );
