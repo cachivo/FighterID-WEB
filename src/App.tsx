@@ -198,6 +198,9 @@ const App = () => {
               <Route path="/gimnasios" element={<Gimnasios />} />
               <Route path="/gimnasios/:slug" element={<GimnasioDetalle />} />
 
+              {/* Legacy /dashboard → profile hub */}
+              <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
+
               {/* Gym Dashboard */}
               <Route path="/gym/:gymId/dashboard" element={<ProtectedRoute><GymDashboard /></ProtectedRoute>} />
               <Route path="/gym/:gymId/fighters" element={<ProtectedRoute><GymFightersPage /></ProtectedRoute>} />
