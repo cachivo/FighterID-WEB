@@ -4,6 +4,54 @@ All notable changes to **Fighter ID**. Format inspired by [Keep a Changelog](htt
 
 ---
 
+## [2026-06-07b] — SPARC v2 Integrity-First Hardening (Build Pass 0, 1, 2)
+
+> **Context**: The SPARC scoring system needed integrity guarantees — no lost votes, no duplicate devices, no clock drift, no blocked events, immutable confirmed votes, configurable quorum, and recomputable rankings. Delivered as three build passes: database/RPC foundation (Pass 0), judge resilience layer (Pass 1), and the Time Master Dashboard (Pass 2).
+
+### SPARC — added (Build Pass 0: Database & Server Logic)
+
+- **`sparc_server_time()`** — Returns server timestamp + monotonic token; client calculates RTT/offset so every countdown is server-synchronized.
+- **`sparc_claim_device(session_id, device_id, device_label)`** — One judge = one active device. If a different device is already bound, writes `DEVICE_TRANSFER` audit log, updates `active_device_id`, and broadcasts a realtime `device_revoked` event to kick the old device.
+- **`sparc_submit_vote()`** — Rewritten to be idempotent, window-aware, and device-aware. Rejects votes with `VOTING_CLOSED` when `now() >= voting_closes_at` and `DEVICE_NOT_BOUND` when `client_device_id != active_device_id`.
+- **`sparc_close_voting(round_id)`** — In a single transaction sets every vote of the round to `LOCKED`. A `BEFORE UPDATE/DELETE` trigger on `sparc_votes` blocks any mutation of `LOCKED` rows (even admins).
+- **`sparc_session_quorum()` / `sparc_open_voting()`** — Enforces `min_quorum_pct` (default 60) and optional `min_quorum_absolute`. Below quorum → returns `QUORUM_NOT_MET`; admin can still override.
+- **`sparc_auto_close_expired_rounds()`** — Opportunistically sweeps expired rounds from any judge heartbeat or admin tick, so rounds close even if the admin browser is dead.
+- **`sparc_heartbeat()`** — Upgraded to compute `ONLINE | IDLE | AWAY | OFFLINE` from `last_interaction` age (10s / 60s / 300s thresholds).
+- **`sparc_admin_override(fight_id, action, reason)`** — Admin-only escape hatch for `force_close_round`, `force_close_voting`, `force_confirm_result`, `force_advance_fight`. Requires mandatory reason; fully audited in `sparc_audit_log` as `EMERGENCY_OVERRIDE`.
+- **`sparc_vote_source` enum + `source_meta jsonb`** — Vote source tracking (`human | ai | coach | hybrid | auto`) with metadata. Schema is AI-ready; current UI writes `human`.
+- **Ranking resilience** — `sparc_rankings` now stores `wins`, `losses`, `draws`, `sparring_count`, `strength_of_schedule`. `sparc_rankings_v` computes `rank` via `ROW_NUMBER()` per discipline/weight class. `sparc_recompute_rankings(discipline)` recalculates on demand without migrations.
+- **`sparc_event_dashboard_v`** — Aggregated executive view per active session: active fight, current round, judge presence counts, quorum status, last vote timestamp, sync drift, next fight. Powers Build Pass 2 without further DB work.
+- **Migrations**: `supabase/migrations/20260607183902_06a1b20b-29f5-43ef-938d-282945d604a6.sql` and `20260607184757_6a1090d7-b54d-495e-bf3e-061d90ab8257.sql`.
+
+### SPARC — added (Build Pass 1: Judge Resilience Layer)
+
+- **`src/system/sparc/hooks/useSparcServerClock.ts`** — Client hook that calls `sparc_server_time()` on mount + every 30s, measures RTT, computes clock offset, and exports `serverNow()`. Bans `Date.now()` in SPARC views.
+- **`src/system/sparc/hooks/useSparcDevice.ts`** — Generates a persistent `device_id` (stored in `localStorage`), claims it via `sparc_claim_device`, and monitors `device_revoked` broadcasts to trigger a full-screen lockout overlay if the session is transferred to another device.
+- **`src/system/sparc/storage/voteDb.ts`** — IndexedDB store for vote persistence with lifecycle states: `DRAFT → SUBMITTED → CONFIRMED → LOCKED`, plus terminal states `REJECTED_TOO_LATE` and `DEVICE_REJECTED`.
+- **`src/system/sparc/voteQueue.ts`** — Submission pipeline passes `device_id` to `sparc_submit_vote`, handles terminal vs. retryable errors, and reconciles server state back into IndexedDB.
+- **`src/system/sparc/hooks/useSparcRecoveryWorker.ts`** — Background recovery process polling every 15s to flush pending votes from IndexedDB using exponential backoff (1s–30s).
+- **`src/system/sparc/hooks/useSparcSessionRecovery.ts`** — On app launch/refresh calls `sparc_recover_session` and auto-redirects judges back to the active fight at `/sparc/live/:fightId`.
+- **`src/system/sparc/hooks/useSparcInteraction.ts`** — Tracks `last_interaction` on `pointerdown` / `keydown` for heartbeat presence state.
+- **`src/pages/sparc/SparcLiveFight.tsx`** — Overhauled for low-end Android (no blurs/shadows). Large touch targets (≥56px), real-time state reconciliation (e.g. `markRoundLocked` on round close), visual countdowns driven by `serverNow()`, distinct `LOCKED` tick.
+- **`src/system/sparc/useSparcConnection.tsx`** — Heartbeat now sends `p_device_id` and `p_interacted`.
+
+### SPARC — added (Build Pass 2: Time Master Dashboard)
+
+- **`src/pages/sparc/SparcDashboard.tsx`** — Operational control center at `/sparc/dashboard/:sessionId` (admin-gated). Reads `sparc_event_dashboard_v` and `sparc_session_quorum()` via realtime.
+- **Realtime subscriptions** — `sparc_presence`, `sparc_fights`, `sparc_rounds`, `sparc_votes`, `sparc_audit_log` for live updates.
+- **Judge grid** — Displays all judges with color-coded presence states (`online`, `idle`, `away`, `offline`).
+- **Quorum gauge** — Live progress bar against `min_quorum_pct` / `min_quorum_absolute`.
+- **Emergency override drawer** — Calls `sparc_admin_override()` with mandatory reason input for `force_close_round`, `force_close_voting`, `force_confirm_result`, `force_advance_fight`.
+- **System health panel** — Shows sync offset, latency, and realtime connection status.
+- **`src/App.tsx`** — Added lazy-loaded route for the dashboard.
+
+### Files changed
+
+- **Created**: `src/system/sparc/hooks/useSparcServerClock.ts`, `src/system/sparc/hooks/useSparcDevice.ts`, `src/system/sparc/hooks/useSparcInteraction.ts`, `src/system/sparc/hooks/useSparcRecoveryWorker.ts`, `src/system/sparc/hooks/useSparcSessionRecovery.ts`, `src/system/sparc/storage/voteDb.ts`, `src/pages/sparc/SparcDashboard.tsx`, and two Supabase migrations.
+- **Edited**: `src/pages/sparc/SparcLiveFight.tsx`, `src/system/sparc/voteQueue.ts`, `src/system/sparc/useSparcConnection.tsx`, `src/App.tsx`, `src/integrations/supabase/types.ts`.
+
+---
+
 ## [2026-06-07] — Critical stability fix: query-pattern failures & orphaned auth rows
 
 > **Context**: Systemic `.single()` query failures across multiple hooks/pages caused unhandled rejections when an expected row did not exist. The root trigger was an inconsistent `app_user` backfill state where some `auth.users` rows had no corresponding `app_user`, making every `.single()` call throw at runtime.
