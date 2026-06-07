@@ -56,7 +56,8 @@ const Header = () => {
   }, [user, getUserFighterProfile]);
 
   const navigationItems = [
-    { name: "Time Master", href: "/time-master", icon: Timer, highlight: true },
+    { name: "ARENA", href: "/arena", icon: Radio, highlight: true },
+    { name: "Arena Control", href: "/time-master", icon: Timer },
     { name: "Social", href: "/social/feed", icon: Users },
     { name: "Eventos", href: "/eventos", icon: Calendar },
     { name: "En Vivo", href: "/en-vivo", icon: Radio },
