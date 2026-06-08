@@ -423,16 +423,17 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     // LAYER 2: Real-time subscription for fighter_licenses changes (NEW)
-    if (user && licenseData?.id) {
+    const currentLicenseId = licenseDataRef.current?.id;
+    if (user && currentLicenseId) {
       licenseChannel = supabase
-        .channel(`license-changes-${licenseData.id}`)
+        .channel(`license-changes-${currentLicenseId}`)
         .on(
           'postgres_changes',
           {
             event: 'UPDATE',
             schema: 'public',
             table: 'fighter_licenses',
-            filter: `id=eq.${licenseData.id}`
+            filter: `id=eq.${currentLicenseId}`
           },
           (payload: any) => {
             console.log('[REALTIME] License status changed via postgres_changes:', payload);
