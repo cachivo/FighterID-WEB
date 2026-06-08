@@ -25,7 +25,7 @@ export function useCombinedFighterRecord(fighterId: string | null) {
           boxeo_record_wins, boxeo_record_losses, boxeo_record_draws
         `)
         .eq('id', fighterId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;

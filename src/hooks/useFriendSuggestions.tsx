@@ -31,7 +31,7 @@ export const useFriendSuggestions = () => {
         .from('app_user')
         .select('id')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!appUser) return;
 
@@ -40,7 +40,7 @@ export const useFriendSuggestions = () => {
         .from('fighter_profiles')
         .select('gym_name, weight_class, country')
         .eq('user_id', appUser.id)
-        .single();
+        .maybeSingle();
 
       // Get existing friends and pending requests
       const { data: existingFriends } = await supabase

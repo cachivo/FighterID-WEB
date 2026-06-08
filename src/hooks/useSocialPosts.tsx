@@ -71,7 +71,7 @@ export function useSocialPosts() {
           .from('app_user')
           .select('id')
           .eq('auth_user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (appUser) {
           const { data: friendships } = await supabase
@@ -218,7 +218,7 @@ export function useSocialPosts() {
         .from('app_user')
         .select('id, is_admin, email')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (userError || !appUser) {
         console.error('❌ [CREATE POST] app_user not found:', userError);
@@ -492,8 +492,7 @@ export function useSocialPosts() {
       const { data: appUser } = await supabase
         .from('app_user')
         .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
+        .eq('auth_user_id', user.id).maybeSingle();
 
       if (!appUser) {
         toast.error('Usuario no encontrado');
@@ -597,8 +596,7 @@ export function useSocialPosts() {
       const { data: appUser } = await supabase
         .from('app_user')
         .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
+        .eq('auth_user_id', user.id).maybeSingle();
 
       if (!appUser) {
         console.log('[FRIENDS POSTS] No app_user found');

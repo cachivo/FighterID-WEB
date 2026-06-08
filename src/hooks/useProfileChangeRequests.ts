@@ -105,8 +105,7 @@ export function useProfileChangeRequests() {
       const { data: appUser, error: userError } = await supabase
         .from('app_user')
         .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
+        .eq('auth_user_id', user.id).maybeSingle();
 
       if (userError || !appUser) {
         throw new Error('Usuario no encontrado');
@@ -243,8 +242,7 @@ export function useProfileChangeRequests() {
       const { data: appUser, error: appUserError } = await supabase
         .from('app_user')
         .select('id')
-        .eq('auth_user_id', userData.user.id)
-        .single();
+        .eq('auth_user_id', userData.user.id).maybeSingle();
 
       if (appUserError) throw appUserError;
 
@@ -310,8 +308,7 @@ export function useProfileChangeRequests() {
       const { data: appUser } = await supabase
         .from('app_user')
         .select('id')
-        .eq('auth_user_id', user?.id)
-        .single();
+        .eq('auth_user_id', user?.id).maybeSingle();
 
       if (!appUser) {
         throw new Error('Usuario admin no encontrado');

@@ -180,6 +180,9 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setLoadingProgress(30);
         console.log(`[LICENSE AUTH] Retrying... (${retryCountRef.current}/${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, 1000));
+        // FIX C1: Reset in-progress guard BEFORE recursing, otherwise the retry
+        // is silently skipped (finally hasn't run yet).
+        checkInProgressRef.current = false;
         return checkLicenseStatusOptimized(userId);
       }
       
@@ -422,54 +425,24 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .subscribe();
     }
 
-    // LAYER 2: Real-time subscription for fighter_licenses changes (NEW)
-    const currentLicenseId = licenseDataRef.current?.id;
-    if (user && currentLicenseId) {
-      licenseChannel = supabase
-        .channel(`license-changes-${currentLicenseId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'fighter_licenses',
-            filter: `id=eq.${currentLicenseId}`
-          },
-          (payload: any) => {
-            console.log('[REALTIME] License status changed via postgres_changes:', payload);
-            if (mounted && payload.new?.status === 'ACTIVE') {
-              console.log('[REALTIME] License approved! Updating state immediately...');
-              setHasActiveLicense(true);
-              setLicenseData((prev: any) => prev ? { ...prev, status: 'ACTIVE' } : prev);
-              // Auto-redirect from pending page
-              if (window.location.pathname === '/license/pending') {
-                navigate('/license/dashboard', { replace: true });
-              }
-            } else if (mounted && payload.new?.status === 'SUSPENDED') {
-              setHasActiveLicense(false);
-              setLicenseData((prev: any) => prev ? { ...prev, status: 'SUSPENDED' } : prev);
-              if (window.location.pathname === '/license/dashboard') {
-                navigate('/license/suspended', { replace: true });
-              }
-            }
+    // FIX H2: License-specific realtime channel moved to its own useEffect below
+    // so it actually fires after licenseData loads (was always null here).
+
+    // LAYER 3: Broadcast listener — FIX H5: only when authenticated
+    if (user) {
+      broadcastChannel = supabase
+        .channel('license-approvals-broadcast')
+        .on('broadcast', { event: 'license-approved' }, (payload) => {
+          console.log('[BROADCAST] License approval notification received:', payload);
+          const refLicId = licenseDataRef.current?.id;
+          if (mounted && refLicId && payload.payload?.licenseId === refLicId) {
+            console.log('[BROADCAST] This is our license! Refreshing status...');
+            retryCountRef.current = 0;
+            checkLicenseStatusOptimized(user.id);
           }
-        )
+        })
         .subscribe();
     }
-
-    // LAYER 3: Broadcast listener for admin approval notifications (NEW)
-    broadcastChannel = supabase
-      .channel('license-approvals-broadcast')
-      .on('broadcast', { event: 'license-approved' }, (payload) => {
-        console.log('[BROADCAST] License approval notification received:', payload);
-        const refLicId = licenseDataRef.current?.id;
-        if (mounted && user && refLicId && payload.payload?.licenseId === refLicId) {
-          console.log('[BROADCAST] This is our license! Refreshing status...');
-          retryCountRef.current = 0;
-          checkLicenseStatusOptimized(user.id);
-        }
-      })
-      .subscribe();
 
     return () => {
       mounted = false;
@@ -487,6 +460,43 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     };
   }, [user?.id]);
+
+  // FIX H2: License-specific realtime channel, depends on the LOADED licenseData.id
+  useEffect(() => {
+    const currentLicenseId = licenseData?.id;
+    if (!user || !currentLicenseId) return;
+
+    const licenseChannel = supabase
+      .channel(`license-changes-${currentLicenseId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'fighter_licenses',
+          filter: `id=eq.${currentLicenseId}`
+        },
+        (payload: any) => {
+          console.log('[REALTIME] License status changed via postgres_changes:', payload);
+          if (payload.new?.status === 'ACTIVE') {
+            setHasActiveLicense(true);
+            setLicenseData((prev: any) => prev ? { ...prev, status: 'ACTIVE' } : prev);
+            if (window.location.pathname === '/license/pending') {
+              navigate('/license/dashboard', { replace: true });
+            }
+          } else if (payload.new?.status === 'SUSPENDED') {
+            setHasActiveLicense(false);
+            setLicenseData((prev: any) => prev ? { ...prev, status: 'SUSPENDED' } : prev);
+            if (window.location.pathname === '/license/dashboard') {
+              navigate('/license/suspended', { replace: true });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(licenseChannel); };
+  }, [user?.id, licenseData?.id, navigate]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
