@@ -4,6 +4,37 @@ All notable changes to **Fighter ID**. Format inspired by [Keep a Changelog](htt
 
 ---
 
+## [2026-06-08] — License audit: reconciled profile/license drift + consistency trigger
+
+> **Context**: Audit of 77 fighter profiles found 3 inconsistencies where `fighter_profiles.license_status` diverged from the actual `fighter_licenses` rows. Root cause: no synchronization mechanism between the two tables; UI code sometimes read the profile column and sometimes the license table, causing misleading status displays.
+
+### Data integrity — fixed
+
+- **2 Boxeo profiles** (`dcde47b4…`, `fb24308d…`) — `license_status` corrected from `active` → `pending` to match their actual `PENDING_REVIEW` license state. No license number or `primary_license_id` changed; they remain in the admin approval queue.
+- **1 MMA profile** (`82bb63ea…`, Miguel Á. Calderón, `FGT-2025-039`) — Missing `fighter_licenses` row created with `ACTIVE` status, `is_primary=true`, dates derived from profile creation, and audit note `'Reconciliación de auditoría 2026-06-07'`. `primary_license_id` backfilled on the profile.
+
+### Database — added
+
+- **`trg_sync_fighter_profile_license`** — `AFTER INSERT/UPDATE/DELETE` trigger on `fighter_licenses` that keeps `fighter_profiles` in sync automatically. For each affected fighter it selects the best license (primary first, then by status precedence `ACTIVE > PENDING_REVIEW > SUSPENDED > REVOKED`, then most recent) and updates `primary_license_id`, `license_status`, and `license_number`. Idempotent: no-op when values already match. Prevents future drift.
+- **Migrations**: `supabase/migrations/20260607235641_697a9d7c-386e-4418-bfe9-dc3fbc0cee72.sql` (trigger + function) and `20260608000113_118959c8-76d5-4608-8514-237406702458.sql` (guard clause to prevent recursive loop on trigger depth).
+
+### UI — fixed
+
+- **`src/hooks/useLicenseAuth.tsx`** — Removed the "forced ACTIVE" fallback that was overriding real license status. Now queries `fighter_licenses` directly, sets `hasActiveLicense` only when `status === 'ACTIVE'`, and routes users correctly: `SUSPENDED` → `/license/suspended`, `PENDING_REVIEW` → `/license/pending`.
+- **`src/pages/profile/ProfileHub.tsx`** — License query now orders by `is_primary DESC, created_at DESC` so the primary license is always authoritative. Route mapping simplified: `suspended` → `/license/suspended`, anything else non-active → `/license/onboarding` only when no license row exists.
+
+### Verification
+
+- Re-run audit query: **0 inconsistencies** across all 77 profiles.
+- `useLicenseAuth` correctly reports `active_license` for Miguel Á. Calderón and `pending_license` for the 2 boxeadores.
+
+### Files changed
+
+- **Created**: `supabase/migrations/20260607235641_697a9d7c-386e-4418-bfe9-dc3fbc0cee72.sql`, `supabase/migrations/20260608000113_118959c8-76d5-4608-8514-237406702458.sql`
+- **Edited**: `src/hooks/useLicenseAuth.tsx`, `src/pages/profile/ProfileHub.tsx`
+
+---
+
 ## [2026-06-07b] — SPARC v2 Integrity-First Hardening (Build Pass 0, 1, 2)
 
 > **Context**: The SPARC scoring system needed integrity guarantees — no lost votes, no duplicate devices, no clock drift, no blocked events, immutable confirmed votes, configurable quorum, and recomputable rankings. Delivered as three build passes: database/RPC foundation (Pass 0), judge resilience layer (Pass 1), and the Time Master Dashboard (Pass 2).
