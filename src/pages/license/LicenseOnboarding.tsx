@@ -3,6 +3,7 @@ import { useLicenseAuth } from '@/hooks/useLicenseAuth';
 import { useOptimizedOnboarding } from '@/hooks/useOptimizedOnboarding';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useGymsList } from '@/hooks/useGymsList';
+import { useUserModules } from '@/hooks/useUserModules';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
