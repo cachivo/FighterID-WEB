@@ -137,8 +137,8 @@ export default function AuthCallback() {
           }
         }
 
-        // Always redirect to home
-        setTimeout(() => navigate('/', { replace: true }), 1500);
+        // Trigger PostAuthRouter via profile hub
+        setTimeout(() => navigate('/profile/hub', { replace: true }), 1500);
       } catch (err: any) {
         console.error('[AuthCallback] Error:', err);
         const type = detectErrorType(err.message || '', '');

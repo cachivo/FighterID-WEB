@@ -16,15 +16,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Detect if running as installed PWA
-const isPWA = () => {
-  return window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as any).standalone === true ||
-    document.referrer.includes('android-app://');
-};
-
-// Normalize network/connection errors so the UI never shows raw browser
-// strings ("Failed to fetch", "Load failed", "NetworkError") in toasts.
 function isNetworkError(e: any): boolean {
   const msg = (e?.message || '').toLowerCase();
   return (
@@ -54,61 +45,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const initializedRef = useRef(false);
   const mountedRef = useRef(true);
+  const authCompletedRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
 
-    // Safety timeout: never let the app stay stuck on the loading splash.
-    // If Supabase getSession() hangs (slow network, offline), unblock UI after 2.5s.
     const safetyTimer = setTimeout(() => {
-      if (mountedRef.current && !initializedRef.current) {
+      if (mountedRef.current && !initializedRef.current && !authCompletedRef.current) {
         console.warn('[AUTH] Safety timeout reached, unblocking UI');
         initializedRef.current = true;
         setLoading(false);
       }
     }, 2500);
 
-    // CRITICAL: Set up listener FIRST, BEFORE checking session
-    // This prevents race conditions on slow mobile connections
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         if (!mountedRef.current) return;
-
         console.log('[AUTH] State changed:', event, currentSession?.user?.id);
-
-        // Update state synchronously
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-
-        // Only set loading false AFTER initial check completes
-        // This prevents showing logged-out state before we know
         if (initializedRef.current) {
           setLoading(false);
         }
       }
     );
 
-    // THEN check for existing session
     const initializeAuth = async () => {
       try {
         console.log('[AUTH] Initializing, checking session...');
-        
         const { data: { session: existingSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('[AUTH] Error getting session:', error);
-        }
-
+        if (error) console.error('[AUTH] Error getting session:', error);
         if (!mountedRef.current) return;
-
+        authCompletedRef.current = true;
+        clearTimeout(safetyTimer);
         console.log('[AUTH] Existing session:', existingSession?.user?.id || 'none');
-
         setSession(existingSession);
         setUser(existingSession?.user ?? null);
       } catch (e) {
         console.error('[AUTH] Failed to get session:', e);
       } finally {
         if (mountedRef.current) {
+          authCompletedRef.current = true;
+          clearTimeout(safetyTimer);
           initializedRef.current = true;
           setLoading(false);
         }
@@ -127,16 +105,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       console.log('[AUTH] Signing in...');
-
-      // Timeout guard so the UI never hangs on slow networks
-      const timeoutPromise = new Promise<any>((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 15000)
-      );
+      let timeoutId: ReturnType<typeof setTimeout>;
+      const timeoutPromise = new Promise<any>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('timeout')), 15000);
+      });
 
       const { data, error } = (await Promise.race([
         supabase.auth.signInWithPassword({ email, password }),
         timeoutPromise,
       ])) as any;
+
+      clearTimeout(timeoutId!);
 
       if (error) {
         console.error('[AUTH] Sign in error:', error);
@@ -161,7 +140,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(data.session);
         setUser(data.user);
       }
-
       return { error: null, errorCode: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected sign in error:', e);
@@ -178,32 +156,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      // Route through AuthCallback so it handles role-based routing
       const redirectUrl = `${window.location.origin}/auth/callback`;
-      
       console.log('[AUTH] Signing up with redirect:', redirectUrl);
-      
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
+        options: { emailRedirectTo: redirectUrl }
       });
-
       if (error) {
-        // Handle rate limiting
         if (error.message?.includes('For security purposes') || error.message?.includes('email_send_rate_limit')) {
           return { error: { message: 'Has intentado registrarte varias veces. Por favor espera 60 segundos antes de intentar nuevamente.' } };
         }
-        
-        // Handle duplicate user
         const message = /registered|exists|already/i.test(error.message)
           ? 'Este correo ya está registrado. Intenta iniciar sesión o recupera tu contraseña.'
           : error.message;
         return { error: { message } };
       }
-
       return { error: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected sign up error:', e);
@@ -215,16 +183,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       console.log('[AUTH] Signing out...');
-      
-      // Clear state first for immediate UI feedback
       setSession(null);
       setUser(null);
-      
       await supabase.auth.signOut({ scope: 'local' });
     } catch (e) {
       console.error('[AUTH] Error signing out:', e);
     } finally {
-      // Ensure state is cleared even if signOut fails
       setSession(null);
       setUser(null);
       setLoading(false);
@@ -234,12 +198,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetPassword = async (email: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('send-password-recovery', {
-        body: { 
-          email,
-          redirectTo: `${window.location.origin}/auth/reset-password`
-        }
+        body: { email, redirectTo: `${window.location.origin}/auth/reset-password` }
       });
-
       if (error) {
         console.error('[AUTH] Error sending recovery email:', error);
         let errorMessage = 'Error al procesar la solicitud';
@@ -251,11 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch {}
         return { error: { message: errorMessage, retryAfter } };
       }
-
-      if (data?.error) {
-        return { error: { message: data.error, retryAfter: data.retryAfter } };
-      }
-
+      if (data?.error) return { error: { message: data.error, retryAfter: data.retryAfter } };
       return { error: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected error in resetPassword:', e);
@@ -265,9 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updatePassword = async (newPassword: string) => {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword
-    });
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
     return { error };
   };
 
@@ -276,27 +230,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
       });
-      
       if (error) {
-        // Handle rate limiting — extract retry seconds when present
         const msg = error.message || '';
         if (msg.includes('For security purposes') || msg.includes('email_send_rate_limit') || msg.includes('over_email_send_rate_limit')) {
           const m = msg.match(/after (\d+) second/i);
           const retryAfter = m ? parseInt(m[1], 10) : 60;
-          return {
-            error: {
-              message: `Espera ${retryAfter} segundos antes de reenviar el correo.`,
-              retryAfter,
-            }
-          };
+          return { error: { message: `Espera ${retryAfter} segundos antes de reenviar el correo.`, retryAfter } };
         }
         return { error };
       }
-      
       return { error: null };
     } catch (e: any) {
       console.error('[AUTH] Unexpected error in resendConfirmation:', e);
@@ -306,15 +250,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value = {
-    user,
-    session,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    resetPassword,
-    updatePassword,
-    resendConfirmation,
+    user, session, loading,
+    signIn, signUp, signOut,
+    resetPassword, updatePassword, resendConfirmation,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

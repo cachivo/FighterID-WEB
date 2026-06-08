@@ -16,7 +16,7 @@ export function useFighterByIdQuery(fighterId: string | null | undefined) {
           gym:gyms!gym_id(id, nombre, logo_url, slug)
         `)
         .eq('id', fighterId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;

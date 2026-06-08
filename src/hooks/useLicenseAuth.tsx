@@ -37,6 +37,8 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const retryCountRef = useRef(0);
   const maxRetries = 1;
   const checkInProgressRef = useRef(false);
+  const licenseDataRef = useRef(licenseData);
+  licenseDataRef.current = licenseData;
 
   // Type for RPC response
   interface LicenseStatusResponse {
@@ -328,8 +330,11 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Progress simulation for better UX
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
-        if (prev < 15) return prev + 1;
-        return prev;
+        if (prev >= 15) {
+          clearInterval(progressInterval);
+          return prev;
+        }
+        return prev + 1;
       });
     }, 200);
 
@@ -418,16 +423,17 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     // LAYER 2: Real-time subscription for fighter_licenses changes (NEW)
-    if (user && licenseData?.id) {
+    const currentLicenseId = licenseDataRef.current?.id;
+    if (user && currentLicenseId) {
       licenseChannel = supabase
-        .channel(`license-changes-${licenseData.id}`)
+        .channel(`license-changes-${currentLicenseId}`)
         .on(
           'postgres_changes',
           {
             event: 'UPDATE',
             schema: 'public',
             table: 'fighter_licenses',
-            filter: `id=eq.${licenseData.id}`
+            filter: `id=eq.${currentLicenseId}`
           },
           (payload: any) => {
             console.log('[REALTIME] License status changed via postgres_changes:', payload);
@@ -456,7 +462,8 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       .channel('license-approvals-broadcast')
       .on('broadcast', { event: 'license-approved' }, (payload) => {
         console.log('[BROADCAST] License approval notification received:', payload);
-        if (mounted && user && licenseData?.id && payload.payload?.licenseId === licenseData.id) {
+        const refLicId = licenseDataRef.current?.id;
+        if (mounted && user && refLicId && payload.payload?.licenseId === refLicId) {
           console.log('[BROADCAST] This is our license! Refreshing status...');
           retryCountRef.current = 0;
           checkLicenseStatusOptimized(user.id);
@@ -479,7 +486,7 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         supabase.removeChannel(broadcastChannel);
       }
     };
-  }, [user?.id, licenseData?.id]);
+  }, [user?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });

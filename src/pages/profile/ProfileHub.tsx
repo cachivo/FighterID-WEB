@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dumbbell, Building2, Scale, Shield, ArrowRight, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Dumbbell, Building2, Scale, Shield, ArrowRight, CheckCircle, Clock, AlertCircle, Users } from 'lucide-react';
 import fighterIdLogo from '@/assets/fighter-id-logo-auth.png';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 
@@ -36,11 +36,12 @@ export default function ProfileHub() {
 
       // Check fighter status
       let fighterStatus: ModuleStatus = 'none';
-      const { data: appUser } = await supabase
+      const { data: appUser, error: appUserErr } = await supabase
         .from('app_user')
         .select('id')
         .eq('auth_user_id', user.id)
         .maybeSingle();
+      if (appUserErr) console.error('[ProfileHub] Error fetching app_user:', appUserErr);
 
       if (appUser) {
         const { data: profile } = await supabase
@@ -107,6 +108,14 @@ export default function ProfileHub() {
             : fighterStatus === 'pending' ? '/license/pending'
             : fighterStatus === 'suspended' ? '/license/suspended'
             : '/license/onboarding',
+        },
+        {
+          key: 'trainer',
+          label: 'Entrenador / Coach',
+          description: 'Únete a un gimnasio y gestiona tus peleadores',
+          icon: Users,
+          status: gymStatus === 'active' ? 'active' : 'none',
+          path: gymStatus === 'active' ? `/gym/${gymStaff?.gym_id}/dashboard` : '/trainer/onboarding',
         },
         {
           key: 'gym',

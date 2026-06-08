@@ -74,30 +74,35 @@ export default function Auth() {
   useEffect(() => {
     const hash = window.location.hash;
     if (!hash || !hash.includes('access_token')) return;
+
     const handleHash = async () => {
-      const hashParams = new URLSearchParams(hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      const type = hashParams.get('type');
-      if (accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-        if (error) {
-          toast.error('Error al verificar cuenta.');
-        } else {
-          window.history.replaceState({}, '', window.location.pathname + window.location.search);
-          if (type === 'signup' || type === 'email') {
+      try {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          if (error) {
+            toast.error('Error al verificar cuenta.');
+          } else if (type === 'signup' || type === 'email') {
             toast.success('¡Cuenta confirmada exitosamente!');
           }
         }
+      } catch (e) {
+        console.error('Hash processing error:', e);
+        toast.error('Error al procesar el enlace de verificación.');
+      } finally {
+        window.history.replaceState({}, '', window.location.pathname + window.location.search);
       }
     };
     handleHash();
   }, []);
 
-  // Post-login: always redirect to home
+  // Post-login: trigger PostAuthRouter via profile hub
   useEffect(() => {
     if (!user || authLoading) return;
-    navigate('/', { replace: true });
+    navigate('/profile/hub', { replace: true });
   }, [user, authLoading]);
 
   const handleOAuthLogin = async (provider: 'google' | 'facebook') => {

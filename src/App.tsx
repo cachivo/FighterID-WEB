@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LicenseAuthProvider } from "@/hooks/useLicenseAuth";
+import { PostAuthRouter } from "@/components/PostAuthRouter";
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminProtectedRoute from '@/components/AdminProtectedRoute';
 import LicenseProtectedRoute from '@/components/LicenseProtectedRoute';
@@ -117,6 +118,7 @@ const GymAddFighter = lazy(() => import("./pages/gym/GymAddFighter"));
 const GymOnboarding = lazy(() => import("./pages/gym/GymOnboarding"));
 const GymPendingInvitation = lazy(() => import("./pages/gym/GymPendingInvitation"));
 const RequestFight = lazy(() => import("./pages/gym/RequestFight"));
+const TrainerOnboarding = lazy(() => import("./pages/gym/TrainerOnboarding"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -126,8 +128,12 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       refetchOnReconnect: 'always',
-      retry: (failureCount, error) => {
+      retry: (failureCount, error: any) => {
         if (failureCount >= 2) return false;
+        const status = error?.response?.status || error?.status;
+        if (status === 401 || status === 403 || status === 404) return false;
+        const code = error?.code;
+        if (code === '42501' || code === 'PGRST301' || code === 'PGRST116') return false;
         return true;
       },
     },
@@ -170,6 +176,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <Suspense fallback={<LoadingSpinner />}>
+            <PostAuthRouter>
             <Routes>
               {/* Public Platform Routes */}
               <Route path="/" element={<Index />} />
@@ -218,6 +225,7 @@ const App = () => {
 
               {/* Gym & Judge Onboarding */}
               <Route path="/gym/onboarding" element={<ProtectedRoute><GymOnboarding /></ProtectedRoute>} />
+              <Route path="/trainer/onboarding" element={<ProtectedRoute><TrainerOnboarding /></ProtectedRoute>} />
               <Route path="/gym/pending-invitation" element={<ProtectedRoute><GymPendingInvitation /></ProtectedRoute>} />
               <Route path="/judge/onboarding" element={<ProtectedRoute><JudgeOnboarding /></ProtectedRoute>} />
               
@@ -327,6 +335,7 @@ const App = () => {
               <Route path="/access-denied" element={<AccessDenied />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </PostAuthRouter>
             </Suspense>
           </TooltipProvider>
         </LicenseAuthProvider>

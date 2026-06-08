@@ -15,7 +15,8 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, User, Award, Upload, FileText, CheckCircle } from 'lucide-react';
+import { Loader2, User, Award, Upload, FileText, CheckCircle, Mail } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { FileUpload } from '@/components/ui/file-upload';
 import { ENABLED_DISCIPLINES, WEIGHT_CLASSES } from '@/lib/constants/disciplines';
 
@@ -55,6 +56,7 @@ function GymSelector({ value, onChange }: { value: string; onChange: (v: string)
 
 export default function LicenseOnboarding() {
   const { user } = useLicenseAuth();
+  const { user: authUser } = useAuth();
   const { createProfile, loading } = useOptimizedOnboarding();
   const navigate = useNavigate();
   const [checkingExisting, setCheckingExisting] = useState(true);
@@ -95,6 +97,18 @@ export default function LicenseOnboarding() {
   const [identityPreview, setIdentityPreview] = useState<string | null>(null);
   const [fighterPhotoPreview, setFighterPhotoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  const identityObjectUrlRef = useRef<string | null>(null);
+  const fighterPhotoObjectUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (identityObjectUrlRef.current) URL.revokeObjectURL(identityObjectUrlRef.current);
+      if (fighterPhotoObjectUrlRef.current) URL.revokeObjectURL(fighterPhotoObjectUrlRef.current);
+    };
+  }, []);
+
+
 
   const handleMartialArtsChange = (art: string, checked: boolean) => {
     if (checked) {
@@ -211,6 +225,32 @@ export default function LicenseOnboarding() {
   if (!user) {
     return <div>No autorizado</div>;
   }
+
+  if (authUser && !authUser.email_confirmed_at) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Mail className="h-12 w-12 mx-auto mb-2 text-primary" />
+            <CardTitle>Verificación Requerida</CardTitle>
+            <CardDescription>
+              Debes verificar tu correo electrónico antes de solicitar una licencia de peleador.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground text-center">
+              Revisa tu bandeja de entrada y haz clic en el enlace de verificación.
+            </p>
+            <Button onClick={() => navigate('/profile')} variant="outline" className="w-full">
+              Volver a Mi Perfil
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+
 
   if (checkingExisting) {
     return (
@@ -579,15 +619,18 @@ export default function LicenseOnboarding() {
                   <FileUpload
                     onFileSelect={(file) => {
                       setIdentityDocument(file);
+                      if (identityObjectUrlRef.current) URL.revokeObjectURL(identityObjectUrlRef.current);
                       const previewUrl = URL.createObjectURL(file);
+                      identityObjectUrlRef.current = previewUrl;
                       setIdentityPreview(previewUrl);
                     }}
                     onRemoveFile={() => {
                       setIdentityDocument(null);
-                      if (identityPreview) {
-                        URL.revokeObjectURL(identityPreview);
-                        setIdentityPreview(null);
+                      if (identityObjectUrlRef.current) {
+                        URL.revokeObjectURL(identityObjectUrlRef.current);
+                        identityObjectUrlRef.current = null;
                       }
+                      setIdentityPreview(null);
                     }}
                     accept="image/*"
                     preview={identityPreview || undefined}
@@ -602,15 +645,18 @@ export default function LicenseOnboarding() {
                   <FileUpload
                     onFileSelect={(file) => {
                       setFighterPhoto(file);
+                      if (fighterPhotoObjectUrlRef.current) URL.revokeObjectURL(fighterPhotoObjectUrlRef.current);
                       const previewUrl = URL.createObjectURL(file);
+                      fighterPhotoObjectUrlRef.current = previewUrl;
                       setFighterPhotoPreview(previewUrl);
                     }}
                     onRemoveFile={() => {
                       setFighterPhoto(null);
-                      if (fighterPhotoPreview) {
-                        URL.revokeObjectURL(fighterPhotoPreview);
-                        setFighterPhotoPreview(null);
+                      if (fighterPhotoObjectUrlRef.current) {
+                        URL.revokeObjectURL(fighterPhotoObjectUrlRef.current);
+                        fighterPhotoObjectUrlRef.current = null;
                       }
+                      setFighterPhotoPreview(null);
                     }}
                     accept="image/*"
                     preview={fighterPhotoPreview || undefined}
@@ -618,6 +664,7 @@ export default function LicenseOnboarding() {
                     className="mb-4"
                   />
                 </div>
+
 
                 <div className="space-y-6">
                   <div className="text-center">
