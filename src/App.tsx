@@ -128,8 +128,12 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       refetchOnReconnect: 'always',
-      retry: (failureCount, error) => {
+      retry: (failureCount, error: any) => {
         if (failureCount >= 2) return false;
+        const status = error?.response?.status || error?.status;
+        if (status === 401 || status === 403 || status === 404) return false;
+        const code = error?.code;
+        if (code === '42501' || code === 'PGRST301' || code === 'PGRST116') return false;
         return true;
       },
     },
