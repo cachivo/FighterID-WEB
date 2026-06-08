@@ -54,7 +54,30 @@ export default function GymOnboarding() {
       // Generate slug
       const slug = nombre.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-      // Create gym record
+      // 1. Get or create app_user FIRST
+      let { data: appUser } = await supabase
+        .from('app_user')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+
+      if (!appUser) {
+        const { data: newAppUser, error: appUserError } = await supabase
+          .from('app_user')
+          .insert({
+            auth_user_id: user.id,
+            email: user.email,
+            first_name: '',
+            last_name: '',
+            handle: `gym_owner_${Date.now()}`,
+          })
+          .select('id')
+          .single();
+        if (appUserError) throw appUserError;
+        appUser = newAppUser;
+      }
+
+      // 2. Create gym (owner_id uses auth.users.id - this IS correct)
       const { data: gym, error: gymError } = await supabase
         .from('gyms')
         .insert({
@@ -81,10 +104,10 @@ export default function GymOnboarding() {
         console.error('Error assigning role:', roleError);
       }
 
-      // Add as gym staff
+      // 3. Add as gym staff with CORRECT FK (app_user.id)
       const { error: staffError } = await supabase
         .from('gym_staff')
-        .insert({ gym_id: gym.id, user_id: user.id, role: 'OWNER' as const });
+        .insert({ gym_id: gym.id, user_id: appUser.id, role: 'OWNER' as const });
 
       if (staffError) console.error('Error adding staff:', staffError);
 
