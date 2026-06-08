@@ -127,51 +127,37 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
           navigate('/license/pending', { replace: true });
         }
       } else if (data.status === 'no_license' && profile) {
-        // CONSISTENCY FALLBACK: RPC says no_license but profile has active license data
-        const profileLicenseStatus = (profile as any).license_status;
+        // CONSISTENCY FALLBACK: RPC says no_license but profile references one.
+        // Re-fetch the actual license and respect its real status — never fake ACTIVE.
         const primaryLicenseId = (profile as any).primary_license_id;
-        
-        if (profileLicenseStatus === 'active' && primaryLicenseId) {
-          console.log('[FALLBACK] Profile shows active license but RPC missed it. Fetching directly...');
-          
-          // Try to fetch the license directly
-          const { data: directLicense, error: directError } = await supabase
+
+        if (primaryLicenseId) {
+          console.log('[FALLBACK] Profile has primary_license_id but RPC missed it. Fetching directly...');
+          const { data: directLicense } = await supabase
             .from('fighter_licenses')
             .select('id, license_number, status, license_level, issued_at, expires_at, is_primary, qr_code_url, created_at')
             .eq('id', primaryLicenseId)
             .maybeSingle();
-          
-          if (directLicense && directLicense.status === 'ACTIVE') {
-            console.log('[FALLBACK] Direct fetch found ACTIVE license!');
-            const combinedLicenseData = { ...directLicense, fighter_profiles: profile };
-            setLicenseData(combinedLicenseData);
-            setHasActiveLicense(true);
-            
-            if (window.location.pathname === '/license/pending') {
+
+          if (directLicense) {
+            const combined = { ...directLicense, fighter_profiles: profile };
+            setLicenseData(combined);
+            const realStatus = directLicense.status;
+            setHasActiveLicense(realStatus === 'ACTIVE');
+
+            const path = window.location.pathname;
+            if (realStatus === 'ACTIVE' && path === '/license/pending') {
               navigate('/license/dashboard', { replace: true });
-            }
-            return;
-          } else if (!directError) {
-            // License exists but not ACTIVE, or couldn't be fetched
-            // Build minimal license data from profile to allow dashboard access
-            console.log('[FALLBACK] Building minimal license data from profile');
-            const minimalLicenseData = {
-              id: primaryLicenseId,
-              status: 'ACTIVE',
-              license_number: (profile as any).license_number || 'N/A',
-              fighter_profiles: profile
-            };
-            setLicenseData(minimalLicenseData);
-            setHasActiveLicense(true);
-            
-            if (window.location.pathname === '/license/pending') {
-              navigate('/license/dashboard', { replace: true });
+            } else if (realStatus === 'SUSPENDED' && path !== '/license/suspended') {
+              navigate('/license/suspended', { replace: true });
+            } else if ((realStatus === 'PENDING_REVIEW' || realStatus === 'APPLIED') && path === '/license/dashboard') {
+              navigate('/license/pending', { replace: true });
             }
             return;
           }
         }
-        
-        // No fallback matched - truly no license
+
+        // Truly no license
         setLicenseData({ fighter_profiles: profile });
         setHasActiveLicense(false);
       } else {
