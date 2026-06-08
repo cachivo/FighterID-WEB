@@ -58,6 +58,7 @@ function GymSelector({ value, onChange }: { value: string; onChange: (v: string)
 export default function LicenseOnboarding() {
   const { user } = useLicenseAuth();
   const { user: authUser } = useAuth();
+  const { appUser } = useUserModules();
   const { createProfile, loading } = useOptimizedOnboarding();
   const navigate = useNavigate();
   const [checkingExisting, setCheckingExisting] = useState(true);
