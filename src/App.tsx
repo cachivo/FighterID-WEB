@@ -176,6 +176,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <Suspense fallback={<LoadingSpinner />}>
+            <PostAuthRouter>
             <Routes>
               {/* Public Platform Routes */}
               <Route path="/" element={<Index />} />
