@@ -54,7 +54,28 @@ export function useOptimizedOnboarding() {
     }
 
     setLoading(true);
-    
+
+    // Validate numeric inputs
+    const heightCm = parseInt(formData.heightCm);
+    const weightKg = parseFloat(formData.weightKg);
+    const reachCm = formData.reachCm ? parseInt(formData.reachCm) : null;
+
+    if (isNaN(heightCm) || heightCm <= 0 || heightCm > 300) {
+      toast.error('Por favor ingresa una altura válida (1-300 cm)');
+      setLoading(false);
+      return { success: false };
+    }
+    if (isNaN(weightKg) || weightKg <= 0 || weightKg > 600) {
+      toast.error('Por favor ingresa un peso válido (1-600 kg)');
+      setLoading(false);
+      return { success: false };
+    }
+    if (reachCm !== null && (isNaN(reachCm) || reachCm <= 0 || reachCm > 300)) {
+      toast.error('Por favor ingresa un alcance válido (1-300 cm)');
+      setLoading(false);
+      return { success: false };
+    }
+
     try {
       // Prepare discipline based on martial arts - ensure it's a valid enum value
       const validDisciplines = ['MMA', 'Boxeo', 'Judo', 'JiuJitsu', 'Kickboxing', 'MuayThai', 'Grappling', 'Otro'] as const;
