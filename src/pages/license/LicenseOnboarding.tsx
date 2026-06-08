@@ -226,6 +226,32 @@ export default function LicenseOnboarding() {
     return <div>No autorizado</div>;
   }
 
+  if (authUser && !authUser.email_confirmed_at) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Mail className="h-12 w-12 mx-auto mb-2 text-primary" />
+            <CardTitle>Verificación Requerida</CardTitle>
+            <CardDescription>
+              Debes verificar tu correo electrónico antes de solicitar una licencia de peleador.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground text-center">
+              Revisa tu bandeja de entrada y haz clic en el enlace de verificación.
+            </p>
+            <Button onClick={() => navigate('/profile')} variant="outline" className="w-full">
+              Volver a Mi Perfil
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+
+
   if (checkingExisting) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
