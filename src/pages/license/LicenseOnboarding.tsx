@@ -170,20 +170,26 @@ export default function LicenseOnboarding() {
       }
 
       try {
-        // Quick check using optimized query
-        const { data: existingProfile } = await supabase
-          .from('fighter_profiles')
-          .select(`
-            id,
-            user:user_id!inner(auth_user_id)
-          `)
-          .eq('user.auth_user_id', user.id)
-          .eq('active', true)
+        // FIX H1: PostgREST does NOT support dot-notation on joined aliases in .eq().
+        // Resolve app_user.id first, then filter fighter_profiles directly.
+        const { data: appUser } = await supabase
+          .from('app_user')
+          .select('id')
+          .eq('auth_user_id', user.id)
           .maybeSingle();
 
-        if (existingProfile && !cancelled) {
-          navigate('/license/pending', { replace: true });
-          return;
+        if (appUser) {
+          const { data: existingProfile } = await supabase
+            .from('fighter_profiles')
+            .select('id')
+            .eq('user_id', appUser.id)
+            .eq('active', true)
+            .maybeSingle();
+
+          if (existingProfile && !cancelled) {
+            navigate('/license/pending', { replace: true });
+            return;
+          }
         }
       } catch (error) {
         console.error('Error checking existing profile:', error);

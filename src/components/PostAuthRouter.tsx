@@ -46,7 +46,9 @@ export function PostAuthRouter({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        if (!appUser?.first_name) {
+        // FIX H3: Gym owners are created with first_name=''. Treat "no app_user row"
+        // as the only "needs setup" signal, not empty first_name.
+        if (!appUser) {
           if (location.pathname !== '/profile/setup') {
             navigate('/profile/setup', { replace: true });
             return;

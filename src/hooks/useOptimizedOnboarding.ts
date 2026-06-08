@@ -128,14 +128,15 @@ export function useOptimizedOnboarding() {
 
       if (error) {
         console.error('Error creating profile:', error);
-        
-        // Handle specific error cases
+
+        // FIX H4: "Already has profile" is an idempotent navigation, NOT a successful
+        // create. Don't return success (caller would wipe the draft + show success toast).
         if (error.message?.includes('already has an active fighter profile')) {
           toast.info('Ya tienes un perfil de peleador activo. Para solicitar otra licencia con otro perfil, usa una cuenta diferente.');
           navigate('/license/pending', { replace: true });
-          return { success: true };
+          return { success: false, alreadyExists: true };
         }
-        
+
         throw error;
       }
 
@@ -171,7 +172,7 @@ export function useOptimizedOnboarding() {
       if (error?.code === '23505') {
         toast.info('Ya tienes un perfil de peleador activo. Para solicitar otra licencia con otro perfil, usa una cuenta diferente.');
         navigate('/license/pending', { replace: true });
-        return { success: true };
+        return { success: false, alreadyExists: true };
       } else if (error?.message?.includes('Unauthorized')) {
         errorMessage = 'Error de autorización. Inicia sesión nuevamente.';
       } else if (error?.message?.includes('invalid input syntax')) {

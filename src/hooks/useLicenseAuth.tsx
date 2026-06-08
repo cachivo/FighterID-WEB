@@ -461,6 +461,43 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
   }, [user?.id]);
 
+  // FIX H2: License-specific realtime channel, depends on the LOADED licenseData.id
+  useEffect(() => {
+    const currentLicenseId = licenseData?.id;
+    if (!user || !currentLicenseId) return;
+
+    const licenseChannel = supabase
+      .channel(`license-changes-${currentLicenseId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'fighter_licenses',
+          filter: `id=eq.${currentLicenseId}`
+        },
+        (payload: any) => {
+          console.log('[REALTIME] License status changed via postgres_changes:', payload);
+          if (payload.new?.status === 'ACTIVE') {
+            setHasActiveLicense(true);
+            setLicenseData((prev: any) => prev ? { ...prev, status: 'ACTIVE' } : prev);
+            if (window.location.pathname === '/license/pending') {
+              navigate('/license/dashboard', { replace: true });
+            }
+          } else if (payload.new?.status === 'SUSPENDED') {
+            setHasActiveLicense(false);
+            setLicenseData((prev: any) => prev ? { ...prev, status: 'SUSPENDED' } : prev);
+            if (window.location.pathname === '/license/dashboard') {
+              navigate('/license/suspended', { replace: true });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(licenseChannel); };
+  }, [user?.id, licenseData?.id, navigate]);
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };

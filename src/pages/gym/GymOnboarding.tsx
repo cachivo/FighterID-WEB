@@ -20,20 +20,25 @@ export default function GymOnboarding() {
   const [telefono, setTelefono] = useState('');
 
   // Check if user already has an active gym
+  // FIX C2: gym_staff.user_id references app_user.id, NOT auth.users.id.
   useEffect(() => {
     if (!user) { setCheckingExisting(false); return; }
-    supabase
-      .from('gym_staff')
-      .select('gym_id')
-      .eq('user_id', user.id)
-      .eq('active', true)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          navigate(`/gym/${data.gym_id}/dashboard`, { replace: true });
-        }
-        setCheckingExisting(false);
-      });
+    (async () => {
+      const { data: appUser } = await supabase
+        .from('app_user')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      if (!appUser) { setCheckingExisting(false); return; }
+      const { data } = await supabase
+        .from('gym_staff')
+        .select('gym_id')
+        .eq('user_id', appUser.id)
+        .eq('active', true)
+        .maybeSingle();
+      if (data) navigate(`/gym/${data.gym_id}/dashboard`, { replace: true });
+      setCheckingExisting(false);
+    })();
   }, [user]);
 
   if (checkingExisting) {
