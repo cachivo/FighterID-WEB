@@ -225,6 +225,7 @@ const App = () => {
 
               {/* Gym & Judge Onboarding */}
               <Route path="/gym/onboarding" element={<ProtectedRoute><GymOnboarding /></ProtectedRoute>} />
+              <Route path="/trainer/onboarding" element={<ProtectedRoute><TrainerOnboarding /></ProtectedRoute>} />
               <Route path="/gym/pending-invitation" element={<ProtectedRoute><GymPendingInvitation /></ProtectedRoute>} />
               <Route path="/judge/onboarding" element={<ProtectedRoute><JudgeOnboarding /></ProtectedRoute>} />
               
