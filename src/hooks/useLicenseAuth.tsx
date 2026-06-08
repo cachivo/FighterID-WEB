@@ -486,7 +486,7 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         supabase.removeChannel(broadcastChannel);
       }
     };
-  }, [user?.id, licenseData?.id]);
+  }, [user?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
