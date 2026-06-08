@@ -12,7 +12,7 @@ import { useEvents } from '@/hooks/useEvents';
 import { useFights } from '@/hooks/useEvents';
 import { useFightOfficials, useFightControl } from '@/hooks/useFightControl';
 import { useFightRealtime } from '@/hooks/useFightRealtime';
-import { useJudges } from '@/hooks/useJudges';
+import { useJudges, type Judge } from '@/hooks/useJudges';
 import { useToast } from '@/hooks/use-toast';
 import { useAIStrikeEvents } from '@/hooks/useAIStrikeEvents';
 import { useAIInferenceSessions } from '@/hooks/useAIInferenceSessions';
