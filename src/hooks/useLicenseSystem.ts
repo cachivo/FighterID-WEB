@@ -273,9 +273,10 @@ export function useVerifyLicense(token: string | null) {
         `)
         .eq('token', token)
         .gt('expires_at', new Date().toISOString())
-        .single();
+        .maybeSingle();
       
       if (tokenError) throw tokenError;
+      if (!tokenData) throw new Error('Token inválido o expirado');
       return tokenData;
     },
     staleTime: 0, // Always fresh for verification

@@ -34,7 +34,7 @@ export const useWallet = () => {
       .from('app_user')
       .select('id')
       .eq('auth_user_id', user.id)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error('Error fetching app user:', error);

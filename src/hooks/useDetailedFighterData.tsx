@@ -35,11 +35,14 @@ export const useDetailedFighterData = () => {
           )
         `)
         .eq('id', fighterId)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Profile error:', profileError);
         throw profileError;
+      }
+      if (!profile) {
+        throw new Error('Fighter not found');
       }
       console.log('Profile fetched:', profile);
 

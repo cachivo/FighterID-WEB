@@ -35,7 +35,7 @@ export function useStrikeCounter(
         .select('id')
         .eq('fight_id', fightId)
         .eq('status', 'live')
-        .single();
+        .maybeSingle();
 
       if (data) {
         setState(prev => ({ ...prev, currentRoundId: data.id }));

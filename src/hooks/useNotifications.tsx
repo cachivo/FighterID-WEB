@@ -26,8 +26,7 @@ export const useNotifications = () => {
       const { data: appUserData } = await supabase
         .from('app_user')
         .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
+        .eq('auth_user_id', user.id).maybeSingle();
 
       if (!appUserData) return;
 
@@ -76,8 +75,7 @@ export const useNotifications = () => {
       const { data: appUserData } = await supabase
         .from('app_user')
         .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
+        .eq('auth_user_id', user.id).maybeSingle();
 
       if (!appUserData) return;
 

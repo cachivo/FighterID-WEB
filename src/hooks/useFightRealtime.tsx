@@ -145,12 +145,12 @@ export function useFightRealtime(fightId: string) {
         .eq('fight_id', fightId)
         .order('timestamp', { ascending: false });
 
-      // Load result
+      // Load result (may not exist until fight ends)
       const { data: results } = await supabase
         .from('fight_results')
         .select('*')
         .eq('fight_id', fightId)
-        .single();
+        .maybeSingle();
 
       setRealtimeData({
         scorecards: scorecards || [],

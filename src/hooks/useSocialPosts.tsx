@@ -71,7 +71,7 @@ export function useSocialPosts() {
           .from('app_user')
           .select('id')
           .eq('auth_user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (appUser) {
           const { data: friendships } = await supabase
@@ -218,7 +218,7 @@ export function useSocialPosts() {
         .from('app_user')
         .select('id, is_admin, email')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (userError || !appUser) {
         console.error('❌ [CREATE POST] app_user not found:', userError);
