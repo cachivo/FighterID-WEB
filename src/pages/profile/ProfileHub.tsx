@@ -103,7 +103,10 @@ export default function ProfileHub() {
           description: 'Obtén tu Fighter ID profesional',
           icon: Dumbbell,
           status: fighterStatus,
-          path: fighterStatus === 'active' ? '/license/dashboard' : fighterStatus === 'pending' ? '/license/pending' : '/license/onboarding',
+          path: fighterStatus === 'active' ? '/license/dashboard'
+            : fighterStatus === 'pending' ? '/license/pending'
+            : fighterStatus === 'suspended' ? '/license/suspended'
+            : '/license/onboarding',
         },
         {
           key: 'gym',
