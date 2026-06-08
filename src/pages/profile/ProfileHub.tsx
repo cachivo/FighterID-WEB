@@ -109,6 +109,14 @@ export default function ProfileHub() {
             : '/license/onboarding',
         },
         {
+          key: 'trainer',
+          label: 'Entrenador / Coach',
+          description: 'Únete a un gimnasio y gestiona tus peleadores',
+          icon: Users,
+          status: gymStatus === 'active' ? 'active' : 'none',
+          path: gymStatus === 'active' ? `/gym/${gymStaff?.gym_id}/dashboard` : '/trainer/onboarding',
+        },
+        {
           key: 'gym',
           label: 'Gimnasio',
           description: 'Registra y gestiona tu gimnasio',
