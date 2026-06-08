@@ -10,8 +10,7 @@ export interface AppUserRecord {
   phone: string | null;
   handle: string | null;
   country: string | null;
-  birth_date: string | null;
-  gender: string | null;
+  birthdate: string | null;
 }
 
 export interface EnsureAppUserDefaults {
