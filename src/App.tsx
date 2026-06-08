@@ -118,6 +118,7 @@ const GymAddFighter = lazy(() => import("./pages/gym/GymAddFighter"));
 const GymOnboarding = lazy(() => import("./pages/gym/GymOnboarding"));
 const GymPendingInvitation = lazy(() => import("./pages/gym/GymPendingInvitation"));
 const RequestFight = lazy(() => import("./pages/gym/RequestFight"));
+const TrainerOnboarding = lazy(() => import("./pages/gym/TrainerOnboarding"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
