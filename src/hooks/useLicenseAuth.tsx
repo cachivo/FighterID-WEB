@@ -37,6 +37,8 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const retryCountRef = useRef(0);
   const maxRetries = 1;
   const checkInProgressRef = useRef(false);
+  const licenseDataRef = useRef(licenseData);
+  licenseDataRef.current = licenseData;
 
   // Type for RPC response
   interface LicenseStatusResponse {
