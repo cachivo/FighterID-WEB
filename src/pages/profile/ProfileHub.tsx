@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dumbbell, Building2, Scale, Shield, ArrowRight, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Dumbbell, Building2, Scale, Shield, ArrowRight, CheckCircle, Clock, AlertCircle, Users } from 'lucide-react';
 import fighterIdLogo from '@/assets/fighter-id-logo-auth.png';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 
