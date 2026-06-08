@@ -462,7 +462,8 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       .channel('license-approvals-broadcast')
       .on('broadcast', { event: 'license-approved' }, (payload) => {
         console.log('[BROADCAST] License approval notification received:', payload);
-        if (mounted && user && licenseData?.id && payload.payload?.licenseId === licenseData.id) {
+        const refLicId = licenseDataRef.current?.id;
+        if (mounted && user && refLicId && payload.payload?.licenseId === refLicId) {
           console.log('[BROADCAST] This is our license! Refreshing status...');
           retryCountRef.current = 0;
           checkLicenseStatusOptimized(user.id);
