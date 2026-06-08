@@ -1,3 +1,5 @@
+# Auditoría de licencias — COMPLETADA (2026-06-08)
+
 ## Diagnóstico
 
 De 77 perfiles, solo **3** tienen inconsistencia entre `fighter_profiles.license_status` y la licencia real:
