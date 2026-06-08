@@ -43,7 +43,8 @@ const AssignOfficialDialog = ({
 
   const filteredJudges = availableJudges.filter((judge) =>
     role === 'REFEREE'
-      ? judge.specialization.includes('Referee') || judge.specialization.includes('MMA')
+      ? (judge.specialization ?? []).includes('Referee') ||
+        (judge.specialization ?? []).includes('MMA')
       : true
   );
 
