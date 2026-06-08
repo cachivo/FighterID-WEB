@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserModules } from '@/hooks/useUserModules';
+import { ensureAppUser, fillAppUserIfEmpty } from '@/lib/ensureAppUser';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,30 +15,27 @@ import fighterIdLogo from '@/assets/fighter-id-logo-auth.png';
 export default function JudgeOnboarding() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { appUser, modules, loading: modulesLoading, refetch } = useUserModules();
   const [loading, setLoading] = useState(false);
-  const [checkingExisting, setCheckingExisting] = useState(true);
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [experiencia, setExperiencia] = useState('');
 
-  // Check if user already has a judge record
+  // If already registered as judge, go to judge area; do NOT block other modules.
   useEffect(() => {
-    if (!user) { setCheckingExisting(false); return; }
-    supabase
-      .from('judges')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          toast.info('Ya estás registrado como juez');
-          navigate('/', { replace: true });
-        }
-        setCheckingExisting(false);
-      });
-  }, [user]);
+    if (modulesLoading) return;
+    if (modules.judge.status !== 'none') {
+      toast.info('Ya estás registrado como juez');
+      navigate('/', { replace: true });
+      return;
+    }
+    if (appUser) {
+      setNombre((prev) => prev || appUser.first_name || '');
+      setApellido((prev) => prev || appUser.last_name || '');
+    }
+  }, [modulesLoading, modules.judge.status, appUser, navigate]);
 
-  if (checkingExisting) {
+  if (modulesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -51,27 +50,24 @@ export default function JudgeOnboarding() {
 
     setLoading(true);
     try {
-      // Ensure app_user exists
-      const { data: existingUser } = await supabase
-        .from('app_user')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
+      // Idempotent app_user — preserves identity from other modules.
+      const ensured = await ensureAppUser(user, {
+        firstName: nombre,
+        lastName: apellido,
+        handlePrefix: `judge_${nombre}_${apellido}`,
+      });
+      await fillAppUserIfEmpty(ensured.id, { first_name: nombre, last_name: apellido });
 
-      if (existingUser) {
-        await supabase.from('app_user').update({ first_name: nombre, last_name: apellido }).eq('id', existingUser.id);
-      }
-
-      // Assign official_judge role
+      // Role (additive)
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({ user_id: user.id, role: 'official_judge' });
-
       if (roleError && !roleError.message?.includes('duplicate')) {
         console.error('Error assigning role:', roleError);
       }
 
-      // Create judge record
+      // FIX: judges.user_id references app_user.id (NOT auth.users.id), to match
+      // every other reader in the codebase (ProfileHub etc.).
       const licenseNum = `JDG-${Date.now().toString(36).toUpperCase()}`;
       const { error: judgeError } = await supabase
         .from('judges')
@@ -79,14 +75,14 @@ export default function JudgeOnboarding() {
           first_name: nombre,
           last_name: apellido,
           license_number: licenseNum,
-          user_id: user.id,
+          user_id: ensured.id,
           active: false,
         });
-
       if (judgeError) throw judgeError;
 
       localStorage.removeItem('fighter_id_selected_role');
       toast.success('¡Registro como juez exitoso! Tu solicitud será revisada.');
+      refetch();
       navigate('/', { replace: true });
     } catch (error: any) {
       console.error('Error creating judge:', error);
@@ -108,7 +104,11 @@ export default function JudgeOnboarding() {
             <Scale className="w-8 h-8 text-purple-400" />
           </div>
           <CardTitle className="text-xl font-bold text-white">Registro como Juez</CardTitle>
-          <CardDescription className="text-white/60">Completa tus datos para solicitar acreditación</CardDescription>
+          <CardDescription className="text-white/60">
+            {modules.fighter.status !== 'none' || modules.gymOwner.status !== 'none' || modules.trainer.status !== 'none'
+              ? 'Añade el módulo Juez a tu cuenta existente'
+              : 'Completa tus datos para solicitar acreditación'}
+          </CardDescription>
         </CardHeader>
 
         <CardContent>

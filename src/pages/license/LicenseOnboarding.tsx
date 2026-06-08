@@ -3,6 +3,7 @@ import { useLicenseAuth } from '@/hooks/useLicenseAuth';
 import { useOptimizedOnboarding } from '@/hooks/useOptimizedOnboarding';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useGymsList } from '@/hooks/useGymsList';
+import { useUserModules } from '@/hooks/useUserModules';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,6 +58,7 @@ function GymSelector({ value, onChange }: { value: string; onChange: (v: string)
 export default function LicenseOnboarding() {
   const { user } = useLicenseAuth();
   const { user: authUser } = useAuth();
+  const { appUser } = useUserModules();
   const { createProfile, loading } = useOptimizedOnboarding();
   const navigate = useNavigate();
   const [checkingExisting, setCheckingExisting] = useState(true);
@@ -134,6 +136,20 @@ export default function LicenseOnboarding() {
     }
     setDraftLoaded(true);
   }, [draftLoaded]);
+
+  // Prefill identity from existing app_user (set by another module like gym/judge).
+  // Only fills empty fields — never overwrites whatever the user typed or what
+  // was restored from the local draft.
+  useEffect(() => {
+    if (!draftLoaded || !appUser) return;
+    setFormData((prev) => ({
+      ...prev,
+      firstName: prev.firstName || appUser.first_name || '',
+      lastName: prev.lastName || appUser.last_name || '',
+      phone: prev.phone || appUser.phone || '',
+      birthdate: prev.birthdate || (appUser as any).birthdate || '',
+    }));
+  }, [draftLoaded, appUser]);
 
   // Debounce draft saves to avoid blocking UI on low-end devices
   const debouncedFormData = useDebounce(formData, 500);
