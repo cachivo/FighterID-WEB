@@ -97,6 +97,18 @@ export default function LicenseOnboarding() {
   const [fighterPhotoPreview, setFighterPhotoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  const identityObjectUrlRef = useRef<string | null>(null);
+  const fighterPhotoObjectUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (identityObjectUrlRef.current) URL.revokeObjectURL(identityObjectUrlRef.current);
+      if (fighterPhotoObjectUrlRef.current) URL.revokeObjectURL(fighterPhotoObjectUrlRef.current);
+    };
+  }, []);
+
+
+
   const handleMartialArtsChange = (art: string, checked: boolean) => {
     if (checked) {
       setFormData({...formData, martialArts: [...formData.martialArts, art]});
