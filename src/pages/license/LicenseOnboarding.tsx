@@ -15,7 +15,8 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, User, Award, Upload, FileText, CheckCircle } from 'lucide-react';
+import { Loader2, User, Award, Upload, FileText, CheckCircle, Mail } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { FileUpload } from '@/components/ui/file-upload';
 import { ENABLED_DISCIPLINES, WEIGHT_CLASSES } from '@/lib/constants/disciplines';
 
