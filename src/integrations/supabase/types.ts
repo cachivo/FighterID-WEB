@@ -4092,6 +4092,7 @@ export type Database = {
           facebook: string | null
           id: string
           instagram: string | null
+          invite_code: string | null
           logo_url: string | null
           moderation_notes: string | null
           moderation_reviewed_at: string | null
@@ -4120,6 +4121,7 @@ export type Database = {
           facebook?: string | null
           id?: string
           instagram?: string | null
+          invite_code?: string | null
           logo_url?: string | null
           moderation_notes?: string | null
           moderation_reviewed_at?: string | null
@@ -4148,6 +4150,7 @@ export type Database = {
           facebook?: string | null
           id?: string
           instagram?: string | null
+          invite_code?: string | null
           logo_url?: string | null
           moderation_notes?: string | null
           moderation_reviewed_at?: string | null
@@ -8649,6 +8652,7 @@ export type Database = {
         }
         Returns: Json
       }
+      request_join_gym: { Args: { p_gym_code: string }; Returns: Json }
       save_fight_result: {
         Args: {
           p_blue_fighter_id: string
