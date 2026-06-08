@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
-import { supabase } from '@/integrations/supabase/client';
+import { useUserModules, type ModuleStatus } from '@/hooks/useUserModules';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,9 +10,7 @@ import { Dumbbell, Building2, Scale, Shield, ArrowRight, CheckCircle, Clock, Ale
 import fighterIdLogo from '@/assets/fighter-id-logo-auth.png';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 
-type ModuleStatus = 'none' | 'pending' | 'active' | 'suspended';
-
-interface ModuleInfo {
+interface ModuleCard {
   key: string;
   label: string;
   description: string;
@@ -24,124 +22,60 @@ interface ModuleInfo {
 export default function ProfileHub() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { roles, isAdmin, loading: rolesLoading } = useUserRole();
-  const [modules, setModules] = useState<ModuleInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isAdmin, loading: rolesLoading } = useUserRole();
+  const { modules, loading: modulesLoading } = useUserModules();
 
-  useEffect(() => {
-    if (authLoading || rolesLoading || !user) return;
+  const cards = useMemo<ModuleCard[]>(() => {
+    const fighter = modules.fighter;
+    const trainer = modules.trainer;
+    const gymOwner = modules.gymOwner;
+    const judge = modules.judge;
 
-    const checkModules = async () => {
-      setLoading(true);
+    return [
+      {
+        key: 'fighter',
+        label: 'Peleador',
+        description: 'Obtén tu Fighter ID profesional',
+        icon: Dumbbell,
+        status: fighter.status,
+        path:
+          fighter.status === 'active' ? '/license/dashboard'
+          : fighter.status === 'pending' ? '/license/pending'
+          : fighter.status === 'suspended' ? '/license/suspended'
+          : '/license/onboarding',
+      },
+      {
+        key: 'trainer',
+        label: 'Entrenador / Coach',
+        description: 'Únete a un gimnasio y gestiona tus peleadores',
+        icon: Users,
+        status: trainer.status,
+        path: trainer.status === 'active' && trainer.gymId
+          ? `/gym/${trainer.gymId}/dashboard`
+          : '/trainer/onboarding',
+      },
+      {
+        key: 'gym',
+        label: 'Gimnasio',
+        description: 'Registra y gestiona tu gimnasio',
+        icon: Building2,
+        status: gymOwner.status,
+        path: gymOwner.status === 'active' && gymOwner.gymId
+          ? `/gym/${gymOwner.gymId}/dashboard`
+          : '/gym/onboarding',
+      },
+      {
+        key: 'judge',
+        label: 'Juez / Oficial',
+        description: 'Accede como oficial certificado',
+        icon: Scale,
+        status: judge.status,
+        path: judge.status !== 'none' ? '/' : '/judge/onboarding',
+      },
+    ];
+  }, [modules]);
 
-      // Check fighter status
-      let fighterStatus: ModuleStatus = 'none';
-      const { data: appUser, error: appUserErr } = await supabase
-        .from('app_user')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
-      if (appUserErr) console.error('[ProfileHub] Error fetching app_user:', appUserErr);
-
-      if (appUser) {
-        const { data: profile } = await supabase
-          .from('fighter_profiles')
-          .select('id')
-          .eq('user_id', appUser.id)
-          .maybeSingle();
-
-        if (profile) {
-          // Prefer the primary license; fall back to the most recent one so users with
-          // an existing application never get pushed back to /license/onboarding.
-          const { data: licenses } = await supabase
-            .from('fighter_licenses')
-            .select('status, is_primary, created_at')
-            .eq('fighter_id', profile.id)
-            .order('is_primary', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-          const license = licenses?.[0];
-          if (license) {
-            fighterStatus = license.status === 'ACTIVE' ? 'active'
-              : license.status === 'SUSPENDED' || license.status === 'REVOKED' ? 'suspended'
-              : 'pending';
-          } else {
-            fighterStatus = 'none';
-          }
-        }
-      }
-
-      // Check gym status — gym_staff.user_id references app_user.id, NOT auth.users.id
-      let gymStatus: ModuleStatus = 'none';
-      let gymStaff: { gym_id: string } | null = null;
-      if (appUser?.id) {
-        const { data } = await supabase
-          .from('gym_staff')
-          .select('gym_id')
-          .eq('user_id', appUser.id)
-          .eq('active', true)
-          .maybeSingle();
-        gymStaff = data;
-        if (gymStaff) gymStatus = 'active';
-      }
-
-      // Check judge status — judges.user_id references app_user.id
-      let judgeStatus: ModuleStatus = 'none';
-      if (appUser?.id) {
-        const { data: judge } = await supabase
-          .from('judges')
-          .select('active')
-          .eq('user_id', appUser.id)
-          .maybeSingle();
-        if (judge) judgeStatus = judge.active ? 'active' : 'pending';
-      }
-
-      setModules([
-        {
-          key: 'fighter',
-          label: 'Peleador',
-          description: 'Obtén tu Fighter ID profesional',
-          icon: Dumbbell,
-          status: fighterStatus,
-          path: fighterStatus === 'active' ? '/license/dashboard'
-            : fighterStatus === 'pending' ? '/license/pending'
-            : fighterStatus === 'suspended' ? '/license/suspended'
-            : '/license/onboarding',
-        },
-        {
-          key: 'trainer',
-          label: 'Entrenador / Coach',
-          description: 'Únete a un gimnasio y gestiona tus peleadores',
-          icon: Users,
-          status: gymStatus === 'active' ? 'active' : 'none',
-          path: gymStatus === 'active' ? `/gym/${gymStaff?.gym_id}/dashboard` : '/trainer/onboarding',
-        },
-        {
-          key: 'gym',
-          label: 'Gimnasio',
-          description: 'Registra y gestiona tu gimnasio',
-          icon: Building2,
-          status: gymStatus,
-          path: gymStatus === 'active' ? `/gym/${gymStaff?.gym_id}/dashboard` : '/gym/onboarding',
-        },
-        {
-          key: 'judge',
-          label: 'Juez / Oficial',
-          description: 'Accede como oficial certificado',
-          icon: Scale,
-          status: judgeStatus,
-          path: judgeStatus !== 'none' ? '/' : '/judge/onboarding',
-        },
-      ]);
-
-      setLoading(false);
-    };
-
-    checkModules();
-  }, [user, authLoading, rolesLoading]);
-
-  if (authLoading || loading) {
+  if (authLoading || rolesLoading || modulesLoading) {
     return <PageSkeleton variant="hub" />;
   }
 
@@ -150,8 +84,7 @@ export default function ProfileHub() {
     return null;
   }
 
-  // If admin with no other modules, go straight to admin
-  if (isAdmin && modules.every(m => m.status === 'none')) {
+  if (isAdmin && cards.every((m) => m.status === 'none')) {
     navigate('/admin/dashboard', { replace: true });
     return null;
   }
@@ -183,7 +116,7 @@ export default function ProfileHub() {
         </Button>
 
         <div className="space-y-3">
-          {modules.map((mod) => (
+          {cards.map((mod) => (
             <Card
               key={mod.key}
               className="cursor-pointer hover:border-primary/50 transition-colors"
