@@ -330,8 +330,11 @@ export const LicenseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Progress simulation for better UX
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
-        if (prev < 15) return prev + 1;
-        return prev;
+        if (prev >= 15) {
+          clearInterval(progressInterval);
+          return prev;
+        }
+        return prev + 1;
       });
     }, 200);
 
