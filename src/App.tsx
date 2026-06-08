@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LicenseAuthProvider } from "@/hooks/useLicenseAuth";
+import { PostAuthRouter } from "@/components/PostAuthRouter";
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminProtectedRoute from '@/components/AdminProtectedRoute';
 import LicenseProtectedRoute from '@/components/LicenseProtectedRoute';
