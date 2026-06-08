@@ -128,8 +128,10 @@ export function useAdminLicenseActions() {
       
       // BROADCAST: Notify the user that their license was approved (NEW)
       // This allows instant UI updates without page refresh
+      const channel = supabase.channel('license-approvals-broadcast');
       try {
-        await supabase.channel('license-approvals-broadcast').send({
+        await channel.subscribe();
+        await channel.send({
           type: 'broadcast',
           event: 'license-approved',
           payload: { licenseId: variables.licenseId }
@@ -137,7 +139,8 @@ export function useAdminLicenseActions() {
         console.log('[BROADCAST] License approval notification sent for:', variables.licenseId);
       } catch (broadcastError) {
         console.warn('[BROADCAST] Failed to send approval notification:', broadcastError);
-        // Don't throw - this is a nice-to-have, not critical
+      } finally {
+        setTimeout(() => { supabase.removeChannel(channel); }, 1000);
       }
     }
   });
