@@ -352,13 +352,7 @@ const FightCard = ({
   onView,
 }: {
   fight: any;
-  availableJudges: Array<{
-    id: string;
-    first_name: string;
-    last_name: string;
-    certification_level: string;
-    specialization: string[];
-  }>;
+  availableJudges: Judge[];
   onView: (fightId: string) => void;
 }) => {
   const { officials, assignOfficial } = useFightOfficials(fight.id);
