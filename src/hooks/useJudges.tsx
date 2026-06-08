@@ -53,13 +53,13 @@ export function useJudges() {
     try {
       // PRE-VALIDACIÓN DE LICENCIA
       console.log('[CREATE JUDGE] Verificando licencia:', judgeData.license_number);
-      
+
       const { data: existingLicense, error: checkError } = await supabase
         .from('judges')
         .select('license_number, first_name, last_name, id')
         .eq('license_number', judgeData.license_number)
         .maybeSingle();
-      
+
       if (checkError && checkError.code !== 'PGRST116') {
         throw checkError;
       }
@@ -74,39 +74,54 @@ export function useJudges() {
         return false;
       }
 
+      // Multi-module: if email matches an existing app_user, link judges.user_id
+      // to that app_user.id so this judge profile becomes an additive module on
+      // the same identity (fighter/gym/etc.).
+      let linkedUserId: string | null = null;
+      if (judgeData.email) {
+        const { data: linkedAppUser } = await supabase
+          .from('app_user')
+          .select('id')
+          .eq('email', judgeData.email)
+          .maybeSingle();
+        if (linkedAppUser) linkedUserId = linkedAppUser.id;
+      }
+
       console.log('[CREATE JUDGE] Licencia disponible, creando juez...');
-      
+
       const { error: insertError } = await supabase
         .from('judges')
-        .insert([judgeData]);
+        .insert([{ ...judgeData, ...(linkedUserId ? { user_id: linkedUserId } : {}) }]);
 
       if (insertError) throw insertError;
 
-      console.log('[CREATE JUDGE] Juez creado exitosamente');
-      
+      console.log('[CREATE JUDGE] Juez creado exitosamente', { linkedUserId });
+
       toast({
         title: "Éxito",
-        description: "Juez creado correctamente",
+        description: linkedUserId
+          ? "Juez creado y vinculado a la cuenta existente"
+          : "Juez creado correctamente",
       });
 
       await fetchJudges();
       return true;
-      
+
     } catch (err) {
       console.error('[CREATE JUDGE] Error:', err);
-      
+
       let errorMessage = err instanceof Error ? err.message : 'Error al crear juez';
-      
+
       if (errorMessage.includes('duplicate key') || errorMessage.includes('judges_license_number_key')) {
         errorMessage = `⚠️ El número de licencia "${judgeData.license_number}" ya está en uso.`;
       }
-      
+
       toast({
         title: "Error",
         description: errorMessage,
         variant: "destructive",
       });
-      
+
       return false;
     }
   };
@@ -200,13 +215,30 @@ export function useCurrentJudge() {
   const fetchCurrentJudge = async () => {
     try {
       setLoading(true);
-      
-      // Get current user's judge profile
+
+      // Multi-module identity: judges.user_id references app_user.id.
+      const { data: authData } = await supabase.auth.getUser();
+      const authUser = authData.user;
+      if (!authUser) {
+        setCurrentJudge(null);
+        return;
+      }
+
+      const { data: appUser } = await supabase
+        .from('app_user')
+        .select('id')
+        .eq('auth_user_id', authUser.id)
+        .maybeSingle();
+      if (!appUser) {
+        setCurrentJudge(null);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('judges')
         .select('*')
-        .eq('email', (await supabase.auth.getUser()).data.user?.email)
-        .single();
+        .eq('user_id', appUser.id)
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
       setCurrentJudge(data);
