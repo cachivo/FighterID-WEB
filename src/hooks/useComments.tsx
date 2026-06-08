@@ -95,8 +95,7 @@ export function useComments(postId: string) {
       const { data: appUser } = await supabase
         .from('app_user')
         .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
+        .eq('auth_user_id', user.id).maybeSingle();
 
       if (!appUser) {
         toast.error('Usuario no encontrado');
