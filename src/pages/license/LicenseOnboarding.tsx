@@ -592,15 +592,18 @@ export default function LicenseOnboarding() {
                   <FileUpload
                     onFileSelect={(file) => {
                       setIdentityDocument(file);
+                      if (identityObjectUrlRef.current) URL.revokeObjectURL(identityObjectUrlRef.current);
                       const previewUrl = URL.createObjectURL(file);
+                      identityObjectUrlRef.current = previewUrl;
                       setIdentityPreview(previewUrl);
                     }}
                     onRemoveFile={() => {
                       setIdentityDocument(null);
-                      if (identityPreview) {
-                        URL.revokeObjectURL(identityPreview);
-                        setIdentityPreview(null);
+                      if (identityObjectUrlRef.current) {
+                        URL.revokeObjectURL(identityObjectUrlRef.current);
+                        identityObjectUrlRef.current = null;
                       }
+                      setIdentityPreview(null);
                     }}
                     accept="image/*"
                     preview={identityPreview || undefined}
@@ -615,15 +618,18 @@ export default function LicenseOnboarding() {
                   <FileUpload
                     onFileSelect={(file) => {
                       setFighterPhoto(file);
+                      if (fighterPhotoObjectUrlRef.current) URL.revokeObjectURL(fighterPhotoObjectUrlRef.current);
                       const previewUrl = URL.createObjectURL(file);
+                      fighterPhotoObjectUrlRef.current = previewUrl;
                       setFighterPhotoPreview(previewUrl);
                     }}
                     onRemoveFile={() => {
                       setFighterPhoto(null);
-                      if (fighterPhotoPreview) {
-                        URL.revokeObjectURL(fighterPhotoPreview);
-                        setFighterPhotoPreview(null);
+                      if (fighterPhotoObjectUrlRef.current) {
+                        URL.revokeObjectURL(fighterPhotoObjectUrlRef.current);
+                        fighterPhotoObjectUrlRef.current = null;
                       }
+                      setFighterPhotoPreview(null);
                     }}
                     accept="image/*"
                     preview={fighterPhotoPreview || undefined}
@@ -631,6 +637,7 @@ export default function LicenseOnboarding() {
                     className="mb-4"
                   />
                 </div>
+
 
                 <div className="space-y-6">
                   <div className="text-center">
