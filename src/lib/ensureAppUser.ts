@@ -85,7 +85,7 @@ export async function ensureAppUser(
  */
 export async function fillAppUserIfEmpty(
   appUserId: string,
-  patch: Partial<Pick<AppUserRecord, 'first_name' | 'last_name' | 'phone' | 'country' | 'birthdate' | 'gender'>>
+  patch: Partial<Pick<AppUserRecord, 'first_name' | 'last_name' | 'phone' | 'country' | 'birthdate'>>
 ): Promise<void> {
   const { data: current } = await supabase
     .from('app_user')
