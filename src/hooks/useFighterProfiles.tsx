@@ -269,14 +269,18 @@ export function useFighterProfiles() {
 
   const invalidateAll = (fighterId?: string) => {
     queryClient.invalidateQueries({ queryKey: ['fighters'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-fighters'] });
     queryClient.invalidateQueries({ queryKey: ['organization-ranking'] });
     queryClient.invalidateQueries({ queryKey: ['fighter-active-leagues'] });
+    queryClient.invalidateQueries({ queryKey: ['fighter-ranking'] });
+    queryClient.invalidateQueries({ queryKey: ['fighter-stats'] });
     queryClient.invalidateQueries({ queryKey: ['ranking-data'] });
     queryClient.invalidateQueries({ queryKey: ['userFighterProfile'] });
     queryClient.invalidateQueries({ queryKey: ['license'] });
     if (fighterId) {
       queryClient.invalidateQueries({ queryKey: ['fighter', fighterId] });
       queryClient.invalidateQueries({ queryKey: ['fighter-profile', fighterId] });
+      queryClient.invalidateQueries({ queryKey: ['fighter_history', fighterId] });
     }
   };
 
