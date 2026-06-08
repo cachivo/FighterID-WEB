@@ -112,10 +112,29 @@ export function useOfficials() {
         }
       }
 
-      const { error } = await supabase.from('officials').insert([data]);
+      // Multi-module: link officials.user_id to an existing app_user when
+      // the email matches, so the same identity can stack modules.
+      let linkedUserId: string | null = null;
+      if (data.email) {
+        const { data: linkedAppUser } = await supabase
+          .from('app_user')
+          .select('id')
+          .eq('email', data.email)
+          .maybeSingle();
+        if (linkedAppUser) linkedUserId = linkedAppUser.id;
+      }
+
+      const { error } = await supabase
+        .from('officials')
+        .insert([{ ...data, ...(linkedUserId ? { user_id: linkedUserId } : {}) }]);
       if (error) throw error;
 
-      toast({ title: 'Éxito', description: 'Oficial creado correctamente' });
+      toast({
+        title: 'Éxito',
+        description: linkedUserId
+          ? 'Oficial creado y vinculado a la cuenta existente'
+          : 'Oficial creado correctamente',
+      });
       await fetchOfficials();
       return true;
     } catch (err) {
