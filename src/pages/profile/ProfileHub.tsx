@@ -36,11 +36,12 @@ export default function ProfileHub() {
 
       // Check fighter status
       let fighterStatus: ModuleStatus = 'none';
-      const { data: appUser } = await supabase
+      const { data: appUser, error: appUserErr } = await supabase
         .from('app_user')
         .select('id')
         .eq('auth_user_id', user.id)
         .maybeSingle();
+      if (appUserErr) console.error('[ProfileHub] Error fetching app_user:', appUserErr);
 
       if (appUser) {
         const { data: profile } = await supabase
