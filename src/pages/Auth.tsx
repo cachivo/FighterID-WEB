@@ -94,10 +94,10 @@ export default function Auth() {
     handleHash();
   }, []);
 
-  // Post-login: always redirect to home
+  // Post-login: trigger PostAuthRouter via profile hub
   useEffect(() => {
     if (!user || authLoading) return;
-    navigate('/', { replace: true });
+    navigate('/profile/hub', { replace: true });
   }, [user, authLoading]);
 
   const handleOAuthLogin = async (provider: 'google' | 'facebook') => {
