@@ -36,13 +36,7 @@ const AssignOfficialDialog = ({
   fightId: string;
   role: string;
   onAssign: (officialId: string, role: string) => void;
-  availableJudges: Array<{
-    id: string;
-    first_name: string;
-    last_name: string;
-    certification_level: string;
-    specialization: string[];
-  }>;
+  availableJudges: Judge[];
 }) => {
   const [selectedJudgeId, setSelectedJudgeId] = useState('');
   const [isOpen, setIsOpen] = useState(false);
