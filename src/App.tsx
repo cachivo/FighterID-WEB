@@ -334,6 +334,7 @@ const App = () => {
               <Route path="/access-denied" element={<AccessDenied />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </PostAuthRouter>
             </Suspense>
           </TooltipProvider>
         </LicenseAuthProvider>
