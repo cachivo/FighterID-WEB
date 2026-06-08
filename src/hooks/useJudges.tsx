@@ -215,13 +215,30 @@ export function useCurrentJudge() {
   const fetchCurrentJudge = async () => {
     try {
       setLoading(true);
-      
-      // Get current user's judge profile
+
+      // Multi-module identity: judges.user_id references app_user.id.
+      const { data: authData } = await supabase.auth.getUser();
+      const authUser = authData.user;
+      if (!authUser) {
+        setCurrentJudge(null);
+        return;
+      }
+
+      const { data: appUser } = await supabase
+        .from('app_user')
+        .select('id')
+        .eq('auth_user_id', authUser.id)
+        .maybeSingle();
+      if (!appUser) {
+        setCurrentJudge(null);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('judges')
         .select('*')
-        .eq('email', (await supabase.auth.getUser()).data.user?.email)
-        .single();
+        .eq('user_id', appUser.id)
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
       setCurrentJudge(data);
