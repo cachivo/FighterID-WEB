@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserModules } from '@/hooks/useUserModules';
+import { ensureAppUser } from '@/lib/ensureAppUser';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,36 +14,23 @@ import fighterIdLogo from '@/assets/fighter-id-logo-auth.png';
 export default function GymOnboarding() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { modules, loading: modulesLoading, refetch } = useUserModules();
   const [loading, setLoading] = useState(false);
-  const [checkingExisting, setCheckingExisting] = useState(true);
   const [nombre, setNombre] = useState('');
   const [direccion, setDireccion] = useState('');
   const [ciudad, setCiudad] = useState('');
   const [telefono, setTelefono] = useState('');
 
-  // Check if user already has an active gym
-  // FIX C2: gym_staff.user_id references app_user.id, NOT auth.users.id.
+  // If user already owns a gym, redirect to its dashboard. Having other
+  // modules (fighter/judge/trainer) does NOT block creating a gym.
   useEffect(() => {
-    if (!user) { setCheckingExisting(false); return; }
-    (async () => {
-      const { data: appUser } = await supabase
-        .from('app_user')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
-      if (!appUser) { setCheckingExisting(false); return; }
-      const { data } = await supabase
-        .from('gym_staff')
-        .select('gym_id')
-        .eq('user_id', appUser.id)
-        .eq('active', true)
-        .maybeSingle();
-      if (data) navigate(`/gym/${data.gym_id}/dashboard`, { replace: true });
-      setCheckingExisting(false);
-    })();
-  }, [user]);
+    if (modulesLoading) return;
+    if (modules.gymOwner.status === 'active' && modules.gymOwner.gymId) {
+      navigate(`/gym/${modules.gymOwner.gymId}/dashboard`, { replace: true });
+    }
+  }, [modulesLoading, modules.gymOwner.status, modules.gymOwner.gymId, navigate]);
 
-  if (checkingExisting) {
+  if (modulesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -56,33 +45,11 @@ export default function GymOnboarding() {
 
     setLoading(true);
     try {
-      // Generate slug
       const slug = nombre.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-      // 1. Get or create app_user FIRST
-      let { data: appUser } = await supabase
-        .from('app_user')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
+      // Idempotent — reuses existing identity if user already had fighter/judge/etc.
+      const appUser = await ensureAppUser(user, { handlePrefix: 'gym_owner' });
 
-      if (!appUser) {
-        const { data: newAppUser, error: appUserError } = await supabase
-          .from('app_user')
-          .insert({
-            auth_user_id: user.id,
-            email: user.email,
-            first_name: '',
-            last_name: '',
-            handle: `gym_owner_${Date.now()}`,
-          })
-          .select('id')
-          .single();
-        if (appUserError) throw appUserError;
-        appUser = newAppUser;
-      }
-
-      // 2. Create gym (owner_id uses auth.users.id - this IS correct)
       const { data: gym, error: gymError } = await supabase
         .from('gyms')
         .insert({
@@ -100,24 +67,21 @@ export default function GymOnboarding() {
 
       if (gymError) throw gymError;
 
-      // Assign gym_owner role
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({ user_id: user.id, role: 'gym_owner' });
-
       if (roleError && !roleError.message?.includes('duplicate')) {
         console.error('Error assigning role:', roleError);
       }
 
-      // 3. Add as gym staff with CORRECT FK (app_user.id)
       const { error: staffError } = await supabase
         .from('gym_staff')
         .insert({ gym_id: gym.id, user_id: appUser.id, role: 'OWNER' as const });
-
       if (staffError) console.error('Error adding staff:', staffError);
 
       localStorage.removeItem('fighter_id_selected_role');
       toast.success('¡Gimnasio registrado exitosamente!');
+      refetch();
       navigate(`/gym/${gym.id}/dashboard`, { replace: true });
     } catch (error: any) {
       console.error('Error creating gym:', error);
@@ -139,7 +103,11 @@ export default function GymOnboarding() {
             <Building2 className="w-8 h-8 text-blue-400" />
           </div>
           <CardTitle className="text-xl font-bold text-white">Registra tu Gimnasio</CardTitle>
-          <CardDescription className="text-white/60">Completa los datos básicos para empezar</CardDescription>
+          <CardDescription className="text-white/60">
+            {modules.fighter.status !== 'none' || modules.judge.status !== 'none'
+              ? 'Añade el módulo Gimnasio a tu cuenta existente'
+              : 'Completa los datos básicos para empezar'}
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
