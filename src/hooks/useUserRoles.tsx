@@ -44,23 +44,25 @@ export function useUserRoles(): UseUserRolesReturn {
 
       if (rolesError) throw rolesError;
 
-      // Combine user data with their roles.
-      // Legacy accounts may have null auth_user_id — fall back to app_user.id so the row still renders.
-      const usersWithRoles: UserRoleData[] = (appUsers || []).map(user => {
-        const effectiveUserId = user.auth_user_id || user.id;
-        const roles = (userRoles || [])
-          .filter(ur => ur.user_id === user.auth_user_id)
-          .map(ur => ur.role as AppRole);
+      // Multi-module per email: one app_user ↔ one auth user ↔ N roles.
+      // Skip orphan app_user rows (no auth link) — they cannot hold roles and
+      // would render with the wrong id, breaking role mutations downstream.
+      const usersWithRoles: UserRoleData[] = (appUsers || [])
+        .filter((u) => !!u.auth_user_id)
+        .map((user) => {
+          const roles = (userRoles || [])
+            .filter((ur) => ur.user_id === user.auth_user_id)
+            .map((ur) => ur.role as AppRole);
 
-        return {
-          id: effectiveUserId,
-          email: user.email || '',
-          first_name: user.first_name,
-          last_name: user.last_name,
-          roles,
-          created_at: user.created_at || ''
-        };
-      });
+          return {
+            id: user.auth_user_id as string,
+            email: user.email || '',
+            first_name: user.first_name,
+            last_name: user.last_name,
+            roles,
+            created_at: user.created_at || '',
+          };
+        });
 
       setUsers(usersWithRoles);
     } catch (err) {
