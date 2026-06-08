@@ -50,18 +50,23 @@ export default function ProfileHub() {
           .maybeSingle();
 
         if (profile) {
-          const { data: license } = await supabase
+          // Prefer the primary license; fall back to the most recent one so users with
+          // an existing application never get pushed back to /license/onboarding.
+          const { data: licenses } = await supabase
             .from('fighter_licenses')
-            .select('status')
+            .select('status, is_primary, created_at')
             .eq('fighter_id', profile.id)
-            .maybeSingle();
+            .order('is_primary', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(1);
 
+          const license = licenses?.[0];
           if (license) {
             fighterStatus = license.status === 'ACTIVE' ? 'active'
               : license.status === 'SUSPENDED' || license.status === 'REVOKED' ? 'suspended'
               : 'pending';
           } else {
-            fighterStatus = 'pending';
+            fighterStatus = 'none';
           }
         }
       }
@@ -98,7 +103,10 @@ export default function ProfileHub() {
           description: 'Obtén tu Fighter ID profesional',
           icon: Dumbbell,
           status: fighterStatus,
-          path: fighterStatus === 'active' ? '/license/dashboard' : fighterStatus === 'pending' ? '/license/pending' : '/license/onboarding',
+          path: fighterStatus === 'active' ? '/license/dashboard'
+            : fighterStatus === 'pending' ? '/license/pending'
+            : fighterStatus === 'suspended' ? '/license/suspended'
+            : '/license/onboarding',
         },
         {
           key: 'gym',
