@@ -37,7 +37,7 @@ export async function ensureAppUser(
 ): Promise<AppUserRecord> {
   const { data: existing, error: selErr } = await supabase
     .from('app_user')
-    .select('id, auth_user_id, email, first_name, last_name, phone, handle, country, birth_date, gender')
+    .select('id, auth_user_id, email, first_name, last_name, phone, handle, country, birthdate')
     .eq('auth_user_id', authUser.id)
     .maybeSingle();
 
@@ -60,7 +60,7 @@ export async function ensureAppUser(
       country: defaults.country ?? null,
       handle,
     })
-    .select('id, auth_user_id, email, first_name, last_name, phone, handle, country, birth_date, gender')
+    .select('id, auth_user_id, email, first_name, last_name, phone, handle, country, birthdate')
     .single();
 
   if (insErr) {
@@ -68,7 +68,7 @@ export async function ensureAppUser(
     if ((insErr as any).code === '23505') {
       const { data: race } = await supabase
         .from('app_user')
-        .select('id, auth_user_id, email, first_name, last_name, phone, handle, country, birth_date, gender')
+        .select('id, auth_user_id, email, first_name, last_name, phone, handle, country, birthdate')
         .eq('auth_user_id', authUser.id)
         .maybeSingle();
       if (race) return race as AppUserRecord;
@@ -85,11 +85,11 @@ export async function ensureAppUser(
  */
 export async function fillAppUserIfEmpty(
   appUserId: string,
-  patch: Partial<Pick<AppUserRecord, 'first_name' | 'last_name' | 'phone' | 'country' | 'birth_date' | 'gender'>>
+  patch: Partial<Pick<AppUserRecord, 'first_name' | 'last_name' | 'phone' | 'country' | 'birthdate' | 'gender'>>
 ): Promise<void> {
   const { data: current } = await supabase
     .from('app_user')
-    .select('first_name, last_name, phone, country, birth_date, gender')
+    .select('first_name, last_name, phone, country, birthdate')
     .eq('id', appUserId)
     .maybeSingle();
 

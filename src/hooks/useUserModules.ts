@@ -43,7 +43,7 @@ export function useUserModules() {
 
       const { data: appUser } = await supabase
         .from('app_user')
-        .select('id, auth_user_id, email, first_name, last_name, phone, handle, country, birth_date, gender')
+        .select('id, auth_user_id, email, first_name, last_name, phone, handle, country, birthdate')
         .eq('auth_user_id', user.id)
         .maybeSingle();
 
