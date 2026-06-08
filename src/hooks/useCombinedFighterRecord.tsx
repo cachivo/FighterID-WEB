@@ -12,7 +12,7 @@ export function useCombinedFighterRecord(fighterId: string | null) {
   const { fightHistory, calculateRecord: calculateFightRecord, isLoading: isLoadingFights } = useFighterHistory(fighterId);
   
   const { data: fighterProfile, isLoading: isLoadingProfile } = useQuery({
-    queryKey: ['fighter_profile', fighterId],
+    queryKey: ['fighter-profile', 'combined-record', fighterId],
     enabled: !!fighterId,
     queryFn: async () => {
       if (!fighterId) return null;
