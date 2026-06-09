@@ -7,6 +7,8 @@ import LandingHero from "@/components/landing/Hero";
 import QuickStatsStrip from "@/components/landing/QuickStatsStrip";
 import SectionPanel from "@/components/landing/SectionPanel";
 import Ranking from "@/components/sections/Ranking";
+import SparcRanking from "@/components/sections/SparcRanking";
+import ArenaSpotlight from "@/components/landing/ArenaSpotlight";
 import { LazyMount } from "@/components/LazyMount";
 import { SectionDivider } from "@/components/landing/SectionDivider";
 import { useLenisScroll } from "@/hooks/useLenisScroll";
@@ -22,6 +24,14 @@ const HowItWorksNew = lazy(() => import("@/components/landing/HowItWorksNew"));
 
 const MemoHeader = memo(LandingHeader);
 const MemoHero = memo(LandingHero);
+
+function MmaBlock() {
+  return (
+    <SectionPanel title="Rankings MMA" subtitle="Ultimate Combat Championship Honduras">
+      <Ranking organizationCode="UCC_MMA" compact />
+    </SectionPanel>
+  );
+}
 
 function BoxeoBlock() {
   return (
@@ -90,6 +100,8 @@ const Index = () => {
       <MemoHeader />
       <MemoHero />
 
+      <ArenaSpotlight />
+
       <Suspense fallback={null}>
         {user && <FighterIDCallToAction />}
       </Suspense>
@@ -104,10 +116,14 @@ const Index = () => {
       )}
 
       <div id="rankings">
-        <SectionPanel title="Rankings MMA" subtitle="Ultimate Combat Championship Honduras">
-          <Ranking organizationCode="UCC_MMA" compact />
+        <SectionPanel title="Rankings SPARC" subtitle="Sparring Performance Assessment & Ranking Circuit">
+          <SparcRanking discipline="MMA" compact />
         </SectionPanel>
       </div>
+
+      <LazyMount placeholderMinHeight={500}>
+        <MmaBlock />
+      </LazyMount>
 
       <LazyMount placeholderMinHeight={600}>
         <BoxeoBlock />
