@@ -1,104 +1,71 @@
-# Arquitectura Multi-Módulo por Email
 
-## Objetivo
-Un solo correo electrónico (= 1 `auth.users` = 1 `app_user`) puede tener **simultáneamente** activos cualquier combinación de los 4 módulos: **Peleador, Entrenador, Gimnasio (Owner), Juez/Oficial**. Ningún módulo debe bloquear ni requerir re-registro para activar otro.
+## 1. Cerrar sesión en el header (desktop + mobile)
 
-## Estado actual
-- `ProfileHub` ya muestra los 4 módulos con su status independiente ✅
-- `app_user` ya es único por `auth_user_id` ✅
-- `user_roles` ya permite múltiples roles por usuario ✅
-- **Pero** hay inconsistencias que rompen el modelo multi-módulo:
-  1. `JudgeOnboarding` usa `judges.user_id = auth.uid()` (incorrecto — debe ser `app_user.id`) y redirige fuera si ya existe registro.
-  2. `GymOnboarding` crea `app_user` con `first_name=''` si no existe, sobrescribiendo identidad de un peleador previo (riesgo).
-  3. `TrainerOnboarding` también crea `app_user` con datos en blanco si ya existe (insert sin upsert).
-  4. Ningún flujo verifica si ya hay `app_user` previo creado por otro módulo para **reutilizar** identidad (nombre/apellido/teléfono) en vez de pedirla de nuevo.
-  5. No existe una vista/función única que devuelva el estado multi-módulo del usuario — `ProfileHub` lo calcula con 4 queries sueltas y otras pantallas no comparten esa lógica.
-  6. No hay rol asignado para "trainer independiente" (sin gym) ni para "fighter" — `user_roles` solo se inserta en gym/judge.
+**`src/components/landing/LandingHeader.tsx`**
+- Reemplazar el botón "Mi cuenta" (desktop) por un `DropdownMenu` (shadcn) cuando hay `user`:
+  - Trigger: "Mi cuenta" con chevron
+  - Items: "Ir a mi cuenta" → `/dashboard`, "Mi perfil" → `/profile/hub`, separador, "Cerrar sesión" → `signOut()` + `navigate('/')`
+- En el Sheet móvil agregar, debajo del botón "Mi cuenta", un botón secundario "Cerrar sesión" (visible solo si `user`) con `signOut()`.
+- Usar `signOut` desde `useAuth()` (ya existe).
 
-## Diseño propuesto
+## 2. Protagonismo de ARENA
 
-### 1. Modelo conceptual (sin cambios de tablas)
-```
-auth.users (1) ──► app_user (1) ──┬──► fighter_profiles  (módulo Peleador)
-                                  ├──► gym_staff         (módulo Entrenador/Gym)
-                                  ├──► gyms.owner_id     (módulo Gimnasio Owner)
-                                  └──► judges            (módulo Juez)
+**Nav highlight (`LandingHeader.tsx`)**
+- Mantener Time Master accesible pero degradado a item normal.
+- Nuevo item destacado en `NAV`: `{ label: 'ARENA Live', href: '/arena', highlight: true }` con ícono `Radio` (lucide) en crimson; tanto desktop como Sheet móvil.
+- El botón móvil crimson dedicado actual (Timer) pasa a apuntar a `/arena` con ícono `Radio`. Time Master sigue accesible vía el menú móvil.
 
-user_roles: N filas (fighter, gym_owner, gym_coach, official_judge, …)
-```
-Reglas:
-- `app_user` se crea **una sola vez** por email; los onboardings posteriores hacen `upsert` no destructivo (solo rellenan campos vacíos).
-- Cada onboarding agrega su `user_roles` correspondiente sin tocar los demás.
-- ProfileHub es el switcher universal entre módulos activos.
+**Bloque hero secundario en `src/pages/Index.tsx`**
+- Nuevo componente `src/components/landing/ArenaSpotlight.tsx`:
+  - Inserción inmediatamente después de `<MemoHero />` y antes del CTA/QuickStats.
+  - Layout editorial: bloque a ancho `max-w-[1200px]`, fondo `#111111`, borde hairline, sin sombras.
+  - Contenido: kicker mono "Centro de competencia en vivo", título display "ARENA", subtítulo corto, dos CTA (crimson "Entrar a ARENA" → `/arena`, ghost "Ver eventos SPARC" → `/sparc`). Indicador "● EN VIVO" si hay un `sparc_events.state = 'live'` (consulta opcional, ligera, dentro de un `useQuery` con `staleTime` alto). Si no hay live, mostrar próximo evento o copy estático.
+  - Mobile-first (grid-cols-1, CTA full-width).
 
-### 2. Hook único `useUserModules`
-Nuevo hook (`src/hooks/useUserModules.ts`) que centraliza:
-```ts
-{
-  appUser: { id, first_name, last_name, phone, … } | null,
-  modules: {
-    fighter:  { status: 'none'|'pending'|'active'|'suspended', profileId?, licenseStatus? },
-    trainer:  { status, gymId? },
-    gymOwner: { status, gymId? },
-    judge:    { status, judgeId? },
-  },
-  loading, refetch
-}
-```
-- Una sola query paralela; cacheada con React Query (`['user-modules', userId]`).
-- Reemplaza la lógica embebida en `ProfileHub` y se reusa en cada onboarding para decidir si **prefill** datos en lugar de pedirlos.
+## 3. Rankings: SPARC primero
 
-### 3. Helper compartido `ensureAppUser(authUser, defaults?)`
-Nuevo util (`src/lib/ensureAppUser.ts`):
-- Busca `app_user` por `auth_user_id`.
-- Si existe → devuelve el registro **sin sobrescribir**.
-- Si no existe → lo crea con `defaults` (email, handle, nombre/apellido si vienen).
-- Garantiza idempotencia y elimina la duplicación actual entre Gym/Trainer/Judge/License onboardings.
+**`src/pages/Index.tsx`**
+- Reordenar `SectionPanel`s dentro del bloque `#rankings`:
+  1. **SPARC Rankings** (nuevo, eager) — `SectionPanel title="Rankings SPARC" subtitle="Sparring Performance Assessment & Ranking Circuit"`. Contenido: componente compacto extraído de `SparcRankings`.
+  2. MMA UCC (sigue eager — única ranking eager según memoria "Landing Low-End Mobile" — se reemplaza por SPARC; UCC pasa a `LazyMount`).
+  3. Boxeo (FEDEHBOX + HHF amateur) dentro de `LazyMount` (sin cambios).
+- **Crear `src/components/sections/SparcRanking.tsx`** (componente reutilizable, compact mode):
+  - Props: `discipline?: 'MMA'|'BOXING'` (default 'MMA'), `compact?: boolean`, `limit?: number` (default 5 en compact).
+  - Query directa a `sparc_rankings` ordenada por `points desc`. Join opcional con `fighter_profiles` para nombre/avatar (vía vista si existe, si no consulta separada por IDs).
+  - Refactorizar `src/pages/sparc/SparcRankings.tsx` para consumirlo en modo no-compact.
+- Respeta regla "solo 1 ranking eager" → SPARC ocupa ese slot.
 
-### 4. Cambios por flujo (aditivos, no rompen lo existente)
+## 4. Workflow check (auditoría — entregable: reporte en chat + fixes solo si triviales)
 
-**LicenseOnboarding (Peleador)**
-- Usa `useUserModules`: si ya hay `appUser`, prefill `firstName/lastName/phone` y permite editar.
-- Solo crea fighter_profile + asigna rol `user` (fighter). No toca otros módulos.
+### A. Onboarding multi-módulo
+Verificar end-to-end:
+- `ensureAppUser` se invoca correctamente en `LicenseOnboarding`, `GymOnboarding`, `TrainerOnboarding`, `JudgeOnboarding` sin sobreescribir `first_name/last_name/phone`.
+- `useUserModules` devuelve estado correcto cuando un mismo email tiene `fighter_profile` + `gym_staff` + `judges`.
+- `user_roles` se agrega aditivamente (no DELETE de otros roles).
+- `ProfileHub` muestra las 4 tarjetas independientes y enruta bien.
+- `PostAuthRouter` no fuerza un módulo único.
+- `useJudges.createJudge` y `useOfficials.createOfficial` enlazan `user_id = app_user.id` por email match.
 
-**TrainerOnboarding (Entrenador)**
-- Usa `ensureAppUser`; si ya existe con nombre, **salta el paso "perfil"** y va directo a "código de gimnasio".
-- Asigna rol `gym_coach` (o `gym_assistant`) tras aprobación del gym.
-- Permite continuar aunque ya exista fighter_profile o judge.
+Para cada hallazgo: nota corta + recomendación. Fixes mínimos in-PR solo si son triviales (≤5 líneas); riesgos mayores se reportan como tareas separadas.
 
-**GymOnboarding (Owner)**
-- Usa `ensureAppUser` y NO sobrescribe `first_name=''` si ya hay datos.
-- Asigna `gym_owner` además de cualquier rol previo.
-- Permite registro aunque el usuario ya sea peleador/juez/entrenador.
+### B. SPARC/ARENA → Ranking
+Trazar:
+- `sparc_events` creado → `SparcLiveFight` → registro de votos/rondas → trigger `trg_fight_result_inserted` → puntos en `sparc_rankings` (fighters/gyms/coaches).
+- Recuperación de sesión (`recoverSession` en `SparcHub`) y `useSparcRecoveryWorker`.
+- Idempotencia del cálculo de puntos (memoria "Automated Fight Lifecycle").
+- Whitelist `EVENT_TYPES` cubre los eventos emitidos durante un fight (verificar que no se intenten loggear tipos no listados).
 
-**JudgeOnboarding (Juez)**
-- **Fix**: usar `app_user.id` para `judges.user_id` (no `auth.uid()`), consistente con el resto del sistema y memoria del proyecto.
-- Si ya existe `judges` activo → ir al panel de juez (no a `/`).
-- Permite registro aunque ya tenga otros módulos.
+Entregable: tabla "paso → archivo:línea → status (OK / ⚠️ / ❌) → nota".
 
-**PostAuthRouter / ProfileSetup**
-- Sin cambios estructurales. Sigue siendo "si no hay `app_user` → /profile/setup". Una vez creado por cualquier vía, no se vuelve a pedir.
+## Out of scope
+- Sin migraciones DB.
+- Sin redesign de `SparcRankings.tsx` más allá de extraer el componente compacto.
+- Sin cambios en RLS, edge functions o flujos de auth fuera de exponer `signOut` en el header.
 
-**ProfileHub**
-- Refactor para consumir `useUserModules` (menos código, sin duplicar lógica).
-- Mantiene los 4 cards independientes con sus status.
-
-### 5. RPC opcional (no bloqueante, mejora performance)
-`get_my_user_modules()` security definer que devuelve el JSON de módulos en 1 round-trip. Si lo dejamos para una fase 2 está bien — el hook puede empezar con 4 queries paralelas.
-
-## Archivos a modificar
-- **Nuevo**: `src/hooks/useUserModules.ts`
-- **Nuevo**: `src/lib/ensureAppUser.ts`
-- **Editar**: `src/pages/profile/ProfileHub.tsx` (usar hook)
-- **Editar**: `src/pages/license/LicenseOnboarding.tsx` (prefill, no bloquear)
-- **Editar**: `src/pages/gym/TrainerOnboarding.tsx` (ensureAppUser, skip paso 1 si ya hay datos)
-- **Editar**: `src/pages/gym/GymOnboarding.tsx` (ensureAppUser sin sobrescribir)
-- **Editar**: `src/pages/judge/JudgeOnboarding.tsx` (usar `app_user.id`, no bloquear por otros módulos)
-
-## Fuera de alcance
-- Sin migraciones de base de datos en esta fase (el modelo ya soporta multi-módulo).
-- Sin cambios al sistema de licencias ni al flujo de invitaciones de gym.
-- Sin cambios al admin.
-
-## Riesgos
-- **Bajo**. Cambios son aditivos; cada módulo sigue funcionando aislado. El único fix con impacto es `JudgeOnboarding.user_id` que actualmente está mal asignado y probablemente ya causa lecturas inconsistentes en `ProfileHub` (que lee `judges` por `app_user.id`).
+## Archivos tocados
+- `src/components/landing/LandingHeader.tsx` (logout dropdown + ARENA nav)
+- `src/components/landing/ArenaSpotlight.tsx` (nuevo)
+- `src/components/sections/SparcRanking.tsx` (nuevo, compact)
+- `src/pages/Index.tsx` (insertar ArenaSpotlight + reordenar rankings)
+- `src/pages/sparc/SparcRankings.tsx` (consumir nuevo componente)
+- Auditoría: solo lectura + reporte; fixes triviales si aparecen.
