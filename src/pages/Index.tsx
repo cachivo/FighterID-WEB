@@ -100,6 +100,8 @@ const Index = () => {
       <MemoHeader />
       <MemoHero />
 
+      <ArenaSpotlight />
+
       <Suspense fallback={null}>
         {user && <FighterIDCallToAction />}
       </Suspense>
@@ -114,10 +116,14 @@ const Index = () => {
       )}
 
       <div id="rankings">
-        <SectionPanel title="Rankings MMA" subtitle="Ultimate Combat Championship Honduras">
-          <Ranking organizationCode="UCC_MMA" compact />
+        <SectionPanel title="Rankings SPARC" subtitle="Sparring Performance Assessment & Ranking Circuit">
+          <SparcRanking discipline="MMA" compact />
         </SectionPanel>
       </div>
+
+      <LazyMount placeholderMinHeight={500}>
+        <MmaBlock />
+      </LazyMount>
 
       <LazyMount placeholderMinHeight={600}>
         <BoxeoBlock />
