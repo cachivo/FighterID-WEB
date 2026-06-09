@@ -20,6 +20,7 @@ import { Loader2, User, Award, Upload, FileText, CheckCircle, Mail } from 'lucid
 import { useAuth } from '@/hooks/useAuth';
 import { FileUpload } from '@/components/ui/file-upload';
 import { ENABLED_DISCIPLINES, WEIGHT_CLASSES } from '@/lib/constants/disciplines';
+import { ensureAppUser, fillAppUserIfEmpty } from '@/lib/ensureAppUser';
 
 function GymSelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const { data: gyms, isLoading } = useGymsList();
