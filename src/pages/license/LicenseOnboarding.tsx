@@ -230,13 +230,45 @@ export default function LicenseOnboarding() {
     e.preventDefault();
     if (!user) return;
 
+    // Ensure app_user exists (idempotent) and additively grant base 'user' role.
+    // This lets users with gym/judge/trainer modules add the fighter module
+    // without depending solely on DB triggers.
+    try {
+      const authUserForEnsure = authUser ?? { id: user.id, email: (user as any).email ?? null };
+      const ensured = await ensureAppUser(authUserForEnsure as any, {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone || null,
+        country: formData.country || null,
+        handlePrefix: `fighter_${formData.firstName}_${formData.lastName}`,
+      });
+      await fillAppUserIfEmpty(ensured.id, {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone: formData.phone || null,
+        country: formData.country || null,
+        birthdate: formData.birthdate || null,
+      });
+
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({ user_id: user.id, role: 'user' });
+      if (roleError && !roleError.message?.includes('duplicate')) {
+        console.warn('[LicenseOnboarding] Non-blocking role insert warning:', roleError.message);
+      }
+    } catch (ensureErr: any) {
+      console.error('[LicenseOnboarding] ensureAppUser failed:', ensureErr);
+      toast.error(ensureErr?.message || 'No se pudo preparar tu cuenta');
+      return;
+    }
+
     const files = {
       identityDocument: identityDocument || undefined,
       fighterPhoto: fighterPhoto || undefined
     };
 
     const result = await createProfile(formData, files);
-    
+
     if (result.success) {
       // Clear the draft after successful submission
       localStorage.removeItem('license_onboarding_draft');
