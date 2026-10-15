@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,25 @@ export default function ArenaBoutHistory({ fighterId }: { fighterId: string }) {
     getNextPageParam: (last, pages) => last.length === 20 ? pages.length * 20 : undefined,
   });
   const entries = history.data?.pages.flat() ?? [];
+  const sparring = useQuery({
+    queryKey: ['fighter-profile', fighterId, 'sparring-summary'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_sparring_summary', { p_fighter_id: fighterId });
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+  const sp = sparring.data;
   return (
     <section className="py-4 space-y-4" aria-label="Historial de Arena Control">
       <h2 className="text-lg font-semibold">Historial de Arena Control</h2>
+      {sp && Number(sp.total) > 0 && (
+        <div className="border border-border rounded-sm p-3 space-y-1" aria-label="Récord de sparrings">
+          <p className="text-xs font-mono text-muted-foreground">Récord de sparrings · no cuenta para el récord oficial</p>
+          <p className="text-2xl font-semibold font-mono">{Number(sp.wins)}-{Number(sp.losses)}-{Number(sp.draws)}</p>
+          <p className="text-sm text-muted-foreground">{Number(sp.total)} sparrings · {Number(sp.rounds)} rounds · {Number(sp.finishes)} KO/TKO</p>
+        </div>
+      )}
       {history.isPending && <p className="text-sm text-muted-foreground">Cargando historial…</p>}
       {history.isError && <div className="space-y-2"><p className="text-sm text-destructive">No se pudo cargar el historial.</p><Button variant="outline" onClick={() => history.refetch()}>Reintentar</Button></div>}
       {!history.isPending && !history.isError && !entries.length && <p className="text-sm text-muted-foreground">Sin sesiones registradas.</p>}

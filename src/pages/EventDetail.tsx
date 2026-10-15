@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useEvents, useFights } from '@/hooks/useEvents';
 import { FighterMiniature } from '@/components/FighterMiniature';
+import { EventFightLive } from '@/components/EventFightLive';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Header from '@/components/Header';
@@ -550,9 +551,7 @@ const EventDetail = () => {
                       }}>|</div>
                           </div>
                           
-                          {fight.status !== 'scheduled' && <Badge variant="outline" className="mt-4 font-bold px-4 py-2">
-                              {fight.status.toUpperCase()}
-                            </Badge>}
+                          <EventFightLive fightId={fight.id} fighterAId={fight.fighter_a_id} nameA={fight.fighter_a ? `${fight.fighter_a.first_name} ${fight.fighter_a.last_name}` : fight.fighter_a_external?.name ?? 'Rojo'} nameB={fight.fighter_b ? `${fight.fighter_b.first_name} ${fight.fighter_b.last_name}` : fight.fighter_b_external?.name ?? 'Azul'} />
                         </div>
 
                         {/* Fighter B - Desktop Only */}
