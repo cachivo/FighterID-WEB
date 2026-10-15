@@ -490,11 +490,12 @@ export function useTimeMaster() {
       setIsRestPeriod(false);
       for (const id of [fighterAId, fighterBId]) {
         if (id) {
+          void queryClient.invalidateQueries({ queryKey: ['fighter', id] });
           void queryClient.invalidateQueries({ queryKey: ['fighter-profile', id] });
           void queryClient.invalidateQueries({ queryKey: ['fighter_history', id] });
         }
       }
-      for (const key of ['fighter-profiles', 'admin-fighters', 'fighter-ranking', 'fighter-stats', 'fighter-record-history']) {
+      for (const key of ['fighters', 'admin-fighters', 'organization-ranking', 'fighter-active-leagues', 'ranking-data', 'userFighterProfile', 'license', 'fighter-ranking', 'fighter-stats']) {
         void queryClient.invalidateQueries({ queryKey: [key] });
       }
       if (response?.records_updated) await loadFighters();
