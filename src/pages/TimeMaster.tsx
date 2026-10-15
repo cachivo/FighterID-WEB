@@ -13,9 +13,6 @@ import {
 import { useTimeMaster } from "@/hooks/useTimeMaster";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useSearchParams } from "react-router-dom";
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import type { ArenaBoutType } from '@/lib/arenaBout';
 
 export default function TimeMaster() {
   const tm = useTimeMaster();
