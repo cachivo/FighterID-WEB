@@ -3464,6 +3464,9 @@ export type Database = {
           id: string
           inspector_id: string | null
           is_championship: boolean | null
+          live_round: number | null
+          live_scores: Json
+          live_updated_at: string | null
           notes: string | null
           number_of_rounds: number | null
           referee_id: string | null
@@ -3500,6 +3503,9 @@ export type Database = {
           id?: string
           inspector_id?: string | null
           is_championship?: boolean | null
+          live_round?: number | null
+          live_scores?: Json
+          live_updated_at?: string | null
           notes?: string | null
           number_of_rounds?: number | null
           referee_id?: string | null
@@ -3536,6 +3542,9 @@ export type Database = {
           id?: string
           inspector_id?: string | null
           is_championship?: boolean | null
+          live_round?: number | null
+          live_scores?: Json
+          live_updated_at?: string | null
           notes?: string | null
           number_of_rounds?: number | null
           referee_id?: string | null
@@ -7016,6 +7025,7 @@ export type Database = {
           blue_name: string | null
           bout_type: string
           created_at: string
+          fight_id: string | null
           id: string
           judge_user_id: string
           notes: string | null
@@ -7037,6 +7047,7 @@ export type Database = {
           blue_name?: string | null
           bout_type?: string
           created_at?: string
+          fight_id?: string | null
           id?: string
           judge_user_id: string
           notes?: string | null
@@ -7058,6 +7069,7 @@ export type Database = {
           blue_name?: string | null
           bout_type?: string
           created_at?: string
+          fight_id?: string | null
           id?: string
           judge_user_id?: string
           notes?: string | null
@@ -7109,6 +7121,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vision_fight_context"
             referencedColumns: ["fighter_b_id"]
+          },
+          {
+            foreignKeyName: "tm_verdict_fight_id_fkey"
+            columns: ["fight_id"]
+            isOneToOne: false
+            referencedRelation: "fights"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tm_verdict_fight_id_fkey"
+            columns: ["fight_id"]
+            isOneToOne: false
+            referencedRelation: "fights_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tm_verdict_fight_id_fkey"
+            columns: ["fight_id"]
+            isOneToOne: false
+            referencedRelation: "vision_fight_context"
+            referencedColumns: ["fight_id"]
           },
           {
             foreignKeyName: "tm_verdict_red_fighter_id_fkey"
@@ -8262,6 +8295,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      arena_link_event_fight: {
+        Args: { p_fight_id: string; p_session_id: string }
+        Returns: undefined
+      }
+      arena_sync_event_fight: {
+        Args: {
+          p_fight_id: string
+          p_round: number
+          p_scores: Json
+          p_status: string
+        }
+        Returns: undefined
+      }
       assign_user_role: {
         Args: {
           p_role: Database["public"]["Enums"]["app_role"]
@@ -8535,6 +8581,17 @@ export type Database = {
           test_type: Database["public"]["Enums"]["doping_test_type"]
           testing_agency: string
           verified_at: string
+        }[]
+      }
+      get_sparring_summary: {
+        Args: { p_fighter_id: string }
+        Returns: {
+          draws: number
+          finishes: number
+          losses: number
+          rounds: number
+          total: number
+          wins: number
         }[]
       }
       get_station_number: { Args: { p_role: string }; Returns: number }
