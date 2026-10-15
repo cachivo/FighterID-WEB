@@ -37,14 +37,21 @@ export default function TimeMaster() {
   }, [eventFightParam, loadEventFight]);
 
   // When a new round is pushed to roundsCompleted, prompt for its score
+  // Sparring: no per-round scoring, result is decided at the end.
   useEffect(() => {
-    if (tm.roundsCompleted.length > lastCompletedCountRef.current) {
+    if (tm.boutType === 'official' && tm.roundsCompleted.length > lastCompletedCountRef.current) {
       const last = tm.roundsCompleted[tm.roundsCompleted.length - 1];
       setEditingRound(last.roundNumber);
       setRoundScoreOpen(true);
     }
     lastCompletedCountRef.current = tm.roundsCompleted.length;
-  }, [tm.roundsCompleted]);
+  }, [tm.roundsCompleted, tm.boutType]);
+
+  // Outside an event, Arena Control is sparring-only.
+  const { setBoutType } = tm;
+  useEffect(() => {
+    if (!eventFightParam && !tm.eventFightId && tm.boutType !== 'sparring') setBoutType('sparring');
+  }, [eventFightParam, tm.eventFightId, tm.boutType, setBoutType]);
 
   // Reset auto-open guard AND any stale pending result when a new match begins.
   useEffect(() => {
@@ -160,12 +167,11 @@ export default function TimeMaster() {
         )}
 
         {/* Fighter selection */}
-        <section className="space-y-3" aria-label="Tipo de encuentro">
-          <h2 className="text-lg font-semibold">Tipo de encuentro</h2>
-          <RadioGroup value={tm.boutType} onValueChange={value => tm.setBoutType(value as ArenaBoutType)} disabled={phaseLocked || !!tm.eventFightId} className="flex flex-wrap gap-6">
-            <div className="flex items-center gap-2"><RadioGroupItem id="arena-sparring" value="sparring" /><Label htmlFor="arena-sparring">Sparring</Label></div>
-            <div className="flex items-center gap-2"><RadioGroupItem id="arena-official" value="official" /><Label htmlFor="arena-official">Pelea oficial</Label></div>
-          </RadioGroup>
+        <section className="space-y-1" aria-label="Tipo de encuentro">
+          <h2 className="text-lg font-semibold">Tipo de encuentro: {tm.eventFightId ? 'Pelea oficial' : 'Sparring'}</h2>
+          <p className="text-xs text-muted-foreground">
+            {tm.eventFightId ? 'Abierta desde el evento: puntaje por round y récord oficial.' : 'El resultado se marca al final. Las peleas oficiales se abren desde su evento.'}
+          </p>
         </section>
         <Card>
           <CardHeader>
