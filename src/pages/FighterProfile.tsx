@@ -14,6 +14,7 @@ import cageBackground from "@/assets/mma-cage-background.png";
 import { Crown, Award } from 'lucide-react';
 import FighterUpdatesFeed from '@/components/FighterUpdatesFeed';
 import FighterRecordHistory from '@/components/FighterRecordHistory';
+import ArenaBoutHistory from '@/components/ArenaBoutHistory';
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -400,6 +401,7 @@ export default function FighterProfile() {
         </Card>
 
         {/* Record change audit trail */}
+        <ArenaBoutHistory fighterId={fighter.id} />
         <FighterRecordHistory fighterId={fighter.id} />
 
 

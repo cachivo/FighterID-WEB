@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Trophy, FileText, Swords, AlertCircle } from "lucide-react";
+import type { ArenaBoutType } from '@/lib/arenaBout';
 
 export type MatchResultType =
   | 'ko' | 'tko'
@@ -30,7 +31,8 @@ const RESULT_TYPES_REQUIRING_ALL_ROUNDS: MatchResultType[] = [
 interface MatchResultDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (result: { winnerId: string | null; resultType: MatchResultType; notes?: string }) => void;
+  onSubmit: (result: { winnerId: string | null; resultType: MatchResultType; notes?: string }) => void | Promise<boolean>;
+  boutType?: ArenaBoutType;
   fighterA: { id: string; name: string };
   fighterB: { id: string; name: string };
   currentRound: number;
@@ -51,7 +53,7 @@ const RESULT_OPTIONS: Array<{ value: MatchResultType; label: string }> = [
   { value: 'no_contest', label: 'No Contest' },
 ];
 
-export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighterB, currentRound, totalRounds, rounds = [], totalScoreA = 0, totalScoreB = 0 }: MatchResultDialogProps) {
+export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighterB, currentRound, totalRounds, rounds = [], totalScoreA = 0, totalScoreB = 0, boutType = 'official' }: MatchResultDialogProps) {
   const [resultType, setResultType] = useState<MatchResultType>('decision_unanimous');
   const [winnerId, setWinnerId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
@@ -82,15 +84,15 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
   }, [resultType]);
 
   const needsWinner = resultType !== 'draw' && resultType !== 'no_contest';
-  const resultRequiresAllRounds = RESULT_TYPES_REQUIRING_ALL_ROUNDS.includes(resultType);
+  const resultRequiresAllRounds = boutType === 'official' && RESULT_TYPES_REQUIRING_ALL_ROUNDS.includes(resultType);
   const allRoundsCompleted = rounds.length === totalRounds;
   const canSubmit = (!needsWinner || winnerId !== null) && (!resultRequiresAllRounds || allRoundsCompleted);
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !submitting && onClose()}>
       <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Swords className="h-5 w-5" /> Resultado de la Pelea</DialogTitle>
+          <DialogTitle className="flex items-center gap-2"><Swords className="h-5 w-5" /> {boutType === 'sparring' ? 'Resultado del sparring' : 'Resultado de la pelea oficial'}</DialogTitle>
           <DialogDescription>Registra el resultado para la pelea terminada en Round {currentRound}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
@@ -180,7 +182,7 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose} disabled={submitting} className="min-h-[44px]">Cancelar</Button>
           <Button
-            onClick={() => {
+            onClick={async () => {
               if (submitting) return;
               if (resultRequiresAllRounds && !allRoundsCompleted) {
                 setValidationError(`Debes completar todos los ${totalRounds} rounds antes de registrar una ${RESULT_OPTIONS.find(o => o.value === resultType)?.label.toLowerCase()}.`);
@@ -188,7 +190,8 @@ export function MatchResultDialog({ isOpen, onClose, onSubmit, fighterA, fighter
               }
               setValidationError(null);
               setSubmitting(true);
-              onSubmit({ winnerId, resultType, notes: notes || undefined });
+              try { await onSubmit({ winnerId, resultType, notes: notes || undefined }); }
+              finally { setSubmitting(false); }
             }}
             disabled={!canSubmit || submitting}
             className="min-h-[44px]"
