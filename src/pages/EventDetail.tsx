@@ -10,6 +10,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 import { useEvents, useFights } from '@/hooks/useEvents';
 import { FighterMiniature } from '@/components/FighterMiniature';
 import { EventFightLive } from '@/components/EventFightLive';
+import { useAdmin } from '@/hooks/useAdmin';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Header from '@/components/Header';
@@ -90,6 +91,7 @@ const EventDetail = () => {
     loading: fightsLoading,
     error: fightsError
   } = useFights(eventId);
+  const { isAdmin } = useAdmin();
   type EventItem = (typeof events)[number];
   const [event, setEvent] = useState<EventItem | null>(null);
 
@@ -551,6 +553,7 @@ const EventDetail = () => {
                       }}>|</div>
                           </div>
                           
+                          {isAdmin && fight.status !== 'completed' && fight.fighter_a_id && fight.fighter_b_id && <Link to={`/time-master?fightId=${fight.id}`} className="mt-4 inline-flex items-center rounded-sm border border-primary px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary hover:text-primary-foreground">Abrir en Arena Control</Link>}
                           <EventFightLive fightId={fight.id} fighterAId={fight.fighter_a_id} nameA={fight.fighter_a ? `${fight.fighter_a.first_name} ${fight.fighter_a.last_name}` : fight.fighter_a_external?.name ?? 'Rojo'} nameB={fight.fighter_b ? `${fight.fighter_b.first_name} ${fight.fighter_b.last_name}` : fight.fighter_b_external?.name ?? 'Azul'} />
                         </div>
 
