@@ -7012,52 +7012,64 @@ export type Database = {
       }
       tm_verdict: {
         Row: {
-          blue_fighter_id: string
+          blue_fighter_id: string | null
+          blue_name: string | null
+          bout_type: string
           created_at: string
           id: string
           judge_user_id: string
           notes: string | null
           records_updated: boolean
-          red_fighter_id: string
+          red_fighter_id: string | null
+          red_name: string | null
           result_type: string
           round_config: number
           round_duration_sec: number
           round_number: number
           rounds: Json
+          session_id: string | null
           signed_at: string
           updated_at: string
           winner_fighter_id: string | null
         }
         Insert: {
-          blue_fighter_id: string
+          blue_fighter_id?: string | null
+          blue_name?: string | null
+          bout_type?: string
           created_at?: string
           id?: string
           judge_user_id: string
           notes?: string | null
           records_updated?: boolean
-          red_fighter_id: string
+          red_fighter_id?: string | null
+          red_name?: string | null
           result_type: string
           round_config: number
           round_duration_sec: number
           round_number: number
           rounds?: Json
+          session_id?: string | null
           signed_at?: string
           updated_at?: string
           winner_fighter_id?: string | null
         }
         Update: {
-          blue_fighter_id?: string
+          blue_fighter_id?: string | null
+          blue_name?: string | null
+          bout_type?: string
           created_at?: string
           id?: string
           judge_user_id?: string
           notes?: string | null
           records_updated?: boolean
-          red_fighter_id?: string
+          red_fighter_id?: string | null
+          red_name?: string | null
           result_type?: string
           round_config?: number
           round_duration_sec?: number
           round_number?: number
           rounds?: Json
+          session_id?: string | null
           signed_at?: string
           updated_at?: string
           winner_fighter_id?: string | null
@@ -8422,6 +8434,20 @@ export type Database = {
           last_strike_ms: number
         }[]
       }
+      get_arena_history: {
+        Args: { p_fighter_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          bout_type: string
+          opponent_id: string
+          opponent_name: string
+          outcome: string
+          result_type: string
+          round_count: number
+          rounds: Json
+          signed_at: string
+          verdict_id: string
+        }[]
+      }
       get_current_user_judge_id: { Args: never; Returns: string }
       get_dashboard_stats: { Args: never; Returns: Json }
       get_fighter_gym_history: {
@@ -8653,6 +8679,24 @@ export type Database = {
         Returns: Json
       }
       request_join_gym: { Args: { p_gym_code: string }; Returns: Json }
+      save_arena_result: {
+        Args: {
+          p_blue_fighter_id: string
+          p_blue_name: string
+          p_bout_type: string
+          p_notes?: string
+          p_red_fighter_id: string
+          p_red_name: string
+          p_result_type: string
+          p_round_config: number
+          p_round_duration_sec: number
+          p_round_number: number
+          p_rounds: Json
+          p_session_id: string
+          p_winner_corner: string
+        }
+        Returns: Json
+      }
       save_fight_result: {
         Args: {
           p_blue_fighter_id: string
