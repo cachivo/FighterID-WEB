@@ -7,19 +7,21 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Swords, Play, Pause, RotateCcw, StopCircle, FastForward, Trophy, RefreshCw, Volume2, VolumeX, Timer, ShieldCheck, Settings, ChevronDown } from "lucide-react";
 import {
   TimeMasterLayout, FighterSelector, MatchConfig, TimerDisplay, RoundTracker,
-  MatchResultDialog, RecordUpdateDialog, AlertSettingsPanel, AlertTestPanel, RoundScoreDialog,
+  MatchResultDialog, AlertSettingsPanel, AlertTestPanel, RoundScoreDialog,
   type MatchResultType, type RoundScoreValue,
 } from "@/components/time-master";
 import { useTimeMaster } from "@/hooks/useTimeMaster";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import type { ArenaBoutType } from '@/lib/arenaBout';
 
 export default function TimeMaster() {
   const tm = useTimeMaster();
   const { loadFighters } = tm;
   const { user } = useAuth();
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
-  const [recordDialogOpen, setRecordDialogOpen] = useState(false);
   const [pendingResult, setPendingResult] = useState<{ winnerId: string | null; resultType: MatchResultType; roundNumber: number; notes?: string } | null>(null);
   const [roundScoreOpen, setRoundScoreOpen] = useState(false);
   const [editingRound, setEditingRound] = useState<number | null>(null);
@@ -53,14 +55,13 @@ export default function TimeMaster() {
       !autoOpenedRef.current &&
       !pendingResult &&
       !resultDialogOpen &&
-      !recordDialogOpen &&
       !roundScoreOpen &&
       tm.roundsCompleted.length >= tm.roundConfig
     ) {
       autoOpenedRef.current = true;
       setResultDialogOpen(true);
     }
-  }, [tm.phase, tm.roundsCompleted.length, tm.roundConfig, pendingResult, resultDialogOpen, recordDialogOpen, roundScoreOpen]);
+  }, [tm.phase, tm.roundsCompleted.length, tm.roundConfig, pendingResult, resultDialogOpen, roundScoreOpen]);
 
 
 
@@ -70,52 +71,20 @@ export default function TimeMaster() {
   const cornerAId = tm.fighterAIsGuest ? 'guest:red' : (tm.fighterAId ?? '');
   const cornerBId = tm.fighterBIsGuest ? 'guest:blue' : (tm.fighterBId ?? '');
 
-  const winnerName = pendingResult?.winnerId
-    ? (pendingResult.winnerId === cornerAId ? tm.fighterAName : tm.fighterBName)
-    : null;
-
   const judgeLabel =
     (user?.user_metadata?.full_name as string | undefined) ||
     (user?.user_metadata?.name as string | undefined) ||
     user?.email ||
     'Juez no autenticado';
 
-  const handleSubmitResult = (r: { winnerId: string | null; resultType: MatchResultType; notes?: string }) => {
+  const handleSubmitResult = async (r: { winnerId: string | null; resultType: MatchResultType; notes?: string }) => {
     const snapshotRound = tm.currentRound;
+    const saved = await tm.completeMatch({ ...r, roundNumber: snapshotRound });
+    if (!saved) return false;
     autoOpenedRef.current = true;
     setPendingResult({ ...r, roundNumber: snapshotRound });
-    tm.finishMatch({ winnerId: r.winnerId, resultType: r.resultType, roundNumber: snapshotRound, notes: r.notes });
     setResultDialogOpen(false);
-    if (tm.isGuestMatch) {
-      // Guest match: no DB write, no record-update prompt.
-      toast("Veredicto local registrado (pelea con invitado, sin afectar récords)");
-    } else {
-      setRecordDialogOpen(true);
-    }
-  };
-
-  const handleConfirmRecord = async () => {
-    if (!pendingResult) { setRecordDialogOpen(false); return; }
-    await tm.updateFighterRecords({
-      winnerId: pendingResult.winnerId,
-      resultType: pendingResult.resultType,
-      roundNumber: pendingResult.roundNumber,
-      notes: pendingResult.notes,
-    });
-    setRecordDialogOpen(false);
-  };
-
-  const handleDeclineRecord = async () => {
-    if (pendingResult) {
-      await tm.insertVerdict({
-        winnerId: pendingResult.winnerId,
-        resultType: pendingResult.resultType,
-        roundNumber: pendingResult.roundNumber,
-        notes: pendingResult.notes,
-      }, false);
-    }
-    setRecordDialogOpen(false);
-    toast("Resultado firmado sin actualizar récords");
+    return true;
   };
 
 
@@ -178,6 +147,13 @@ export default function TimeMaster() {
         </Card>
 
         {/* Fighter selection */}
+        <section className="space-y-3" aria-label="Tipo de encuentro">
+          <h2 className="text-lg font-semibold">Tipo de encuentro</h2>
+          <RadioGroup value={tm.boutType} onValueChange={value => tm.setBoutType(value as ArenaBoutType)} disabled={phaseLocked} className="flex flex-wrap gap-6">
+            <div className="flex items-center gap-2"><RadioGroupItem id="arena-sparring" value="sparring" /><Label htmlFor="arena-sparring">Sparring</Label></div>
+            <div className="flex items-center gap-2"><RadioGroupItem id="arena-official" value="official" /><Label htmlFor="arena-official">Pelea oficial</Label></div>
+          </RadioGroup>
+        </section>
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Peleadores</CardTitle>
@@ -216,7 +192,7 @@ export default function TimeMaster() {
             </div>
             {tm.isGuestMatch && (
               <p className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-500">
-                Esta pelea incluye un peleador invitado. <strong>No afectará récords oficiales</strong>.
+                {tm.boutType === 'official' ? 'Selecciona dos peleadores registrados para una pelea oficial.' : 'Sparring con invitado: se guardará en el historial del peleador registrado.'}
               </p>
             )}
           </CardContent>
@@ -324,11 +300,12 @@ export default function TimeMaster() {
                 </Button>
               )}
               {tm.phase === 'finished' && (
-                <Button size="lg" onClick={tm.resetMatch} disabled={recordDialogOpen} className="min-h-[48px]">
+                <Button size="lg" onClick={tm.resetMatch} disabled={tm.isSaving || !pendingResult} className="min-h-[48px]">
                   <RefreshCw className="h-5 w-5 mr-2" /> Nueva Pelea
                 </Button>
 
               )}
+              {tm.phase === 'finished' && !pendingResult && <Button variant="outline" disabled={tm.isSaving} onClick={() => setResultDialogOpen(true)}>Guardar resultado</Button>}
               {tm.phase !== 'setup' && tm.phase !== 'finished' && (
                 <Button size="lg" variant="ghost" onClick={tm.resetMatch} className="min-h-[48px]">
                   <RefreshCw className="h-5 w-5 mr-2" /> Reiniciar Todo
@@ -373,16 +350,7 @@ export default function TimeMaster() {
         rounds={tm.roundsCompleted}
         totalScoreA={tm.totalScoreA}
         totalScoreB={tm.totalScoreB}
-      />
-
-      <RecordUpdateDialog
-        isOpen={recordDialogOpen}
-        onConfirm={handleConfirmRecord}
-        onDecline={handleDeclineRecord}
-        fighterAName={tm.fighterAName}
-        fighterBName={tm.fighterBName}
-        winnerName={winnerName}
-        resultType={pendingResult?.resultType ?? ''}
+        boutType={tm.boutType}
       />
     </TimeMasterLayout>
   );

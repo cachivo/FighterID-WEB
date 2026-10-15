@@ -5,6 +5,8 @@ import {
   type AlertSettings, loadAlertSettings, saveAlertSettings, playAlert,
 } from '@/lib/timeMasterAlerts';
 import type { AlertKind, BellVariant } from '@/lib/timeMasterAlerts';
+import { useQueryClient } from '@tanstack/react-query';
+import { snapshotArenaRounds, shouldUpdateArenaRecord, type ArenaBoutType } from '@/lib/arenaBout';
 
 export type MatchPhase = 'setup' | 'ready' | 'fighting' | 'between_rounds' | 'finished';
 
@@ -50,6 +52,11 @@ export interface FighterOption {
 
 export function useTimeMaster() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [boutType, setBoutType] = useState<ArenaBoutType>('sparring');
+  const [isSaving, setIsSaving] = useState(false);
+  const sessionIdRef = useRef(crypto.randomUUID());
+  const savingRef = useRef(false);
 
   const [phase, setPhase] = useState<MatchPhase>('setup');
   const [fighterAId, setFighterAId] = useState<string | null>(null);
@@ -150,13 +157,14 @@ export function useTimeMaster() {
 
   const canStartMatch = useMemo(() => {
     if (phase !== 'setup') return false;
+    if (boutType === 'official' && isGuestMatch) return false;
     const aReady = fighterAIsGuest ? fighterAName.trim().length > 0 : !!fighterAId;
     const bReady = fighterBIsGuest ? fighterBName.trim().length > 0 : !!fighterBId;
     if (!aReady || !bReady) return false;
     // Two registered fighters must be different.
     if (!fighterAIsGuest && !fighterBIsGuest && fighterAId === fighterBId) return false;
     return true;
-  }, [fighterAId, fighterBId, fighterAIsGuest, fighterBIsGuest, fighterAName, fighterBName, phase]);
+  }, [fighterAId, fighterBId, fighterAIsGuest, fighterBIsGuest, fighterAName, fighterBName, phase, boutType, isGuestMatch]);
 
   const loadFighters = useCallback(async () => {
     setIsLoading(true);
@@ -411,6 +419,7 @@ export function useTimeMaster() {
   }, []);
 
   const resetMatch = useCallback(() => {
+    sessionIdRef.current = crypto.randomUUID();
     setPhase('setup');
     setFighterAId(null);
     setFighterBId(null);
@@ -444,6 +453,58 @@ export function useTimeMaster() {
   // do NOT subtract knockdowns again here (would double-penalize).
   const totalScoreA = useMemo(() => roundsCompleted.reduce((s, r) => s + (r.scoreA || 0), 0), [roundsCompleted]);
   const totalScoreB = useMemo(() => roundsCompleted.reduce((s, r) => s + (r.scoreB || 0), 0), [roundsCompleted]);
+
+  const completeMatch = useCallback(async (result: MatchResult) => {
+    if (savingRef.current) return false;
+    const activeRound = phase === 'fighting' ? {
+      roundNumber: currentRound, durationMs: timeMsRef.current,
+      knockdownsA: 0, knockdownsB: 0, warningsA: 0, warningsB: 0, scoreA: 10, scoreB: 10,
+    } : null;
+    const rounds = snapshotArenaRounds(roundsCompleted, activeRound);
+    if (!rounds.length) {
+      toastRef.current({ title: 'Inicia un round antes de guardar', variant: 'destructive' });
+      return false;
+    }
+    savingRef.current = true;
+    setIsSaving(true);
+    setIsRunning(false);
+    setIsPaused(true);
+    if (restIntervalRef.current) clearInterval(restIntervalRef.current);
+    try {
+      const winnerCorner = result.winnerId === (fighterAId ?? 'guest:red') ? 'red'
+        : result.winnerId === (fighterBId ?? 'guest:blue') ? 'blue' : null;
+      const { data, error } = await supabase.rpc('save_arena_result', {
+        p_session_id: sessionIdRef.current, p_bout_type: boutType,
+        p_red_fighter_id: fighterAId, p_blue_fighter_id: fighterBId,
+        p_red_name: fighterAName, p_blue_name: fighterBName,
+        p_winner_corner: winnerCorner, p_result_type: result.resultType,
+        p_round_number: rounds.length, p_round_config: roundConfig,
+        p_round_duration_sec: roundDuration, p_rounds: rounds as unknown as import('@/integrations/supabase/types').Json,
+        p_notes: result.notes ?? null,
+      });
+      if (error) throw error;
+      const response = data as { records_updated?: boolean } | null;
+      setRoundsCompleted(rounds);
+      finishMatch({ ...result, roundNumber: rounds.length });
+      setIsPaused(false);
+      setIsRestPeriod(false);
+      for (const id of [fighterAId, fighterBId]) {
+        if (id) {
+          void queryClient.invalidateQueries({ queryKey: ['fighter-profile', id] });
+          void queryClient.invalidateQueries({ queryKey: ['fighter_history', id] });
+        }
+      }
+      for (const key of ['fighter-profiles', 'admin-fighters', 'fighter-ranking', 'fighter-stats', 'fighter-record-history']) {
+        void queryClient.invalidateQueries({ queryKey: [key] });
+      }
+      if (response?.records_updated) await loadFighters();
+      toastRef.current({ title: boutType === 'sparring' ? 'Sparring guardado' : 'Pelea oficial guardada', description: shouldUpdateArenaRecord(boutType, result.resultType) ? 'Récords e historial actualizados.' : 'Historial guardado sin cambiar el récord oficial.' });
+      return true;
+    } catch (error) {
+      toastRef.current({ title: 'No se pudo guardar', description: error instanceof Error ? error.message : (error as { message?: string })?.message ?? 'Reintenta guardar el resultado.', variant: 'destructive' });
+      return false;
+    } finally { savingRef.current = false; setIsSaving(false); }
+  }, [phase, currentRound, roundsCompleted, boutType, fighterAId, fighterBId, fighterAName, fighterBName, roundConfig, roundDuration, finishMatch, queryClient, loadFighters]);
 
   // Atomic single-RPC writer (validates auth, dedups, atomic record updates,
   // correct No-Contest handling). Falls back to legacy direct writes if the
@@ -523,6 +584,7 @@ export function useTimeMaster() {
 
 
   return {
+    boutType, setBoutType, completeMatch, isSaving,
     phase, fighterAId, fighterBId, fighterAName, fighterBName,
     fighterAIsGuest, fighterBIsGuest, isGuestMatch,
     roundConfig, roundDuration, currentRound, timeMs, isRunning, isPaused,
