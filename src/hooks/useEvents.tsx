@@ -288,6 +288,29 @@ export function useEvents(discipline?: string) {
   };
 }
 
+/** fights_full exposes flat fighter_a_* / fighter_b_* columns; build the nested shape the fight card reads. */
+export function normalizeFightRow(row: any): Fight {
+  const build = (side: 'a' | 'b') => {
+    const id = row[`fighter_${side}_id`];
+    if (!id) return row[`fighter_${side}`] ?? undefined;
+    const fullName: string = row[`fighter_${side}_name`] ?? '';
+    const [first, ...rest] = fullName.trim().split(/\s+/);
+    return {
+      id,
+      first_name: first ?? '',
+      last_name: rest.join(' '),
+      nickname: row[`fighter_${side}_nickname`] ?? null,
+      avatar_url: row[`fighter_${side}_avatar`] ?? null,
+      country: row[`fighter_${side}_country`] ?? null,
+      weight_class: row[`fighter_${side}_weight_class`] ?? null,
+      record_wins: row[`fighter_${side}_wins`] ?? 0,
+      record_losses: row[`fighter_${side}_losses`] ?? 0,
+      record_draws: row[`fighter_${side}_draws`] ?? 0,
+    };
+  };
+  return { ...row, fighter_a: build('a'), fighter_b: build('b') };
+}
+
 export function useFights(eventId?: string) {
   const [fights, setFights] = useState<Fight[]>([]);
   const [loading, setLoading] = useState(true);
@@ -313,7 +336,7 @@ export function useFights(eventId?: string) {
       console.log('useFights - Query result:', { data, error, eventId });
 
       if (error) throw error;
-      setFights((data as any[]) || []);
+      setFights(((data as any[]) || []).map(normalizeFightRow));
       setError(null);
     } catch (err) {
       console.error('useFights - Error:', err);
