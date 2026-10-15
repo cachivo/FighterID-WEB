@@ -56,6 +56,8 @@ export function useTimeMaster() {
   const [boutType, setBoutType] = useState<ArenaBoutType>('sparring');
   const [isSaving, setIsSaving] = useState(false);
   const sessionIdRef = useRef(crypto.randomUUID());
+  const [eventFightId, setEventFightId] = useState<string | null>(null);
+  const [eventFightLabel, setEventFightLabel] = useState<string | null>(null);
   const savingRef = useRef(false);
 
   const [phase, setPhase] = useState<MatchPhase>('setup');
@@ -420,6 +422,8 @@ export function useTimeMaster() {
 
   const resetMatch = useCallback(() => {
     sessionIdRef.current = crypto.randomUUID();
+    setEventFightId(null);
+    setEventFightLabel(null);
     setPhase('setup');
     setFighterAId(null);
     setFighterBId(null);
@@ -484,6 +488,11 @@ export function useTimeMaster() {
       });
       if (error) throw error;
       const response = data as { records_updated?: boolean } | null;
+      if (eventFightId && boutType === 'official') {
+        const { error: linkError } = await supabase.rpc('arena_link_event_fight', { p_session_id: sessionIdRef.current, p_fight_id: eventFightId });
+        if (linkError) toastRef.current({ title: 'Resultado guardado, pero no se publicó en el evento', description: linkError.message, variant: 'destructive' });
+        else void queryClient.invalidateQueries({ queryKey: ['event-fight-live', eventFightId] });
+      }
       setRoundsCompleted(rounds);
       finishMatch({ ...result, roundNumber: rounds.length });
       setIsPaused(false);
@@ -505,7 +514,7 @@ export function useTimeMaster() {
       toastRef.current({ title: 'No se pudo guardar', description: error instanceof Error ? error.message : (error as { message?: string })?.message ?? 'Reintenta guardar el resultado.', variant: 'destructive' });
       return false;
     } finally { savingRef.current = false; setIsSaving(false); }
-  }, [phase, currentRound, roundsCompleted, boutType, fighterAId, fighterBId, fighterAName, fighterBName, roundConfig, roundDuration, finishMatch, queryClient, loadFighters]);
+  }, [phase, currentRound, roundsCompleted, boutType, fighterAId, fighterBId, fighterAName, fighterBName, roundConfig, roundDuration, finishMatch, queryClient, loadFighters, eventFightId]);
 
   // Atomic single-RPC writer (validates auth, dedups, atomic record updates,
   // correct No-Contest handling). Falls back to legacy direct writes if the
@@ -584,7 +593,56 @@ export function useTimeMaster() {
 
 
 
+  // Preload a scheduled event fight (admins open Arena Control from the event card).
+  const loadEventFight = useCallback(async (fightId: string) => {
+    const { data, error } = await supabase
+      .from('fights')
+      .select('id, fighter_a_id, fighter_b_id, number_of_rounds, round_duration_seconds, status')
+      .eq('id', fightId)
+      .maybeSingle();
+    if (error || !data) {
+      toastRef.current({ title: 'No se encontró la pelea del evento', variant: 'destructive' });
+      return;
+    }
+    if (data.status === 'completed') {
+      toastRef.current({ title: 'Esta pelea ya tiene resultado publicado', variant: 'destructive' });
+      return;
+    }
+    if (!data.fighter_a_id || !data.fighter_b_id) {
+      toastRef.current({ title: 'La pelea tiene peleadores externos', description: 'Arena Control solo puede publicar peleas entre peleadores registrados.', variant: 'destructive' });
+      return;
+    }
+    const { data: profiles } = await supabase
+      .from('fighter_profiles')
+      .select('id, first_name, last_name, nickname')
+      .in('id', [data.fighter_a_id, data.fighter_b_id]);
+    const name = (id: string) => {
+      const f = profiles?.find((p) => p.id === id);
+      return f ? `${f.first_name} ${f.last_name}${f.nickname ? ` "${f.nickname}"` : ''}` : 'Peleador';
+    };
+    setFighterAIsGuest(false); setFighterBIsGuest(false);
+    setFighterAId(data.fighter_a_id); setFighterBId(data.fighter_b_id);
+    setFighterAName(name(data.fighter_a_id)); setFighterBName(name(data.fighter_b_id));
+    const rounds = data.number_of_rounds;
+    setRoundConfig(rounds === 5 || rounds === 8 ? rounds : 3);
+    if (data.round_duration_seconds && data.round_duration_seconds > 0) setRoundDuration(data.round_duration_seconds);
+    setBoutType('official');
+    setEventFightId(data.id);
+    setEventFightLabel(`${name(data.fighter_a_id)} vs ${name(data.fighter_b_id)}`);
+  }, []);
+
+  // Push live round + scores to the public event card while the fight runs.
+  useEffect(() => {
+    if (!eventFightId || phase === 'setup' || matchResult) return;
+    const scores = roundsCompleted.map((r) => ({ round: r.roundNumber, red: r.scoreA, blue: r.scoreB }));
+    void supabase.rpc('arena_sync_event_fight', {
+      p_fight_id: eventFightId, p_status: 'live', p_round: currentRound,
+      p_scores: scores as unknown as import('@/integrations/supabase/types').Json,
+    }).then(({ error }) => { if (error) console.warn('[arena] sync event fight failed', error.message); });
+  }, [eventFightId, phase, currentRound, roundsCompleted, matchResult]);
+
   return {
+    eventFightId, eventFightLabel, loadEventFight,
     boutType, setBoutType, completeMatch, isSaving,
     phase, fighterAId, fighterBId, fighterAName, fighterBName,
     fighterAIsGuest, fighterBIsGuest, isGuestMatch,
