@@ -12,7 +12,7 @@ import {
 } from "@/components/time-master";
 import { useTimeMaster } from "@/hooks/useTimeMaster";
 import { useAuth } from "@/hooks/useAuth";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import type { ArenaBoutType } from '@/lib/arenaBout';
@@ -29,6 +29,12 @@ export default function TimeMaster() {
   const autoOpenedRef = useRef(false);
 
   useEffect(() => { loadFighters(); }, [loadFighters]);
+  const [searchParams] = useSearchParams();
+  const eventFightParam = searchParams.get('fightId');
+  const { loadEventFight } = tm;
+  useEffect(() => {
+    if (eventFightParam && /^[0-9a-f-]{36}$/i.test(eventFightParam)) void loadEventFight(eventFightParam);
+  }, [eventFightParam, loadEventFight]);
 
   // When a new round is pushed to roundsCompleted, prompt for its score
   useEffect(() => {
@@ -146,10 +152,17 @@ export default function TimeMaster() {
           </CardContent>
         </Card>
 
+        {tm.eventFightId && (
+          <div className="border border-primary/40 rounded-sm p-3 text-sm">
+            <p className="font-medium break-words">Pelea del evento: {tm.eventFightLabel}</p>
+            <p className="text-muted-foreground text-xs mt-1">Cada round y puntaje se muestra en vivo en la cartelera. Al guardar el resultado se publica el ganador y las tarjetas.</p>
+          </div>
+        )}
+
         {/* Fighter selection */}
         <section className="space-y-3" aria-label="Tipo de encuentro">
           <h2 className="text-lg font-semibold">Tipo de encuentro</h2>
-          <RadioGroup value={tm.boutType} onValueChange={value => tm.setBoutType(value as ArenaBoutType)} disabled={phaseLocked} className="flex flex-wrap gap-6">
+          <RadioGroup value={tm.boutType} onValueChange={value => tm.setBoutType(value as ArenaBoutType)} disabled={phaseLocked || !!tm.eventFightId} className="flex flex-wrap gap-6">
             <div className="flex items-center gap-2"><RadioGroupItem id="arena-sparring" value="sparring" /><Label htmlFor="arena-sparring">Sparring</Label></div>
             <div className="flex items-center gap-2"><RadioGroupItem id="arena-official" value="official" /><Label htmlFor="arena-official">Pelea oficial</Label></div>
           </RadioGroup>

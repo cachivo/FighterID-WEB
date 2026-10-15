@@ -439,6 +439,12 @@ const FightCard = ({
               <Monitor className="mr-2 h-3 w-3" />
               HUD
             </Button>
+            <Button size="sm" asChild>
+              <Link to={`/time-master?fightId=${fight.id}`}>
+                <Clock className="mr-2 h-3 w-3" />
+                Arena Control
+              </Link>
+            </Button>
             <Button size="sm" variant="outline" onClick={() => onView(fight.id)}>
               <Eye className="mr-2 h-3 w-3" />
               Ver
