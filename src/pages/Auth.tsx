@@ -355,8 +355,8 @@ export default function Auth() {
                 type="button"
                 variant="outline"
                 className="w-full border-border hover:bg-secondary"
-                disabled={checkingEmail || !email}
-                onClick={(e) => handleEmailSubmit(e as any, 'register')}
+                disabled={checkingEmail}
+                onClick={() => setStep('register')}
               >
                 Crear cuenta nueva
               </Button>
@@ -494,9 +494,19 @@ export default function Auth() {
                 </div>
               ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="bg-secondary rounded-lg p-3 border border-border">
-                    <p className="text-sm text-muted-foreground">Nuevo registro para:</p>
-                    <p className="text-foreground font-medium">{email}</p>
+                  <div>
+                    <label className="text-sm font-medium text-foreground/90" htmlFor="signup-email">Email</label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="tu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      autoComplete="email"
+                      disabled={!!invitation}
+                      className="bg-secondary border-border focus:border-primary"
+                    />
                   </div>
 
                   {invitation && (
